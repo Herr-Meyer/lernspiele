@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="de" class="onstart">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Holzcraft – Das Geheimnis des Waldes</title>
+<style>
+/* Schriften liegen im Ordner "fonts" neben dieser Datei – keine Verbindung zu Google */
+@font-face{font-family:'Press Start 2P';src:url('fonts/PressStart2P-Regular.ttf') format('truetype');font-display:swap}
+@font-face{font-family:'VT323';src:url('fonts/VT323-Regular.ttf') format('truetype');font-display:swap}
+</style>
+<style>
+:root{
+  --bg:#2a1d10; --panel:#e6cc96; --panel2:#c9a463; --hi:rgba(255,255,255,.35); --ink:#2b1d10; --muted:#6a4f2c;
+  --line:#2b1d10; --accent:#4f9a31; --accent-d:#2f6b1c; --accent-ink:#ffffff; --ok:#2e8b3e; --bad:#b83226;
+  --okbg:#bfe6b0; --badbg:#f3c2bb; --gold:#f2c230;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#120c06; --panel:#3a2a1a; --panel2:#24190e; --hi:rgba(255,255,255,.08); --ink:#f5e6c8; --muted:#c7ab7e;
+    --line:#050302; --accent:#4f9a31; --accent-d:#2a5a18; --okbg:#2f5a2a; --badbg:#6a2620;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#120c06; --panel:#3a2a1a; --panel2:#24190e; --hi:rgba(255,255,255,.08); --ink:#f5e6c8; --muted:#c7ab7e;
+  --line:#050302; --accent:#4f9a31; --accent-d:#2a5a18; --okbg:#2f5a2a; --badbg:#6a2620;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'VT323',ui-monospace,Menlo,Consolas,monospace;font-size:22px;line-height:1.15;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+#app{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px)}
+#cv{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:block;touch-action:none;image-rendering:pixelated}
+.panel{background:var(--panel);color:var(--ink);border:4px solid var(--line);box-shadow:inset -4px -4px 0 var(--panel2),inset 4px 4px 0 var(--hi),0 6px 0 rgba(0,0,0,.35)}
+.px{font-family:'Press Start 2P',ui-monospace,monospace}
+button,select,.opt{touch-action:manipulation}
+button{font:inherit;color:inherit}
+.btn{font-family:'Press Start 2P',ui-monospace,monospace;font-size:11px;line-height:1.4;min-height:44px;padding:10px 14px;background:var(--panel2);color:var(--ink);border:3px solid var(--line);box-shadow:inset -3px -3px 0 rgba(0,0,0,.25),inset 3px 3px 0 var(--hi);cursor:pointer}
+.btn:active{transform:translateY(2px)}
+.btn:focus-visible,.opt:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:inset -4px -4px 0 var(--accent-d),inset 4px 4px 0 rgba(255,255,255,.3)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 8px) calc(env(safe-area-inset-right,0px) + 10px) 8px calc(env(safe-area-inset-left,0px) + 10px);pointer-events:none}
+#hud > *{pointer-events:auto}
+.chip{display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:22px}
+.blk{width:26px;height:26px;image-rendering:pixelated;border:2px solid var(--line)}
+.blk.off{filter:grayscale(1) brightness(.55);opacity:.55}
+.hud-r{display:flex;gap:6px;align-items:center}
+.hbtn{width:44px;height:44px;padding:0;font-size:20px;display:grid;place-items:center}
+.hbtn.muted{opacity:.5;text-decoration:line-through}
+
+/* Touch controls */
+#pad,#abtn{display:none}
+body.touch #pad{--p:clamp(120px,36vmin,158px);display:block;position:fixed;left:calc(env(safe-area-inset-left,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);width:var(--p);height:var(--p);z-index:6;touch-action:none;opacity:.88}
+#pad .pv,#pad .ph{position:absolute;background:rgba(43,29,16,.72);border:3px solid rgba(0,0,0,.6);border-radius:4px}
+#pad .pv{left:33.33%;top:0;width:33.34%;height:100%}
+#pad .ph{left:0;top:33.33%;width:100%;height:33.34%}
+#pad .ar{position:absolute;color:#f5e6c8;font-size:20px;width:33.33%;height:33.33%;display:grid;place-items:center;pointer-events:none}
+#pad .u{left:33.33%;top:0}#pad .d{left:33.33%;top:66.66%}#pad .l{left:0;top:33.33%}#pad .r{left:66.66%;top:33.33%}
+#pad .ar.on{color:var(--gold)}
+body.touch #abtn{--a:clamp(64px,20vmin,82px);display:grid;place-items:center;position:fixed;right:calc(env(safe-area-inset-right,0px) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 40px);width:var(--a);height:var(--a);border-radius:50%;z-index:6;background:#4f9a31;color:#fff;border:4px solid #1f3d12;box-shadow:inset -4px -4px 0 #2f6b1c,inset 4px 4px 0 rgba(255,255,255,.3);font-family:'Press Start 2P',monospace;font-size:18px;touch-action:none;opacity:.9}
+body.touch #abtn.ready{background:#f2c230;color:#2b1d10;border-color:#6b4a10;box-shadow:inset -4px -4px 0 #b88a12,inset 4px 4px 0 rgba(255,255,255,.4);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+body.talking #pad,body.talking #abtn,body.modal #pad,body.modal #abtn{display:none !important}
+
+/* Dialogue */
+#dlg{display:none;position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:8;max-width:760px;margin:0 auto;padding:12px 14px 14px;min-height:140px;cursor:pointer}
+.dh{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+#por{width:48px;height:48px;image-rendering:pixelated;background:var(--panel2);border:3px solid var(--line)}
+#dname{font-family:'Press Start 2P',monospace;font-size:12px}
+#dtext{font-size:25px;line-height:1.12;min-height:58px;white-space:pre-wrap}
+#dch{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#dmore{position:absolute;right:14px;bottom:8px;font-size:22px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* Modal */
+#modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:10;background:rgba(10,6,2,.62);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top,0px) + 12px) 10px calc(env(safe-area-inset-bottom,0px) + 12px)}
+#card{max-width:720px;margin:0 auto;padding:16px 16px 18px}
+#card h2{font-family:'Press Start 2P',monospace;font-size:14px;line-height:1.6;margin:10px 0 12px}
+#card h3{font-family:'Press Start 2P',monospace;font-size:12px;line-height:1.5;margin:16px 0 8px}
+#card p{margin:6px 0 10px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--muted);font-size:20px}
+.tag{font-family:'Press Start 2P',monospace;font-size:10px;padding:6px 8px;background:var(--panel2);border:2px solid var(--line);color:var(--ink)}
+.fig{background:#f7efd9;border:3px solid var(--line);padding:6px;margin:8px 0 12px;text-align:center}
+.fig svg{width:100%;max-width:380px;height:auto;display:block;margin:0 auto}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;font-family:'VT323',monospace;font-size:23px;padding:10px 12px;min-height:48px;background:var(--panel2);color:var(--ink);border:3px solid var(--line);box-shadow:inset -3px -3px 0 rgba(0,0,0,.2),inset 3px 3px 0 var(--hi);cursor:pointer}
+.opt.ok{background:var(--okbg);border-color:var(--ok)}
+.opt.bad{background:var(--badbg);border-color:var(--bad);animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.rows{display:grid;gap:4px;margin-bottom:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 4px;border-bottom:2px dashed var(--panel2)}
+.row span{flex:1}
+select{font-family:'VT323',monospace;font-size:21px;min-height:42px;max-width:56%;padding:4px 6px;background:var(--panel);color:var(--ink);border:3px solid var(--line)}
+.row.ok select{border-color:var(--ok);background:var(--okbg)}
+.row.bad select{border-color:var(--bad);background:var(--badbg)}
+.fb{min-height:10px;margin:10px 0;font-size:22px}
+.fb.ok{color:var(--ok)}.fb.bad{color:var(--bad)}
+.fb .ex{display:block;color:var(--ink);margin-top:4px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:8px}
+textarea,input[type=text]{width:100%;font-family:'VT323',monospace;font-size:23px;padding:8px 10px;background:#fbf4e2;color:#2b1d10;border:3px solid var(--line);-webkit-user-select:text;user-select:text}
+textarea{min-height:150px;resize:vertical}
+.count{color:var(--muted);font-size:19px;text-align:right}
+.reward{display:flex;align-items:center;gap:14px;margin:6px 0 10px}
+.reward canvas{width:72px;height:72px;image-rendering:pixelated;border:4px solid var(--line);animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(.3) rotate(-20deg)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.lk{list-style:none;padding:0;margin:6px 0}
+.lk li{padding:6px 0 6px 18px;position:relative;border-bottom:1px dashed var(--panel2)}
+.lk li::before{content:"";position:absolute;left:2px;top:13px;width:8px;height:8px;background:var(--accent);border:1px solid var(--line)}
+details{border:3px solid var(--line);background:var(--panel2);padding:8px 10px;margin:8px 0}
+summary{cursor:pointer;font-family:'Press Start 2P',monospace;font-size:11px;line-height:1.6}
+.passgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.pg{text-align:center;padding:6px;border:3px solid var(--line);background:var(--panel2);font-size:19px}
+.pg canvas{width:40px;height:40px;image-rendering:pixelated;display:block;margin:2px auto 4px}
+.pg.off canvas{filter:grayscale(1) brightness(.55);opacity:.55}
+table{width:100%;border-collapse:collapse;margin:8px 0}
+td,th{border:2px solid var(--line);padding:6px 8px;text-align:left;font-size:21px}
+.ans{white-space:pre-wrap;background:#fbf4e2;color:#2b1d10;border:2px solid var(--line);padding:8px;min-height:40px;font-size:21px;-webkit-user-select:text;user-select:text}
+.sig{display:flex;gap:16px;margin-top:20px;flex-wrap:wrap}
+.sig div{flex:1;min-width:180px;border-top:2px solid var(--line);padding-top:4px;color:var(--muted);font-size:19px}
+
+/* Avatar-Editor */
+.avwrap{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.avprev{flex:0 0 auto;text-align:center}
+.avprev canvas{width:128px;height:144px;image-rendering:pixelated;background:#5fae3d;border:4px solid var(--line);display:block}
+.avprev .turn{display:flex;gap:6px;justify-content:center;margin-top:6px}
+.avprev .turn .btn{min-height:40px;padding:6px 10px}
+.avopts{flex:1 1 260px;min-width:0}
+.avrow{margin-bottom:10px}
+.avrow > div:first-child{font-size:20px;margin-bottom:4px}
+.sw{display:flex;flex-wrap:wrap;gap:6px}
+.sw button{width:40px;height:40px;border:3px solid var(--line);padding:0;cursor:pointer;box-shadow:inset -3px -3px 0 rgba(0,0,0,.25),inset 3px 3px 0 rgba(255,255,255,.25)}
+.sw button.on{outline:3px solid var(--gold);outline-offset:2px}
+.sw button.txt{width:auto;min-width:40px;padding:0 10px;background:var(--panel2);color:var(--ink);font-family:'VT323',monospace;font-size:20px}
+.savehint{font-size:19px;color:var(--muted);margin-top:6px}
+@media (max-width:480px){.avprev{width:calc(100% + 24px);margin:0 -12px;position:sticky;top:-12px;z-index:2;background:var(--panel);padding:6px 12px;border-bottom:3px solid var(--panel2)}.avprev canvas{margin:0 auto;width:96px;height:108px}}
+
+/* Start */
+html.onstart,html.onstart body{height:auto;min-height:100%;overflow:auto}
+html.onstart #hud,html.onstart #pad,html.onstart #abtn,html.onstart #app{display:none !important}
+#start{position:relative;z-index:12;min-height:100vh;display:block;background:#1d3a14;padding:calc(env(safe-area-inset-top,0px) + 16px) 12px calc(env(safe-area-inset-bottom,0px) + 16px)}
+.startcard{max-width:520px;width:100%;padding:20px 18px;margin:0 auto}
+.startbtns .btn{display:block;width:100%;margin-bottom:8px;font-size:13px;min-height:56px;line-height:56px;padding:0 10px;text-align:center;text-decoration:none;-webkit-appearance:none;appearance:none}
+#diag{font-size:16px;color:var(--muted);text-align:center;margin-top:8px;opacity:.75}
+.logo{font-family:'Press Start 2P',monospace;font-size:clamp(26px,8vw,46px);text-align:center;color:#f2c230;letter-spacing:2px;text-shadow:3px 3px 0 #7a4a1c,6px 6px 0 #2b1d10;margin:6px 0 4px;line-height:1.2}
+.sub{text-align:center;font-size:24px;color:var(--muted);margin-bottom:16px}
+.field{margin:10px 0}
+.field label{display:block;font-size:20px;margin-bottom:4px}
+.startbtns{display:grid;gap:8px;margin-top:16px}
+.help{font-size:19px;color:var(--muted);margin-top:14px;text-align:center}
+.err{color:var(--bad);font-size:20px;min-height:22px}
+
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 66px);transform:translateX(-50%);z-index:9;padding:8px 14px;max-width:92%;text-align:center;font-size:21px;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+
+@media (max-width:480px){
+  body{font-size:20px}
+  #hud{gap:4px;padding-left:calc(env(safe-area-inset-left,0px) + 6px);padding-right:calc(env(safe-area-inset-right,0px) + 6px)}
+  .chip{padding:3px 6px;gap:4px;font-size:19px}
+  .blk{width:21px;height:21px}
+  .hud-r{gap:4px}
+  .hbtn{width:40px;height:40px;min-height:40px;font-size:17px}
+  #modal{padding-left:6px;padding-right:6px}
+  #card{padding:12px 12px 14px}
+  #card h2{font-size:12px}
+  .row{flex-direction:column;align-items:stretch;gap:6px}
+  select{max-width:100%;width:100%}
+  .opt{font-size:21px}
+  .passgrid{grid-template-columns:repeat(2,1fr)}
+  .actions .btn{flex:1 1 auto}
+  #dlg{left:6px;right:6px;min-height:124px;padding:10px 12px 12px}
+  #dtext{font-size:22px}
+  #toast{top:calc(env(safe-area-inset-top,0px) + 58px)}
+}
+@media (max-height:500px) and (orientation:landscape){
+  #dlg{left:calc(env(safe-area-inset-left,0px) + 10px);right:calc(env(safe-area-inset-right,0px) + 10px);min-height:0;padding:8px 12px 10px}
+  #dtext{font-size:21px;min-height:0}
+  #por{width:34px;height:34px}
+  .dh{margin-bottom:2px}
+  #dname{font-size:10px}
+  #toast{top:calc(env(safe-area-inset-top,0px) + 54px)}
+  .startcard{padding:12px 14px}
+  .logo{font-size:26px}
+  .sub{margin-bottom:6px}
+}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+
+@media print{
+  html,body{height:auto;overflow:visible;background:#fff;color:#000;padding:0}
+  #app,#hud,#pad,#abtn,#dlg,#toast,#start{display:none !important}
+  #modal{position:static;display:block !important;background:none;padding:0;overflow:visible}
+  #card{border:none;box-shadow:none;max-width:none;background:#fff;color:#000;padding:0}
+  .noprint{display:none !important}
+  .ans{background:#fff}
+}
+</style>
+</head>
+<body>
+<div id="app"><canvas id="cv"></canvas></div>
+
+<div id="hud">
+  <div class="chip panel" id="blocks">
+    <canvas class="blk off" data-k="wald" width="16" height="16" title="Waldblock"></canvas>
+    <canvas class="blk off" data-k="baum" width="16" height="16" title="Baumblock"></canvas>
+    <canvas class="blk off" data-k="stamm" width="16" height="16" title="Stammblock"></canvas>
+    <canvas class="blk off" data-k="werkstoff" width="16" height="16" title="Werkstoffblock"></canvas>
+    <span id="acn">🌰 0/8</span>
+  </div>
+  <div class="hud-r">
+    <div class="chip panel" id="pts">★ 0</div>
+    <button class="btn hbtn" id="mus" aria-label="Musik an oder aus">♪</button>
+    <button class="btn hbtn" id="passBtn" aria-label="Forscherpass öffnen">📒</button>
+  </div>
+</div>
+
+<div id="pad" aria-hidden="true"><div class="pv"></div><div class="ph"></div><span class="ar u">▲</span><span class="ar d">▼</span><span class="ar l">◀</span><span class="ar r">▶</span></div>
+<button id="abtn" aria-label="Sprechen">A</button>
+
+<div id="dlg" class="panel" role="dialog" aria-live="polite">
+  <div class="dh"><canvas id="por" width="48" height="48"></canvas><b id="dname"></b></div>
+  <div id="dtext"></div>
+  <div id="dch"></div>
+  <span id="dmore">▼</span>
+</div>
+
+<div id="modal"><div id="card" class="panel"></div></div>
+<div id="toast" class="panel"></div>
+
+<div id="start">
+  <div class="startcard panel" id="startForm">
+    <div class="logo">HOLZCRAFT</div>
+    <div class="sub">Das Geheimnis des Waldes – TuN Klasse 6</div>
+    <p>Herr Meyer braucht deine Hilfe! Erkunde den Wald, löse die Rätsel der Waldbewohner und sammle vier Wissensblöcke.</p>
+    <div class="field"><label for="inName">Dein Name</label><input type="text" id="inName" maxlength="40" autocomplete="off" autocapitalize="words" enterkeyhint="next"></div>
+    <div class="field"><label for="inKlasse">Deine Klasse</label><input type="text" id="inKlasse" maxlength="10" autocomplete="off" autocorrect="off" placeholder="z. B. 6a" enterkeyhint="go"></div>
+    <div class="startbtns" id="startBtns"><a href="#los" class="btn primary" id="go" role="button">Spiel starten</a></div>
+    <div class="err" id="err"></div>
+    <div class="help" id="help"></div>
+    <div id="diag"></div>
+  </div>
+</div>
+
+<script>
+window.__holzErr = function(msg){
+  var e = document.getElementById('err'), st = document.getElementById('start');
+  if(e && st && st.style.display !== 'none') e.textContent = 'Technischer Fehler: ' + msg + '. Bitte Herrn Meyer Bescheid geben.';
+  else { var t = document.getElementById('toast'); if(t){ t.textContent = 'Fehler: ' + msg; t.className = 'panel show'; } }
+};
+window.addEventListener('error', function(ev){ window.__holzErr((ev.message || 'unbekannt') + (ev.lineno ? ' (Zeile ' + ev.lineno + ')' : '')); });
+setTimeout(function(){ if(!window.__holzReady) window.__holzErr('Spiel nicht geladen – ' + navigator.userAgent); }, 3000);
+</script>
+<script>
+(() => {
+'use strict';
+
+/* ================= Helpers ================= */
+const $ = s => document.querySelector(s);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function shuffle(a, r){r=r||Math.random;a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* ================= Save state ================= */
+const KEY = 'holzcraft-tun6-v1';
+const fresh = () => ({name:'',klasse:'',x:8,y:23,dir:'up',intro:false,done:{},scores:{},max:{},answers:{},acorns:[],music:true,started:false,av:null});
+function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
+let state = Object.assign(fresh(), load() || {});
+function save(){try{localStorage.setItem(KEY, JSON.stringify(state));}catch(e){}}
+
+/* ================= Content ================= */
+function callout(lx, ly, px, py, n){
+  const sx = px > lx ? lx + 12 : lx - 12;
+  return `<line x1="${sx}" y1="${ly}" x2="${px}" y2="${py}" stroke="#222" stroke-width="2"/><circle cx="${px}" cy="${py}" r="3" fill="#222"/>` +
+    `<circle cx="${lx}" cy="${ly}" r="12" fill="#fff" stroke="#222" stroke-width="2.5"/><text x="${lx}" y="${ly+5}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="15" fill="#222">${n}</text>`;
+}
+function badge(x, y, n){
+  return `<circle cx="${x}" cy="${y}" r="9" fill="#fff" stroke="#222" stroke-width="2"/><text x="${x}" y="${y+5}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="13" fill="#222">${n}</text>`;
+}
+function svgTree(){
+  const c = [[120,62,44],[82,80,32],[158,80,32],[100,40,30],[142,42,30]];
+  return `<svg viewBox="0 0 240 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Baum mit den Nummern 1 bis 3">
+  <rect x="0" y="168" width="240" height="62" fill="#8b6a43"/><rect x="0" y="163" width="240" height="7" fill="#5fae3d"/>
+  <rect x="108" y="96" width="24" height="74" fill="#7a5230" stroke="#4a2f17" stroke-width="3"/>
+  ${c.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r+3}" fill="#1f5e22"/>`).join('')}
+  ${c.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#3f8f3f"/>`).join('')}
+  <g stroke="#5b3a1e" stroke-width="5" stroke-linecap="round" fill="none">
+  <path d="M114 170 L96 190 L80 202"/><path d="M126 170 L146 192 L166 204"/><path d="M120 170 L120 210"/><path d="M96 190 L92 214"/><path d="M146 192 L152 216"/></g>
+  ${callout(24,40,72,72,1)}${callout(24,130,110,130,2)}${callout(24,204,86,198,3)}
+  </svg>`;
+}
+function svgStamm(){
+  return `<svg viewBox="0 0 330 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Querschnitt eines Stammes mit den Nummern 1 bis 6">
+  <circle cx="110" cy="110" r="100" fill="#5b3a1e"/>
+  <circle cx="110" cy="110" r="88" fill="#a0703e"/>
+  <circle cx="110" cy="110" r="82" fill="#e3e04a"/>
+  <circle cx="110" cy="110" r="79" fill="#f2d9a0"/>
+  ${[72,64,56,49].map(r=>`<circle cx="110" cy="110" r="${r}" fill="none" stroke="#d6ae6c" stroke-width="1.6"/>`).join('')}
+  <circle cx="110" cy="110" r="44" fill="#c08a50"/>
+  ${[36,26,16].map(r=>`<circle cx="110" cy="110" r="${r}" fill="none" stroke="#8f5f30" stroke-width="1.6"/>`).join('')}
+  <circle cx="110" cy="110" r="3" fill="#5b3a1e"/>
+  ${callout(262,28,170,38,1)}${callout(262,68,187,74,2)}
+  <path d="M276 28 H286 V68 H276 M286 48 H290" fill="none" stroke="#222" stroke-width="2"/>
+  <circle cx="302" cy="48" r="12" fill="#fff" stroke="#222" stroke-width="2.5"/><text x="302" y="53" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="15" fill="#222">3</text>
+  ${callout(262,110,190,110,4)}${callout(262,152,134,124,5)}${callout(262,192,146,161,6)}
+  </svg>`;
+}
+function svgRings(){
+  let s = `<svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Baumscheibe mit Jahresringen">
+  <circle cx="110" cy="110" r="104" fill="#4a2e17"/><circle cx="110" cy="110" r="95" fill="#f0d29a"/>`;
+  for(let i=1;i<=7;i++) s += `<circle cx="110" cy="110" r="${12*i}" fill="none" stroke="#a8742f" stroke-width="4"/>`;
+  return s + `<circle cx="110" cy="110" r="3" fill="#8a5a2b"/></svg>`;
+}
+function svgSchnitt(){
+  let le = '';
+  for(let x=24;x<216;x+=14) le += `<rect x="${x}" y="158" width="12" height="14" fill="#e8c98e"/>`;
+  return `<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Querschnitt eines Stammes mit Schnittholz 1 bis 5">
+  <defs><clipPath id="lc"><circle cx="120" cy="120" r="94"/></clipPath></defs>
+  <circle cx="120" cy="120" r="101" fill="#5b3a1e"/><circle cx="120" cy="120" r="94" fill="#a77b48"/>
+  <g clip-path="url(#lc)" stroke="#6e4a28" stroke-width="1.5">
+   <rect x="0" y="0" width="240" height="40" fill="#d8b378"/>
+   <rect x="20" y="42" width="200" height="14" fill="#ecd09b"/>
+   <rect x="26" y="58" width="188" height="24" fill="#e2c084"/>
+   <rect x="62" y="84" width="20" height="72" fill="#ecd09b"/><rect x="158" y="84" width="20" height="72" fill="#ecd09b"/>
+   <rect x="0" y="84" width="38" height="72" fill="#d8b378"/><rect x="202" y="84" width="38" height="72" fill="#d8b378"/>
+   <rect x="84" y="84" width="72" height="72" fill="#f0d6a2"/>
+   ${le}
+   <rect x="20" y="174" width="200" height="14" fill="#ecd09b"/>
+   <rect x="0" y="190" width="240" height="50" fill="#d8b378"/>
+  </g>
+  ${[10,20,30].map(r=>`<circle cx="120" cy="120" r="${r}" fill="none" stroke="#c99a5b" stroke-width="1.5"/>`).join('')}
+  ${badge(120,33,1)}${badge(150,49,2)}${badge(120,70,3)}${badge(165,165,4)}${badge(120,120,5)}
+  </svg>`;
+}
+function svgOSB(){
+  const r = mulberry32(7), pal = ['#e3c48a','#d4a965','#b98a4f','#ecd7a6','#c99555'];
+  let s = `<svg viewBox="0 0 240 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Foto-ähnliche Zeichnung einer Holzplatte"><rect width="240" height="150" fill="#c9995a"/>`;
+  for(let i=0;i<95;i++){
+    const x=r()*250-5, y=r()*125, w=26+r()*34, h=7+r()*7, a=-30+r()*60, c=pal[Math.floor(r()*pal.length)];
+    s += `<rect x="${(x-w/2).toFixed(1)}" y="${(y-h/2).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${c}" stroke="rgba(90,60,30,.4)" transform="rotate(${a.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+  }
+  s += `<rect x="0" y="124" width="240" height="26" fill="#a87a45"/>`;
+  for(let i=0;i<60;i++) s += `<rect x="${(r()*236).toFixed(1)}" y="${(126+r()*20).toFixed(1)}" width="${(2+r()*5).toFixed(1)}" height="2" fill="${r()<.5?'#7d5530':'#d9b77e'}"/>`;
+  return s + '</svg>';
+}
+
+const STATIONS = [
+{
+  id:'wald', short:'Wald', block:'Waldblock', npc:'forster', who:'Förster Fritz', place:'Waldlichtung',
+  intro:[
+    'Hallo! Ich bin Förster Fritz. Willkommen auf meiner Lichtung!',
+    'Wusstest du? Fast ein Drittel der Fläche Deutschlands ist bewaldet. Und der Wert eines Waldes ist viel mehr als der Wert seines Holzes!',
+    'Der Wald hat drei Hauptfunktionen. Nummer 1: die ERHOLUNGSFUNKTION. Der Wald schenkt uns Entspannung und Erholung – beim Wandern, bei der Naturbeobachtung, bei Sport und Spiel.',
+    'Nummer 2: die NUTZFUNKTION. Der Wald produziert Sauerstoff, beeinflusst das Klima, liefert den nachwachsenden Rohstoff Holz, schafft Arbeitsplätze und ist Lebensraum für Tiere und Pflanzen.',
+    'Nummer 3: die SCHUTZFUNKTION. Der Wald filtert Staub, Ruß und Gase aus der Luft, schützt vor Lärm, regelt den Wasserhaushalt und schützt den Boden davor, von Wasser und Wind abgetragen zu werden.',
+    'Die häufigsten Bäume bei uns sind Fichte (28 %), Kiefer (24 %), Buche (15 %) und Eiche (10 %). Und das meiste Holz verbraucht die Sägeindustrie.',
+    'Bereit für mein Wald-Rätsel?'
+  ],
+  card:[
+    'Fast ein Drittel Deutschlands ist bewaldet.',
+    'Erholungsfunktion: Wandern, Naturbeobachtung, Sport und Spiel.',
+    'Nutzfunktion: Sauerstoff, Klima, Rohstoff Holz, Arbeitsplätze, Einkommen der Waldbesitzer, Lebensraum.',
+    'Schutzfunktion: filtert Staub, Ruß und Gase, schützt vor Lärm, regelt den Wasserhaushalt, schützt vor Bodenabtragung.',
+    'Häufigste Baumarten: Fichte 28 %, Kiefer 24 %, Buche 15 %, Eiche 10 %.',
+    'Die Sägeindustrie verbraucht das meiste Rohholz.'
+  ],
+  puzzles:[
+    {type:'as', q:'Ordne jede Beobachtung der richtigen Waldfunktion zu!', opts:['Erholungsfunktion','Nutzfunktion','Schutzfunktion'],
+     rows:[['Familie Yilmaz wandert am Sonntag durch den Wald.','Erholungsfunktion'],['Lena beobachtet einen Specht mit dem Fernglas.','Erholungsfunktion'],
+           ['Aus Fichtenholz werden Bretter für Möbel gesägt.','Nutzfunktion'],['Förster und Försterinnen haben hier ihren Arbeitsplatz.','Nutzfunktion'],
+           ['Bei Starkregen halten die Wurzeln den Boden fest.','Schutzfunktion'],['Der Wald schluckt den Lärm der Autobahn.','Schutzfunktion']],
+     e:'Super! Erholung = für dich, Nutzung = für Wirtschaft und Leben, Schutz = gegen Gefahren und Schmutz.'},
+    {type:'mc', q:'Wie viel der Fläche Deutschlands ist bewaldet?', o:['Fast ein Zehntel','Fast ein Drittel','Fast die Hälfte','Fast drei Viertel'], a:1,
+     e:'Genau: fast ein Drittel unseres Landes ist Wald.'},
+    {type:'mc', q:'Welche Baumart kommt in Deutschlands Wäldern am häufigsten vor?', o:['Eiche','Buche','Fichte','Kiefer'], a:2,
+     e:'Die Fichte liegt mit 28 % vorne, danach folgt die Kiefer mit 24 %.'},
+    {type:'mc', q:'Was produzieren Bäume, das wir zum Atmen brauchen?', o:['Stickstoff','Sauerstoff','Kohlenstoffdioxid','Wasserdampf'], a:1,
+     e:'Richtig! Die Sauerstoffproduktion gehört zur Nutzfunktion des Waldes.'},
+    {type:'mc', q:'Welche Industrie verbraucht in Deutschland das meiste Rohholz?', o:['Sägeindustrie','Holzwerkstoffindustrie','Zellstoffindustrie (Papier)','Spielzeugindustrie'], a:0,
+     e:'Die Sägeindustrie verbraucht fast 30 Millionen Kubikmeter Rohholz – mehr als die anderen zusammen.'}
+  ],
+  fq:'Wie nutzt du den Wald? Nenne zu jeder der drei Funktionen ein Beispiel aus deinem Alltag – vielleicht nutzt du sie, ohne es zu merken!',
+  outro:'Klasse gemacht! Der Waldblock gehört dir. Folge dem Weg weiter – Säge-Sepp wohnt gleich um die Ecke.'
+},
+{
+  id:'baum', short:'Baum', block:'Baumblock', npc:'owl', who:'Eule Olga', place:'Uralte Eiche',
+  intro:[
+    'Huhu! Ich bin Olga, die Eule. Diese uralte Eiche ist mein Zuhause.',
+    'Jeder Baum besteht aus drei Teilen: den WURZELN, dem STAMM und der KRONE.',
+    'Die Wurzeln geben dem Baum Halt in der Erde. Mit ihren feinen Wurzelhaaren nehmen sie Wasser und die darin gelösten Nährstoffe auf.',
+    'Der Stamm enthält die „Versorgungsleitungen“. Er transportiert das Wasser mit den Nährstoffen nach oben in die Krone.',
+    'Die Krone besteht aus Ästen und Zweigen mit Blättern, Blüten und Früchten. In den Blättern entstehen Aufbaustoffe: Traubenzucker und Stärke.',
+    'Diese Aufbaustoffe werden zu den Speicherzellen des Baumes gebracht.',
+    'Huhu – bereit für mein Rätsel?'
+  ],
+  card:[
+    'Ein Baum besteht aus Wurzeln, Stamm und Krone.',
+    'Wurzeln: geben Halt und nehmen mit den Wurzelhaaren Wasser und gelöste Nährstoffe auf.',
+    'Stamm: enthält die Versorgungsleitungen und transportiert Wasser und Nährstoffe in die Krone.',
+    'Krone: Äste, Zweige, Blätter, Blüten und Früchte. In den Blättern entstehen Traubenzucker und Stärke.',
+    'Die Aufbaustoffe werden zu den Speicherzellen gebracht.'
+  ],
+  puzzles:[
+    {type:'as', q:'Beschrifte den Baum: Welcher Teil gehört zu welcher Nummer?', svg:svgTree, opts:['Wurzel','Stamm','Krone'],
+     rows:[['Nummer 1','Krone'],['Nummer 2','Stamm'],['Nummer 3','Wurzel']], e:'Krone oben, Stamm in der Mitte, Wurzeln in der Erde.'},
+    {type:'as', q:'Welcher Teil des Baumes erledigt diese Aufgabe?', opts:['Wurzel','Stamm','Krone'],
+     rows:[['Gibt dem Baum Halt in der Erde','Wurzel'],['Nimmt mit Wurzelhaaren Wasser auf','Wurzel'],['Enthält die Versorgungsleitungen','Stamm'],
+           ['Transportiert Wasser und Nährstoffe nach oben','Stamm'],['Trägt Blätter, Blüten und Früchte','Krone'],['Hier entstehen Traubenzucker und Stärke','Krone']],
+     e:'Perfekt – jeder Teil hat seine eigene Aufgabe!'},
+    {type:'mc', q:'Womit nehmen die Wurzeln Wasser und Nährstoffe auf?', o:['Mit der Borke','Mit den Wurzelhaaren','Mit den Blättern','Mit dem Kernholz'], a:1,
+     e:'Die feinen Wurzelhaare saugen Wasser mit den darin gelösten Nährstoffen auf.'},
+    {type:'mc', q:'Welche Aufbaustoffe entstehen in den Blättern?', o:['Kalk und Salz','Harz und Wachs','Traubenzucker und Stärke','Eiweiß und Fett'], a:2,
+     e:'Traubenzucker und Stärke – die Energie des Baumes.'},
+    {type:'mc', q:'Wohin werden die Aufbaustoffe gebracht?', o:['In die Wurzelhaare zum Ausscheiden','Zu den Speicherzellen des Baumes','In die Borke als Schutzschicht','In die Luft'], a:1,
+     e:'Sie werden in den Speicherzellen gelagert.'}
+  ],
+  fq:'Beschreibe den Aufbau eines Baumes mit seinen drei Bestandteilen. Welche Aufgabe hat jeder Teil?',
+  outro:'Huhu, ausgezeichnet! Der Baumblock ist deiner. Specht Paul wohnt weiter südlich am großen Baumstumpf.'
+},
+{
+  id:'stamm', short:'Stamm', block:'Stammblock', npc:'bird', who:'Specht Paul', place:'Jahresring-Stumpf',
+  intro:[
+    'Tock-tock! Ich bin Paul, der Specht. Ich kenne jeden Stamm – von außen bis ganz nach innen!',
+    'Ganz außen ist die RINDE. Sie hat zwei Schichten: die BORKE (äußere Rinde) und den BAST (innere Rinde).',
+    'Die Borke schützt den Baum vor Wasserverlust, Umwelteinflüssen und vor Pilz- und Insektenbefall.',
+    'Der Bast enthält Leitungen, die Siebröhrchen. Durch sie gelangen Traubenzucker und Stärke in die unteren Baumteile. Alter Bast stirbt ab, verkorkt und wird Teil der Borke.',
+    'Darunter liegt das KAMBIUM, die hauchdünne Wachstumsschicht. Es erzeugt jedes Jahr nach außen Bast und nach innen neues Holz.',
+    'Das neue Holz heißt SPLINTHOLZ. Es ist jung und weich. Darin liegen die Wasserleitungen und die Speicherzellen für Wasser.',
+    'Ganz innen liegt das KERNHOLZ: hart, wertvoll und der tragende Teil des Baumes. Bei Lärche und Nussbaum verfärbt es sich deutlich dunkel.',
+    'Und die Jahresringe? Vom Frühjahr bis in den Sommer wächst FRÜHHOLZ: dünnwandige Zellen, große Poren – darum sieht es hell aus.',
+    'Im Sommer und Herbst wächst SPÄTHOLZ: enge, dickwandige Zellen, kleine Poren – es sieht dunkler aus. Frühholz und Spätholz zusammen bilden einen JAHRESRING!',
+    'Tock-tock – bereit für mein Rätsel?'
+  ],
+  card:[
+    'Rinde = Borke (außen) + Bast (innen).',
+    'Borke: schützt vor Wasserverlust, Umwelteinflüssen, Pilzen und Insekten.',
+    'Bast: Siebröhrchen leiten Traubenzucker und Stärke nach unten. Er stirbt ab, verkorkt und wird zur Borke.',
+    'Kambium: hauchdünne Wachstumsschicht. Nach außen entsteht Bast, nach innen Splintholz.',
+    'Splintholz: junges, weiches Holz mit Wasserleitungen und Speicherzellen.',
+    'Kernholz: hart, wertvoll, tragender Teil des Baumes.',
+    'Frühholz (Frühjahr bis Sommer): große Poren, hell. Spätholz (Sommer und Herbst): kleine Poren, dunkel. Zusammen = ein Jahresring.',
+    'Nadelbäume haben Harzkanäle, die als Punkte sichtbar sind.'
+  ],
+  puzzles:[
+    {type:'as', q:'Beschrifte den Stamm! Welcher Fachbegriff gehört zu welcher Nummer?', svg:svgStamm,
+     opts:['Borke','Bast','Rinde','Kambium','Splintholz','Kernholz','Frühholz','Harzkanal'],
+     rows:[['Nummer 1','Borke'],['Nummer 2','Bast'],['Nummer 3 (1 und 2 zusammen)','Rinde'],['Nummer 4','Kambium'],['Nummer 5','Kernholz'],['Nummer 6','Splintholz']],
+     e:'Von außen nach innen: Borke, Bast, Kambium, Splintholz, Kernholz. Borke und Bast zusammen sind die Rinde.'},
+    {type:'as', q:'Welche Schicht hat welche Aufgabe?', opts:['Borke','Bast','Kambium','Splintholz','Kernholz'],
+     rows:[['Schützt vor Wasserverlust, Pilzen und Insekten','Borke'],['Leitet Traubenzucker und Stärke nach unten','Bast'],['Hauchdünne Wachstumsschicht','Kambium'],
+           ['Junges, weiches Holz mit Wasserleitungen','Splintholz'],['Hartes, tragendes Holz in der Mitte','Kernholz']],
+     e:'Spitze! Du kennst jede Schicht.'},
+    {type:'mc', q:'Zähl die dunklen Jahresringe! Wie alt war dieser Baum ungefähr?', svg:svgRings, o:['5 Jahre','7 Jahre','9 Jahre','12 Jahre'], a:1,
+     e:'7 Ringe = etwa 7 Jahre. Jeder Jahresring steht für eine Wachstumsperiode.'},
+    {type:'mc', q:'Warum sieht Frühholz hell aus?', o:['Es wird im Winter gebildet.','Es hat dünnwandige Zellen mit großen Poren.','Es wird von der Sonne gebleicht.','Es ist das älteste Holz im Baum.'], a:1,
+     e:'Dünne Zellwände und große Poren lassen das Frühholz hell erscheinen.'},
+    {type:'mc', q:'Was bilden Frühholz und Spätholz zusammen?', o:['Die Borke','Das Kambium','Einen Jahresring','Einen Harzkanal'], a:2,
+     e:'Frühholz + Spätholz = ein Jahresring.'},
+    {type:'mc', q:'Was erzeugt das Kambium jedes Jahr?', o:['Nach außen Bast, nach innen Splintholz','Nur Blätter und Blüten','Nach außen Kernholz, nach innen Borke','Neue Wurzelhaare'], a:0,
+     e:'Genau – das Kambium ist der eigentlich wachsende Teil des Stammes.'}
+  ],
+  fq:'Erkläre mithilfe der Begriffe Frühholz und Spätholz, wie ein Jahresring entsteht.',
+  outro:'Tock-tock, stark! Der Stammblock gehört dir.'
+},
+{
+  id:'werkstoff', short:'Werkstoff', block:'Werkstoffblock', npc:'sepp', who:'Säge-Sepp', place:'Sägewerk',
+  intro:[
+    'Servus! Ich bin Säge-Sepp. In meinem Sägewerk wird aus Baumstämmen Schnittholz.',
+    'Aus einem Stamm schneide ich SCHWARTEN (die runden Außenstücke), BRETTER, BOHLEN (dicke Bretter), LEISTEN und das dicke KANTHOLZ aus der Mitte.',
+    'Das Schnittholz muss im Freien oder in Trockenkammern trocknen. Erst danach werden daraus Halbzeuge wie Leisten, Stäbe und gehobelte Bretter.',
+    'Achtung, Holz ARBEITET! Gibt es Feuchtigkeit ab, SCHWINDET es. Nimmt es Feuchtigkeit auf, QUILLT es. Darum sollte zugesägtes Holz nicht nass werden.',
+    'Je weiter ein Brett von der Stammmitte entfernt ist, desto eher VERWIRFT es sich beim Trocknen – oder reißt sogar.',
+    'Dann gibt es HOLZWERKSTOFFE: Platten aus Holzspänen, Holzfasern oder Holzresten, mit Leim gepresst. So nutzt man auch minderwertiges Holz – das ist nachhaltig! Und sie arbeiten nicht wie Vollholz.',
+    'Faserplatten (HDF, MDF, LDF) bestehen aus einem feinen Faserbrei – z. B. für Schrankrückwände. Spanplatten werden aus Holzspänen bei hoher Temperatur gepresst – z. B. für Möbel.',
+    'Die OSB-Platte besteht aus großen, flachen Holzspänen, die ausgerichtet, verleimt und gepresst werden. Man nutzt sie z. B. für Wände, Dächer und Fußböden.',
+    'Beim Sperrholz werden mindestens drei Furnierlagen kreuzweise zur Faser verleimt. So sperren sie sich gegenseitig ab und das Holz kann kaum noch arbeiten. Ab neun Schichten oder 15 mm heißt es Multiplexplatte.',
+    'Harthölzer wie Eiche und Buche sind dicht und hart. Weichhölzer wie Fichte und Kiefer wachsen meist schneller und lassen sich leichter bearbeiten.',
+    'Und denk dran: Wer einen Baum fällt, soll auch wieder einen pflanzen! Bereit für mein Rätsel?'
+  ],
+  card:[
+    'Schnittholz: Schwarten, Bretter, Bohlen, Leisten, Kantholz.',
+    'Schnittholz muss trocknen, bevor daraus Halbzeuge entstehen.',
+    'Holz arbeitet: Es schwindet (gibt Feuchtigkeit ab) und quillt (nimmt Feuchtigkeit auf). Bretter können sich verwerfen.',
+    'Holzwerkstoffe: Platten aus Spänen, Fasern oder Resten mit Leim – nachhaltig und formstabil.',
+    'OSB-Platte: große, flache, ausgerichtete Späne, verleimt und gepresst – für Wände, Dächer, Böden.',
+    'Sperrholz: mindestens drei Furnierlagen kreuzweise verleimt, ab 9 Schichten oder 15 mm Multiplex.',
+    'Leimholzplatte: Vollholzstäbe ohne Deckfurnier verleimt, z. B. Küchenarbeitsplatte.',
+    'Harthölzer: Eiche, Buche. Weichhölzer: Fichte, Kiefer.'
+  ],
+  puzzles:[
+    {type:'as', q:'Beschrifte das Schnittholz mit den Fachbegriffen!', svg:svgSchnitt, opts:['Schwarte','Brett','Bohle','Leiste','Kantholz','Furnier'],
+     rows:[['Nummer 1','Schwarte'],['Nummer 2','Brett'],['Nummer 3','Bohle'],['Nummer 4','Leiste'],['Nummer 5','Kantholz']],
+     e:'Außen die Schwarten, dann Bretter und Bohlen, unten die Leisten und in der Mitte das Kantholz.'},
+    {type:'as', q:'Holz arbeitet! Wie heißt der Fachbegriff?', opts:['schwinden','quellen','verwerfen'],
+     rows:[['Holz gibt Feuchtigkeit ab und wird kleiner.','schwinden'],['Holz nimmt Feuchtigkeit auf und wird größer.','quellen'],['Ein Brett verbiegt sich beim Trocknen.','verwerfen']],
+     e:'Schwinden, quellen, verwerfen – so arbeitet Holz.'},
+    {type:'mc', q:'Welcher Holzwerkstoff ist das?', svg:svgOSB, o:['Leimholzplatte','OSB-Platte','Faserplatte (MDF)','Furnier'], a:1,
+     e:'Die großen, flachen Späne verraten sie: eine OSB-Platte.'},
+    {type:'mc', q:'Warum werden die Lagen beim Sperrholz kreuzweise zur Faser verleimt?', o:['Damit es schöner aussieht','Damit sich die Lagen gegenseitig absperren und das Holz kaum noch arbeitet','Damit es leichter brennt','Damit man weniger Leim braucht'], a:1,
+     e:'Die Lagen sperren sich gegenseitig – daher der Name Sperrholz.'},
+    {type:'as', q:'Welcher Holzwerkstoff passt zur Beschreibung?', opts:['OSB-Platte','Spanplatte','Faserplatte','Sperrholz','Leimholzplatte'],
+     rows:[['Große, flache Späne – ausgerichtet und verpresst','OSB-Platte'],['Holzspäne, bei hoher Temperatur gepresst','Spanplatte'],['Feiner Faserbrei aus Abfallholz','Faserplatte'],
+           ['Mindestens drei Furnierlagen kreuzweise verleimt','Sperrholz'],['Vollholzstäbe ohne Deckfurnier – z. B. Küchenarbeitsplatte','Leimholzplatte']],
+     e:'Du bist ein echter Holzwerkstoff-Profi!'},
+    {type:'as', q:'Hartholz oder Weichholz?', opts:['Hartholz','Weichholz'],
+     rows:[['Eiche','Hartholz'],['Fichte','Weichholz'],['Buche','Hartholz'],['Kiefer','Weichholz']], e:'Eiche und Buche sind hart, Fichte und Kiefer weich.'},
+    {type:'mc', q:'Warum sind Holzwerkstoffe nachhaltig?', o:['Sie werden aus Plastik hergestellt.','Man kann minderwertiges Holz und Holzreste verwerten.','Sie wachsen schneller als Bäume.','Sie halten ewig.'], a:1,
+     e:'Aus Resten und minderwertigem Holz entstehen nützliche Platten – so wird nichts verschwendet.'}
+  ],
+  fq:'Erkläre, was es bedeutet, wenn Holz „arbeitet“. Benutze dabei die Begriffe schwinden und quellen.',
+  outro:'Prima! Der Werkstoffblock gehört dir. Mit dem Wissen bekommst du mein bestes Holz!'
+}];
+const ST = {}; STATIONS.forEach(s => { ST[s.id] = s; });
+
+const ACORNS = [
+  'Holz arbeitet: Darum knarzt manchmal ein Holzfußboden oder ein Deckenbalken.',
+  'Nadelbäume haben Harzkanäle. Im Querschnitt sieht man sie als helle oder dunkle Punkte.',
+  'Bei Lärche und Nussbaum verfärbt sich das Kernholz deutlich dunkel.',
+  'Edle Hölzer sind knapp und teuer. Darum klebt man oft nur hauchdünne Holzblätter – Furniere – auf günstigeres Holz.',
+  'Wenn Tropenwälder unkontrolliert abgeholzt werden, geht wichtige Sauerstoffproduktion verloren.',
+  'Faserplatten gibt es hart (HDF), mitteldicht (MDF) und leicht (LDF).',
+  'In Spanplatten können sogar Hanf oder Reisstroh stecken!',
+  'Früher versorgte der Wald die Menschen mit Nahrung, Werkstoff, Baustoff und Brennholz.'
+];
+
+const NPCS = [
+  {id:'meyer', kind:'meyer', name:'Herr Meyer', x:8, y:22, dir:'down'},
+  {id:'forster', kind:'forster', name:'Förster Fritz', x:8, y:8, dir:'down', st:'wald'},
+  {id:'owl', kind:'owl', name:'Eule Olga', x:32, y:7, dir:'down', st:'baum'},
+  {id:'bird', kind:'bird', name:'Specht Paul', x:32, y:24, dir:'down', st:'stamm'},
+  {id:'sepp', kind:'sepp', name:'Säge-Sepp', x:16, y:15, dir:'down', st:'werkstoff'}
+];
+const npcAt = (x, y) => NPCS.find(n => n.x === x && n.y === y);
+
+const SIGNS = {
+  '11,22':'Werkstatt von Herrn Meyer. Zutritt nur mit Schutzbrille! 😎',
+  '11,15':'Wegweiser: Nach oben zur Waldlichtung (Förster Fritz). Nach rechts zum Sägewerk (Säge-Sepp). Nach unten zur Werkstatt.',
+  '26,17':'Wegweiser: Nach oben zur uralten Eiche (Eule Olga). Nach unten zum Jahresring-Stumpf (Specht Paul). Nach links zum Sägewerk.',
+  '10,8':'Infotafel: Der Wert eines Waldes ist viel mehr als der Materialwert seines Holzes!',
+  '34,8':'Infotafel: Wurzeln + Stamm + Krone = ein Baum.',
+  '34,24':'Infotafel: Jeder Jahresring steht für ein Jahr Wachstum. Zähl mal nach!',
+  '19,16':'Infotafel Nachhaltigkeit: Pflege und Erhaltung unserer Erde und Lebewesen. Wer einen Baum fällt, soll auch wieder einen pflanzen.'
+};
+
+/* ================= Map ================= */
+const MW = 42, MH = 34;
+const map = [];
+const acornPos = [];
+(function gen(){
+  const r = mulberry32(20261002);
+  for(let y=0;y<MH;y++){map[y]=[];for(let x=0;x<MW;x++){const v=r();let t='G';if(v<.17)t='T';else if(v<.29)t='N';else if(v<.33)t='F';else if(v<.345)t='R';map[y][x]=t;}}
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++) if(x<2||y<2||x>=MW-2||y>=MH-2) map[y][x] = r()<.5?'T':'N';
+  for(let y=0;y<MH;y++){const cx=22+Math.round(Math.sin(y*.35)*1.5);map[y][cx]='W';map[y][cx+1]='W';}
+  const clear=(cx,cy,rad)=>{for(let y=cy-rad;y<=cy+rad;y++)for(let x=cx-rad;x<=cx+rad;x++){if(x<2||y<2||x>=MW-2||y>=MH-2)continue;if(Math.hypot(x-cx,y-cy)<=rad+.3&&map[y][x]!=='W')map[y][x]=r()<.12?'F':'G';}};
+  clear(8,25,5); clear(8,8,4); clear(32,8,4); clear(32,25,4); clear(16,15,4);
+  for(let x=5;x<=10;x++){map[19][x]='^';map[20][x]='^';map[21][x]='H';}
+  map[21][8]='D'; map[22][4]='L'; map[23][4]='L';
+  for(let x=13;x<=19;x++){map[12][x]='^';map[13][x]='^';map[14][x]='H';}
+  map[14][15]='D'; map[14][18]='Z'; map[14][20]='O'; map[15][13]='L'; map[15][14]='L';
+  map[5][31]='E'; map[5][32]='E'; map[6][31]='E'; map[6][32]='E';
+  map[24][31]='U';
+  const setP=(x,y)=>{const t=map[y][x];if(t==='W'||t==='B')map[y][x]='B';else if('GFTNR.'.includes(t))map[y][x]='.';};
+  const line=(a,b)=>{let x=a[0],y=a[1];setP(x,y);while(x!==b[0]||y!==b[1]){if(x!==b[0])x+=Math.sign(b[0]-x);else y+=Math.sign(b[1]-y);setP(x,y);}};
+  const route=p=>{for(let i=0;i<p.length-1;i++)line(p[i],p[i+1]);};
+  route([[8,23],[12,23],[12,10],[8,10],[8,9]]);
+  route([[12,16],[16,16]]);
+  route([[16,16],[16,18],[27,18],[27,9],[32,9],[32,8]]);
+  route([[27,18],[27,25],[32,25]]);
+  for(const k in SIGNS){const [x,y]=k.split(',').map(Number);map[y][x]='S';}
+  for(const n of NPCS) if(!'GF.'.includes(map[n.y][n.x])) map[n.y][n.x]='G';
+  const cands=[];
+  for(let y=2;y<MH-2;y++)for(let x=2;x<MW-2;x++){
+    const t=map[y][x];
+    if((t==='G'||t==='F')&&!npcAt(x,y)&&!(x===8&&y===23)&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>map[y+dy][x+dx]==='.')) cands.push([x,y]);
+  }
+  const sh=shuffle(cands,r);
+  for(const minD of [7,5,3,0]){
+    for(const c of sh){
+      if(acornPos.length>=ACORNS.length)break;
+      if(acornPos.some(a=>a[0]===c[0]&&a[1]===c[1]))continue;
+      if(acornPos.every(a=>Math.hypot(a[0]-c[0],a[1]-c[1])>=minD)) acornPos.push(c);
+    }
+  }
+})();
+const walk = (x, y) => x>=0 && y>=0 && x<MW && y<MH && 'GF.B'.includes(map[y][x]) && !npcAt(x, y);
+
+/* ================= Textures ================= */
+function tex(w,h,fn,seed){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');fn(g,mulberry32(seed||1),w,h);return c;}
+function noise(g,r,pal,w,h,x0,y0){w=w||16;h=h||16;x0=x0||0;y0=y0||0;for(let y=0;y<h;y++)for(let x=0;x<w;x++){g.fillStyle=pal[Math.floor(r()*pal.length)];g.fillRect(x0+x,y0+y,1,1);}}
+const PAL = {
+  grass:['#5fae3d','#5fae3d','#58a536','#66b844','#4f9a31','#5fae3d'],
+  dirt:['#8b6a43','#9b774c','#7d5f3b','#a5825a','#9b774c'],
+  oak:['#2e7d32','#357a38','#276b2b','#3f8f3f','#2e7d32','#1f5e22'],
+  spruce:['#1f5133','#24603b','#2b6b45','#184429','#24603b'],
+  water:['#2f63c9','#3a70d6','#3466cf','#2f63c9'],
+  stone:['#8a8a8a','#7a7a7a','#9a9a9a','#6e6e6e','#858585']
+};
+function flower(g,x,y,c){g.fillStyle=c;g.fillRect(x-1,y,1,1);g.fillRect(x+1,y,1,1);g.fillRect(x,y-1,1,1);g.fillRect(x,y+1,1,1);g.fillStyle='#ffd54f';g.fillRect(x,y,1,1);}
+function edge(g,w,h){g.fillStyle='rgba(0,0,0,.28)';g.fillRect(0,h-1,w,1);g.fillRect(w-1,0,1,h);g.fillStyle='rgba(255,255,255,.14)';g.fillRect(0,0,w,1);g.fillRect(0,0,1,h);}
+function planks(g,r,cols,line,vertical){
+  for(let i=0;i<4;i++){const c=cols[i%cols.length];g.fillStyle=c;if(vertical)g.fillRect(i*4,0,4,16);else g.fillRect(0,i*4,16,4);}
+  for(let i=0;i<40;i++){g.fillStyle='rgba(0,0,0,.08)';g.fillRect(Math.floor(r()*16),Math.floor(r()*16),1,1);}
+  g.fillStyle=line;
+  for(let i=0;i<4;i++){if(vertical){g.fillRect(i*4+3,0,1,16);g.fillRect(i*4,(i*5+3)%16,3,1);}else{g.fillRect(0,i*4+3,16,1);g.fillRect((i*7+3)%16,i*4,1,3);}}
+}
+function disc(g,cx,cy,R,fn){for(let y=0;y<16;y++)for(let x=0;x<16;x++){const d=Math.hypot(x+.5-cx,y+.5-cy);if(d<R){const c=fn(d,x,y);if(c){g.fillStyle=c;g.fillRect(x,y,1,1);}}}}
+const T = {};
+T.G = tex(16,16,(g,r)=>noise(g,r,PAL.grass),11);
+T.F = tex(16,16,(g,r)=>{noise(g,r,PAL.grass);flower(g,3,4,'#e53935');flower(g,11,9,'#ffffff');flower(g,5,12,'#7e57c2');},12);
+T['.'] = tex(16,16,(g,r)=>{noise(g,r,PAL.dirt);for(let i=0;i<4;i++){g.fillStyle='#b3a89a';g.fillRect(Math.floor(r()*15),Math.floor(r()*15),2,1);}},13);
+T.T = tex(16,16,(g,r)=>{noise(g,r,PAL.oak);for(let i=0;i<10;i++){g.fillStyle='#174a1a';g.fillRect(Math.floor(r()*16),Math.floor(r()*16),1,1);}edge(g,16,16);},14);
+T.N = tex(16,16,(g,r)=>{noise(g,r,PAL.spruce);g.fillStyle='rgba(255,255,255,.08)';for(let i=0;i<16;i+=4)g.fillRect(0,i,16,1);edge(g,16,16);},15);
+const water=(seed)=>tex(16,16,(g,r)=>{noise(g,r,PAL.water);for(let i=0;i<4;i++){g.fillStyle='#7fb0ff';g.fillRect(Math.floor(r()*12),Math.floor(r()*16),3+Math.floor(r()*2),1);}},seed);
+T.W0 = water(16); T.W1 = water(17);
+T.R = tex(16,16,(g,r)=>{noise(g,r,PAL.stone);g.fillStyle='#555';for(let i=0;i<6;i++)g.fillRect(Math.floor(r()*14),Math.floor(r()*14),2,1);edge(g,16,16);},18);
+T.H = tex(16,16,(g,r)=>planks(g,r,['#b5834e','#a8794a','#b98a55','#a37346'],'#6e4a28',false),19);
+T['^'] = tex(16,16,(g,r)=>{planks(g,r,['#6b4423','#5e3b1f','#6f4826','#5a381c'],'#3b2412',false);g.fillStyle='rgba(255,255,255,.12)';g.fillRect(0,0,16,1);},20);
+T.D = tex(16,16,(g,r)=>{planks(g,r,['#b5834e','#a8794a'],'#6e4a28',false);g.fillStyle='#5a381c';g.fillRect(3,1,10,15);g.fillStyle='#7a4f2a';g.fillRect(4,2,8,14);g.fillStyle='#3b2412';g.fillRect(4,8,8,1);g.fillStyle='#f2c230';g.fillRect(10,9,1,2);},21);
+T.S = tex(16,16,(g,r)=>{noise(g,r,PAL.grass);g.fillStyle='#6e4a28';g.fillRect(7,9,2,7);g.fillStyle='#3b2412';g.fillRect(1,2,14,8);g.fillStyle='#c89a5a';g.fillRect(2,3,12,6);g.fillStyle='#5a3a1c';g.fillRect(3,4,9,1);g.fillRect(3,6,7,1);},22);
+T.B = tex(16,16,(g,r)=>{planks(g,r,['#b08050','#a3764a','#b6875a','#a87a4c'],'#6e4a28',true);g.fillStyle='#4a2f17';g.fillRect(0,0,16,2);g.fillRect(0,14,16,2);},23);
+T.L = tex(16,16,(g,r)=>{noise(g,r,PAL.grass);for(const [cx,cy] of [[4.5,11.5],[11.5,11.5],[8,5.5]])disc(g,cx,cy,4,d=>d>3.2?'#5b3a1e':(Math.floor(d)%2?'#c8a06a':'#e3c08a'));},24);
+T.U = tex(16,16,(g,r)=>{noise(g,r,PAL.grass);disc(g,8,8,7.6,d=>d>6.4?'#5b3a1e':d<1?'#8a5a2b':(Math.floor(d/1.4)%2?'#c99a5b':'#e3c08a'));},25);
+T.O = tex(16,16,(g,r)=>{noise(g,r,PAL.grass);disc(g,8,8,7.6,(d,x,y)=>{if(d>6.5)return'#5b3a1e';if(d<1.6)return'#3b2412';const dx=x+.5-8,dy=y+.5-8;if(Math.abs(dx)<.8||Math.abs(dy)<.8||Math.abs(Math.abs(dx)-Math.abs(dy))<.8)return'#8a5a2b';return null;});},26);
+T.Z = tex(16,16,(g,r)=>{planks(g,r,['#b5834e','#a8794a'],'#6e4a28',false);disc(g,8,8,7,(d,x,y)=>{if(d<1.5)return'#444';const a=Math.atan2(y+.5-8,x+.5-8);if(d>5.6)return(Math.floor((a+Math.PI)/(Math.PI/8))%2)?'#7d8489':null;return d>4.6?'#9aa1a6':'#c3c8cc';});},27);
+T.E = tex(32,32,(g,r)=>{noise(g,r,PAL.grass,32,32);for(let y=0;y<32;y++)for(let x=0;x<32;x++){const dx=x+.5-16,dy=y+.5-16,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx),R=13.8+1.6*Math.sin(a*7);if(d<R){g.fillStyle=d>R-1.4?'#1b4d1e':PAL.oak[Math.floor(r()*PAL.oak.length)];if(d<R-1.4&&dx<-2&&dy<-2&&r()<.25)g.fillStyle='#4caf50';g.fillRect(x,y,1,1);}}for(let i=0;i<7;i++){const x=8+Math.floor(r()*16),y=8+Math.floor(r()*16);g.fillStyle='#8a5a2b';g.fillRect(x,y,1,2);g.fillStyle='#4a2f17';g.fillRect(x,y,1,1);}},28);
+const ICON = {
+  wald: tex(16,16,(g,r)=>{noise(g,r,PAL.dirt);noise(g,r,PAL.grass,16,5);for(let x=0;x<16;x+=2){if(r()<.6){g.fillStyle='#4f9a31';g.fillRect(x,5,1,1+Math.floor(r()*2));}}edge(g,16,16);},31),
+  baum: tex(16,16,(g,r)=>{noise(g,r,PAL.oak);for(let i=0;i<4;i++){g.fillStyle='#c62828';g.fillRect(Math.floor(r()*14)+1,Math.floor(r()*14)+1,1,1);}edge(g,16,16);},32),
+  stamm: tex(16,16,(g,r)=>{g.fillStyle='#5b3a1e';g.fillRect(0,0,16,16);disc(g,8,8,7.2,d=>d<1?'#8a5a2b':(Math.floor(d/1.4)%2?'#c99a5b':'#e3c08a'));edge(g,16,16);},33),
+  werkstoff: tex(16,16,(g,r)=>{planks(g,r,['#d9b77e','#c9a463','#dcbc86','#c39c5b'],'#8a6232',false);edge(g,16,16);},34)
+};
+
+/* ================= Audio ================= */
+let actx=null, musicGain=null, sfxGain=null, noiseBuf=null, seqTimer=null, nextT=0, step=0;
+const mtof = m => 440*Math.pow(2,(m-69)/12);
+const MEL = [76,79,84,79,76,74,72,null, 72,76,81,79,76,74,76,null, 77,76,74,72,69,72,74,null, 74,71,67,71,74,77,76,74,
+             72,null,76,79,84,83,81,79, 76,null,72,76,81,79,76,72, 77,81,84,81,77,76,74,72, 71,74,79,77,74,71,72,null];
+const BASS = [48,45,41,43];
+function initAudio(){
+  if(actx) { if(actx.state==='suspended') actx.resume(); return; }
+  try{
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+    const master = actx.createGain(); master.gain.value = .9; master.connect(actx.destination);
+    musicGain = actx.createGain(); musicGain.gain.value = state.music ? .55 : 0; musicGain.connect(master);
+    sfxGain = actx.createGain(); sfxGain.gain.value = .7; sfxGain.connect(master);
+    noiseBuf = actx.createBuffer(1, actx.sampleRate*.1, actx.sampleRate);
+    const d = noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    try{ const b=actx.createBuffer(1,1,22050), src=actx.createBufferSource(); src.buffer=b; src.connect(actx.destination); src.start(0); }catch(e){}
+    nextT = actx.currentTime + .1; step = 0;
+    seqTimer = setInterval(schedule, 30);
+  }catch(e){ actx = null; }
+}
+function tone(t,f,dur,type,vol,dest){
+  const o=actx.createOscillator(), g=actx.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol,t+.012); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(dest); o.start(t); o.stop(t+dur+.05);
+  return o;
+}
+function hat(t){
+  const s=actx.createBufferSource(); s.buffer=noiseBuf;
+  const f=actx.createBiquadFilter(); f.type='highpass'; f.frequency.value=6500;
+  const g=actx.createGain(); g.gain.setValueAtTime(.05,t); g.gain.exponentialRampToValueAtTime(0.0001,t+.05);
+  s.connect(f); f.connect(g); g.connect(musicGain); s.start(t); s.stop(t+.06);
+}
+function schedule(){
+  if(!actx) return;
+  const sd = 60/112/2;
+  while(nextT < actx.currentTime + .15){
+    const s8 = step % 8, bar = Math.floor(step/8);
+    const n = MEL[step];
+    if(n) tone(nextT, mtof(n), sd*.9, 'square', .045, musicGain);
+    if(s8 % 2 === 0){ const root = BASS[bar % 4]; tone(nextT, mtof(s8 % 4 === 0 ? root : root+12), sd*1.7, 'triangle', .13, musicGain); }
+    else hat(nextT);
+    nextT += sd; step = (step+1) % MEL.length;
+  }
+}
+function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+document.addEventListener('pointerdown', () => { if(actx && actx.state !== 'running' && !document.hidden) actx.resume(); }, {passive:true});
+const sfx = {
+  seq(notes, type, len, vol){ if(!actx) return; let t=actx.currentTime+.01; for(const n of notes){ tone(t, mtof(n), len*1.4, type, vol, sfxGain); t+=len; } },
+  ok(){ this.seq([72,76,79,84],'square',.07,.08); buzz(25); },
+  bad(){ buzz([40,50,40]); if(!actx) return; const t=actx.currentTime+.01, o=tone(t,220,.3,'sawtooth',.06,sfxGain); o.frequency.exponentialRampToValueAtTime(110,t+.28); },
+  pick(){ this.seq([84,91],'square',.07,.07); buzz(20); },
+  fanfare(){ this.seq([72,76,79,84,79,84,88],'square',.1,.08); },
+  blip(){ if(actx) tone(actx.currentTime+.005, 660, .05, 'triangle', .05, sfxGain); }
+};
+function setMusic(on){
+  state.music = on; save();
+  $('#mus').classList.toggle('muted', !on);
+  if(musicGain) musicGain.gain.setTargetAtTime(on ? .55 : 0, actx.currentTime, .05);
+}
+document.addEventListener('visibilitychange', () => { if(!actx) return; if(document.hidden) actx.suspend(); else actx.resume(); });
+
+/* ================= Sprites ================= */
+const AV = {
+  skin:{label:'Hautfarbe', type:'col', opts:['#ffe0c4','#f1c27d','#e0ac69','#c68642','#a0673d','#8d5524','#5c3a1e']},
+  hair:{label:'Haarfarbe', type:'col', opts:['#1c1c1c','#3a2516','#5b3a1e','#8a5a2b','#d8b04c','#f0dc8c','#b5462a','#a0a0a0','#3b6fd8','#d64fa0','#43a047']},
+  style:{label:'Frisur', type:'txt', opts:[['kurz','kurz'],['lang','lang'],['zopf','Zopf'],['locken','Locken'],['raspel','raspelkurz']]},
+  head:{label:'Kopfbedeckung', type:'txt', opts:[['none','keine'],['cap','Cap'],['beanie','Mütze'],['hat','Hut'],['helmet','Bauhelm'],['band','Stirnband'],['phones','Kopfhörer']]},
+  headCol:{label:'Farbe Kopfbedeckung', type:'col', opts:['#e53935','#f39c12','#f2c230','#43a047','#1e88e5','#8e24aa','#ec407a','#ffffff','#2b2b2b']},
+  top:{label:'Kleidung', type:'txt', opts:[['tshirt','T-Shirt'],['hoodie','Hoodie'],['plaid','Karohemd'],['track','Trainingsjacke'],['overall','Latzhose'],['dress','Kleid']]},
+  shirt:{label:'Farbe Oberteil', type:'col', opts:['#3b7dd8','#e53935','#43a047','#f2c230','#8e24aa','#ec407a','#ff8f00','#00897b','#ffffff','#2b2b2b']},
+  pants:{label:'Farbe Hose', type:'col', opts:['#2c3e66','#2b2b2b','#5d4a2e','#6d6d6d','#3f6b3a','#8e2a2a','#e0d4b8']}
+};
+const AV_DEFAULT = {skin:'#f1c27d',hair:'#5b3a1e',style:'kurz',head:'cap',headCol:'#e53935',top:'tshirt',shirt:'#3b7dd8',pants:'#2c3e66'};
+function shade(hex, f){ const n=parseInt(hex.slice(1),16); const c=k=>Math.max(0,Math.min(255,Math.round(((n>>k)&255)*f))); return '#'+[c(16),c(8),c(0)].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+function playerLook(av){
+  av = Object.assign({}, AV_DEFAULT, av||{});
+  const light = ['#ffffff','#f2c230','#e0d4b8'].includes(av.shirt);
+  return {skin:av.skin, hair:av.hair, hs:av.style, shirt:av.shirt, shirtD:shade(av.shirt, light ? .78 : .68), top:av.top,
+          pants:av.pants, head:av.head==='none' ? null : av.head, headCol:av.headCol, headDark:shade(av.headCol,.7), eyeWhite:true};
+}
+const LOOK = {
+  player: playerLook(state.av),
+  meyer:{skin:'#efc3a0',shade:'#d99a78',hair:'#3a2516',hairHi:'#5a3a24',beard:'#4a2f1c',frame:'#5a3a22',red:'#c8102e',redD:'#8e0b20',white:'#f4f4f4',band:'#1a1a1a',pants:'#2b2b2b'},
+  forster:{skin:'#eabf94',hair:'#7a5230',shirt:'#4e7d3a',pants:'#5d4a2e',hat:'#3e5f2a',beard:'#7a5230'},
+  sepp:{skin:'#e9b48a',hair:'#d9d9d9',shirt:'#c0392b',plaid:'#7b1f16',pants:'#2c3e66',helmet:'#f39c12',beard:'#d9d9d9'}
+};
+function drawHuman(c,X,Y,s,o,dir,frame){
+  const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(X+x*s,Y+y*s,w*s,h*s);};
+  const lh = frame===1 ? 2 : 3, rh = frame===2 ? 2 : 3;
+  const top = o.top, sh = o.shirt, sd = o.shirtD || o.shirt;
+  // Beine und Schuhe
+  p(5,13,2,lh,o.pants); p(9,13,2,rh,o.pants); p(5,12+lh,2,1,'#2b2b2b'); p(9,12+rh,2,1,'#2b2b2b');
+  // Oberkörper
+  p(4,8,8,5,sh);
+  if(o.plaid){p(4,10,8,1,o.plaid);p(7,8,1,5,o.plaid);}
+  if(o.belt){p(4,12,8,1,o.belt);p(10,11,1,2,'#9aa1a6');}
+  // Arme
+  if(top==='tshirt' || top==='dress' || top==='overall'){ p(3,8,1,2,sh); p(12,8,1,2,sh); p(3,10,1,3,o.skin); p(12,10,1,3,o.skin); }
+  else if(top==='track'){ p(3,8,1,4,'#f4f4f4'); p(12,8,1,4,'#f4f4f4'); p(3,9,1,1,sh); p(12,9,1,1,sh); p(3,11,1,1,sh); p(12,11,1,1,sh); p(3,12,1,1,o.skin); p(12,12,1,1,o.skin); }
+  else { p(3,8,1,4,sh); p(12,8,1,4,sh); p(3,12,1,1,o.skin); p(12,12,1,1,o.skin); }
+  // Kleidungsdetails
+  if(top==='hoodie'){
+    if(dir==='up') p(4,7,8,2,sd);
+    else { p(4,8,8,1,sd); p(5,11,6,1,sd); if(dir==='down'){ p(6,9,1,2,'#f4f4f4'); p(9,9,1,2,'#f4f4f4'); } }
+  } else if(top==='plaid'){
+    p(4,10,8,1,sd); p(4,12,8,1,sd); p(6,8,1,5,sd); p(9,8,1,5,sd); p(3,10,1,1,sd); p(12,10,1,1,sd);
+    if(dir==='down') p(7,8,2,1,'#f4f4f4');
+  } else if(top==='track'){
+    p(4,11,8,1,'#1a1a1a'); if(dir==='down') p(8,8,1,5,sd);
+  } else if(top==='overall'){
+    p(5,9,6,4,o.pants); p(4,12,8,1,o.pants);
+    if(dir==='down'||dir==='up'){ p(5,8,1,1,o.pants); p(10,8,1,1,o.pants); }
+    if(dir==='down'){ p(7,10,2,1,shade(o.pants,.7)); p(5,9,1,1,'#f2c230'); p(10,9,1,1,'#f2c230'); }
+  } else if(top==='dress'){
+    p(4,11,8,1,sd); p(3,12,10,1,sh); p(2,13,12,1,sh); p(2,13,12,1,sd); p(3,12,10,1,sh); if(dir!=='up') p(7,9,2,1,'#f4f4f4');
+  }
+  // Kopf
+  p(4,1,8,7,o.skin);
+  const eye='#222', hs = o.hs || 'kurz';
+  if(dir==='up'){
+    if(hs==='raspel') p(4,1,8,3,o.hair); else p(4,1,8,6,o.hair);
+  } else if(dir==='down'){
+    if(hs==='raspel') p(4,1,8,1,o.hair);
+    else { p(4,1,8,2,o.hair); p(4,3,1,2,o.hair); p(11,3,1,2,o.hair); }
+    if(o.beard){p(4,6,8,2,o.beard);}
+    if(o.eyeWhite){ p(5,4,1,1,'#fff'); p(10,4,1,1,'#fff'); }
+    p(6,4,1,1,eye); p(9,4,1,1,eye); p(7,6,2,1,o.beard?'#8a5a4a':'#a0524a');
+    if(o.glasses){p(5,4,6,1,'#111');p(5,3,2,2,'#111');p(9,3,2,2,'#111');p(6,3,1,1,'#5ad1ff');}
+  } else {
+    const L = dir==='left';
+    if(hs==='raspel'){ p(4,1,8,1,o.hair); p(L?10:4,2,2,2,o.hair); }
+    else { p(4,1,8,2,o.hair); p(L?8:4,3,4,3,o.hair); }
+    if(o.beard) p(L?4:8,6,4,2,o.beard);
+    if(o.eyeWhite) p(L?6:9,4,1,1,'#fff');
+    p(L?5:10,4,1,1,eye); p(L?4:11,6,1,1,'#a0524a');
+    if(o.glasses){p(L?4:9,4,3,1,'#111');p(L?4:10,3,2,2,'#111');}
+  }
+  // Frisur-Extras
+  const hd2 = shade(o.hair || '#000000', .75);
+  if(hs==='lang' || o.long){
+    if(dir==='up') p(4,6,8,3,o.hair);
+    else if(dir==='down'){ p(3,2,1,7,o.hair); p(12,2,1,7,o.hair); }
+    else p(dir==='left'?11:4,3,1,6,o.hair);
+  } else if(hs==='zopf'){
+    if(dir==='up'){ p(7,6,2,4,o.hair); p(7,6,2,1,o.headCol||'#e53935'); }
+    else if(dir==='down') p(12,4,1,3,o.hair);
+    else { const L = dir==='left'; p(L?12:3,3,1,4,o.hair); p(L?12:3,3,1,1,o.headCol||'#e53935'); }
+  } else if(hs==='locken'){
+    if(dir==='up'){ p(3,0,10,8,o.hair); p(5,2,1,1,hd2); p(9,4,1,1,hd2); p(6,6,1,1,hd2); }
+    else if(dir==='down'){ p(3,0,10,3,o.hair); p(3,3,1,4,o.hair); p(12,3,1,4,o.hair); p(5,1,1,1,hd2); p(9,0,1,1,hd2); p(7,2,1,1,hd2); }
+    else { const L = dir==='left'; p(3,0,10,3,o.hair); p(L?8:3,3,5,4,o.hair); p(L?10:5,4,1,1,hd2); p(6,1,1,1,hd2); }
+  }
+  // Kopfbedeckung (Spieler)
+  if(o.head){
+    const hc=o.headCol, hd=o.headDark;
+    if(o.head==='cap'){ p(4,0,8,2,hc); if(dir==='down') p(4,2,8,1,hd); else if(dir==='left') p(1,2,4,1,hd); else if(dir==='right') p(11,2,4,1,hd); }
+    else if(o.head==='beanie'){ p(4,-1,8,3,hc); p(3,1,10,1,hd); p(7,-2,2,1,hd); }
+    else if(o.head==='hat'){ p(2,1,12,1,hd); p(4,-1,8,2,hc); p(4,0,8,1,hd); }
+    else if(o.head==='helmet'){ p(4,-1,8,3,hc); p(3,1,10,1,hd); p(7,-1,2,1,'#ffffff55'); }
+    else if(o.head==='band'){ p(4,2,8,1,hc); if(dir==='left') p(11,3,1,2,hc); if(dir==='right') p(4,3,1,2,hc); }
+    else if(o.head==='phones'){
+      p(4,0,8,1,'#333333');
+      if(dir==='down'||dir==='up'){ p(3,1,1,1,'#333333'); p(12,1,1,1,'#333333'); p(2,3,2,3,hc); p(12,3,2,3,hc); }
+      else { p(7,2,3,3,hc); p(8,3,1,1,hd); }
+    }
+  }
+  // Kopfbedeckungen der Waldbewohner
+  if(o.hat){p(2,0,12,2,o.hat);p(5,-1,6,1,o.hat);}
+  if(o.helmet){p(4,-1,8,3,o.helmet);p(3,1,10,1,o.helmet);p(7,-1,2,1,'#fff3');}
+  if(o.cap){
+    p(4,0,8,2,o.cap);
+    if(dir==='down') p(4,2,8,1,o.capV); else if(dir==='left') p(1,2,4,1,o.capV); else if(dir==='right') p(11,2,4,1,o.capV);
+  }
+}
+function drawOwl(c,X,Y,s,now){
+  const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(X+x*s,Y+y*s,w*s,h*s);};
+  p(1,14,14,2,'#5b3a1e');
+  p(4,4,8,10,'#8d6e4a'); p(6,8,4,5,'#e0caa0'); p(6,9,1,1,'#8d6e4a'); p(8,11,1,1,'#8d6e4a');
+  p(4,2,2,2,'#6d5236'); p(10,2,2,2,'#6d5236');
+  p(3,7,1,6,'#6d5236'); p(12,7,1,6,'#6d5236');
+  const blink = (Math.floor(now/180)%22)===0;
+  if(blink){p(5,6,3,1,'#6d5236');p(8,6,3,1,'#6d5236');}
+  else{p(5,5,3,3,'#fff');p(8,5,3,3,'#fff');p(6,6,1,1,'#111');p(9,6,1,1,'#111');p(4,5,1,1,'#111');p(11,5,1,1,'#111');}
+  p(7,8,2,1,'#f2a33a'); p(5,13,2,1,'#f2a33a'); p(9,13,2,1,'#f2a33a');
+}
+function drawBird(c,X,Y,s,now){
+  const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(X+x*s,Y+y*s,w*s,h*s);};
+  const pk = (Math.floor(now/140)%14)<3 ? 1 : 0;
+  p(4,12,2,3,'#2b2b2b'); p(5,6,6,7,'#2b2b2b'); p(6,8,4,4,'#f5f5f5'); p(10,8,1,1,'#fff'); p(10,10,1,1,'#fff');
+  p(5+pk,2,6,5,'#2b2b2b'); p(6+pk,1,4,2,'#e53935'); p(5+pk,5,3,1,'#fff'); p(8+pk,3,2,2,'#fff'); p(9+pk,3,1,1,'#111');
+  p(11+pk,4,3,1,'#9e9e9e'); p(6,13,1,2,'#7d7d7d'); p(9,13,1,2,'#7d7d7d');
+}
+function drawAcorn(c,X,Y,s){
+  const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(X+x*s,Y+y*s,w*s,h*s);};
+  p(7,4,1,2,'#5b3a1e'); p(5,6,6,2,'#6d4c2f'); p(5,8,6,4,'#c58a3a'); p(6,12,4,1,'#c58a3a'); p(7,13,2,1,'#a8722b'); p(6,8,1,2,'#e3b06a');
+}
+function drawMeyer(c,X,Y,s,dir,frame){
+  const o = LOOK.meyer;
+  const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(X+x*s,Y+y*s,w*s,h*s);};
+  const lh = frame===1 ? 2 : 3, rh = frame===2 ? 2 : 3;
+  p(5,13,2,lh,o.pants); p(9,13,2,rh,o.pants); p(5,12+lh,2,1,'#111'); p(9,12+rh,2,1,'#111');
+  // Trainingsjacke: rot, schwarzes Band, weiß-rot gestreifte Ärmel
+  p(4,8,8,5,o.red); p(4,11,8,1,o.band);
+  p(3,8,1,4,o.white); p(12,8,1,4,o.white); p(3,9,1,1,o.red); p(12,9,1,1,o.red); p(3,11,1,1,o.red); p(12,11,1,1,o.red);
+  p(3,12,1,1,o.skin); p(12,12,1,1,o.skin);
+  if(dir==='down'){ p(8,9,1,2,o.redD); p(6,9,1,1,o.white); p(7,8,2,1,'#3b5fb0'); }
+  // Kopf
+  p(4,1,8,7,o.skin);
+  if(dir==='up'){
+    p(4,0,8,6,o.hair); p(5,-1,6,1,o.hair); p(6,0,3,1,o.hairHi); p(4,6,1,2,o.beard); p(11,6,1,2,o.beard);
+    return;
+  }
+  if(dir==='down'){
+    p(4,0,8,2,o.hair); p(5,-1,6,1,o.hair); p(6,-1,3,1,o.hairHi); p(4,2,1,2,o.hair); p(11,2,1,2,o.hair);
+    // runde Brille
+    p(5,3,3,1,o.frame); p(5,5,3,1,o.frame); p(5,4,1,1,o.frame); p(7,4,1,1,o.frame);
+    p(8,3,3,1,o.frame); p(8,5,3,1,o.frame); p(8,4,1,1,o.frame); p(10,4,1,1,o.frame);
+    p(6,4,1,1,'#2b1a10'); p(9,4,1,1,'#2b1a10');
+    // Bart und Lächeln
+    p(4,5,1,3,o.beard); p(11,5,1,3,o.beard); p(6,6,4,1,o.beard);
+    p(5,7,2,1,o.beard); p(9,7,2,1,o.beard); p(7,7,2,1,'#ffffff'); p(6,8,4,1,o.beard);
+  } else {
+    const L = dir==='left';
+    p(4,0,8,2,o.hair); p(5,-1,6,1,o.hair); p(L?9:4,2,3,3,o.hair);
+    p(L?4:9,3,3,1,o.frame); p(L?4:9,5,3,1,o.frame); p(L?4:11,4,1,1,o.frame); p(L?6:9,4,1,1,o.frame); p(L?7:8,4,2,1,o.frame);
+    p(L?5:10,4,1,1,'#2b1a10');
+    p(L?4:8,6,4,2,o.beard); p(L?4:11,7,1,1,'#ffffff'); p(L?5:8,8,3,1,o.beard); p(L?8:7,5,1,3,o.beard);
+  }
+}
+function drawMeyerPortrait(c){
+  const o = LOOK.meyer, s = 3;
+  const p=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x*s,y*s,w*s,h*s);};
+  // Jacke
+  p(1,12,14,4,o.red); p(0,13,2,3,o.white); p(14,13,2,3,o.white); p(0,14,2,1,o.red); p(14,14,2,1,o.red);
+  p(2,15,12,1,o.band); p(7,12,2,1,'#3b5fb0'); p(8,13,1,2,o.redD); p(5,13,1,1,o.white);
+  p(6,10,4,2,o.skin);
+  // Kopf
+  p(3,3,10,8,o.skin); p(2,5,1,2,o.skin); p(13,5,1,2,o.skin);
+  p(3,1,10,2,o.hair); p(4,0,8,1,o.hair); p(6,0,3,1,o.hairHi); p(5,1,4,1,o.hairHi); p(3,3,1,3,o.hair); p(12,3,1,3,o.hair);
+  // Brille
+  p(5,4,6,1,o.frame);
+  p(4,5,4,1,o.frame); p(4,7,4,1,o.frame); p(4,6,1,1,o.frame); p(7,6,1,1,o.frame);
+  p(8,5,4,1,o.frame); p(8,7,4,1,o.frame); p(8,6,1,1,o.frame); p(11,6,1,1,o.frame);
+  p(3,6,1,1,o.frame); p(12,6,1,1,o.frame);
+  p(6,6,1,1,'#2b1a10'); p(9,6,1,1,'#2b1a10');
+  p(7,8,2,1,o.shade); p(4,8,1,1,'#e8a090'); p(11,8,1,1,'#e8a090');
+  // Bart und Lächeln
+  p(3,7,1,4,o.beard); p(12,7,1,4,o.beard); p(5,9,6,1,o.beard);
+  p(4,10,2,1,o.beard); p(10,10,2,1,o.beard); p(6,10,4,1,'#ffffff'); p(5,11,6,1,o.beard);
+}
+function drawKind(c,kind,X,Y,s,dir,frame,now){
+  if(kind==='meyer') drawMeyer(c,X,Y,s,dir,frame);
+  else if(kind==='owl') drawOwl(c,X,Y,s,now);
+  else if(kind==='bird') drawBird(c,X,Y,s,now);
+  else drawHuman(c,X,Y,s,LOOK[kind],dir,frame);
+}
+
+/* ================= Canvas ================= */
+const cv = $('#cv'), ctx = cv.getContext('2d');
+let cssW=0, cssH=0, dpr=1, S=3, TS=48, camX=0, camY=0;
+function resize(){
+  const r = cv.getBoundingClientRect();
+  cssW = r.width; cssH = r.height; dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(cssW*dpr); cv.height = Math.round(cssH*dpr);
+  S = Math.max(2, Math.min(4, Math.round(Math.min(cssW, cssH)/(16*9))));
+  TS = 16*S;
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 250));
+if(window.visualViewport) visualViewport.addEventListener('resize', resize);
+
+const DIRS = {up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+const pl = {x:state.x, y:state.y, fx:state.x, fy:state.y, t:1, moving:false, dir:state.dir, step:0};
+if(!walk(pl.x,pl.y)){pl.x=pl.fx=8;pl.y=pl.fy=23;}
+
+function draw(now){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#163a17'; ctx.fillRect(0,0,cssW,cssH);
+  const rx = pl.fx + (pl.x-pl.fx)*pl.t, ry = pl.fy + (pl.y-pl.fy)*pl.t;
+  const mw = MW*TS, mh = MH*TS;
+  camX = rx*TS + TS/2 - cssW/2; camY = ry*TS + TS/2 - cssH/2;
+  camX = mw <= cssW ? (mw-cssW)/2 : Math.max(0, Math.min(mw-cssW, camX));
+  camY = mh <= cssH ? (mh-cssH)/2 : Math.max(0, Math.min(mh-cssH, camY));
+  camX = Math.round(camX); camY = Math.round(camY);
+  const x0=Math.max(0,Math.floor(camX/TS)), x1=Math.min(MW-1,Math.floor((camX+cssW)/TS));
+  const y0=Math.max(0,Math.floor(camY/TS)), y1=Math.min(MH-1,Math.floor((camY+cssH)/TS));
+  const wf = Math.floor(now/650)%2;
+  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
+    const t = map[y][x], dx = x*TS-camX, dy = y*TS-camY;
+    if(t==='E'){ ctx.drawImage(T.E,(x-31)*16,(y-5)*16,16,16,dx,dy,TS,TS); continue; }
+    if(t==='W'){ ctx.drawImage(wf?T.W1:T.W0,dx,dy,TS,TS); continue; }
+    ctx.drawImage(T[t]||T.G,dx,dy,TS,TS);
+  }
+  acornPos.forEach((a,i)=>{
+    if(state.acorns.includes(i)) return;
+    const bob = Math.round(Math.sin(now/300+i)*1)*S;
+    drawAcorn(ctx, a[0]*TS-camX, a[1]*TS-camY+bob, S);
+  });
+  if(pl.goal && Math.floor(now/250)%2===0){
+    const gx = pl.goal[0]*TS-camX, gy = pl.goal[1]*TS-camY, L = 4*S, w = S;
+    ctx.fillStyle = '#f2c230';
+    ctx.fillRect(gx,gy,L,w); ctx.fillRect(gx,gy,w,L);
+    ctx.fillRect(gx+TS-L,gy,L,w); ctx.fillRect(gx+TS-w,gy,w,L);
+    ctx.fillRect(gx,gy+TS-w,L,w); ctx.fillRect(gx,gy+TS-L,w,L);
+    ctx.fillRect(gx+TS-L,gy+TS-w,L,w); ctx.fillRect(gx+TS-w,gy+TS-L,w,L);
+  }
+  const ents = NPCS.map(n=>({y:n.y, n}));
+  ents.push({y:ry, p:true});
+  ents.sort((a,b)=>a.y-b.y);
+  for(const e of ents){
+    const ex = e.p ? rx : e.n.x, ey = e.p ? ry : e.n.y;
+    const X = Math.round(ex*TS-camX), Y = Math.round(ey*TS-camY);
+    if(X < -TS || Y < -TS*2 || X > cssW+TS || Y > cssH+TS) continue;
+    ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(X+TS/2,Y+TS-S,5*S,1.6*S,0,0,Math.PI*2); ctx.fill();
+    if(e.p) drawHuman(ctx,X,Y,S,LOOK.player,pl.dir,pl.moving?(pl.step%2?1:2):0);
+    else drawKind(ctx,e.n.kind,X,Y,S,e.n.dir,0,now);
+  }
+  for(const n of NPCS){
+    let mark = null;
+    if(n.st) mark = state.done[n.st] ? 'ok' : '!';
+    else if(!state.intro || allDone()) mark = '!';
+    if(!mark) continue;
+    const X = Math.round(n.x*TS-camX), Y = Math.round(n.y*TS-camY);
+    const bob = mark==='!' ? Math.round(Math.sin(now/220)*1.5)*S : 0;
+    const bx = X+TS/2-4*S, by = Y-9*S+bob;
+    ctx.fillStyle='#2b1d10'; ctx.fillRect(bx-S,by-S,10*S,10*S);
+    ctx.fillStyle = mark==='!' ? '#f2c230' : '#4f9a31'; ctx.fillRect(bx,by,8*S,8*S);
+    ctx.fillStyle = mark==='!' ? '#2b1d10' : '#ffffff';
+    if(mark==='!'){ ctx.fillRect(bx+3.5*S,by+1*S,1*S,4*S); ctx.fillRect(bx+3.5*S,by+6*S,1*S,1*S); }
+    else { ctx.fillRect(bx+1*S,by+4*S,1*S,1*S); ctx.fillRect(bx+2*S,by+5*S,1*S,1*S); ctx.fillRect(bx+3*S,by+4*S,1*S,1*S); ctx.fillRect(bx+4*S,by+3*S,1*S,1*S); ctx.fillRect(bx+5*S,by+2*S,1*S,1*S); ctx.fillRect(bx+6*S,by+1*S,1*S,1*S); }
+  }
+}
+
+/* ================= Input ================= */
+const keyStack = [];
+let touchDir = null;
+const KEYMAP = {ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
+const blocked = () => dlg.open || modalOpen || startOpen;
+window.addEventListener('keydown', e => {
+  const tag = (e.target && e.target.tagName) || '';
+  if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
+  if(startOpen) return;
+  if(e.code==='Escape' && modalOpen && modalMode==='pass'){ closeModal(); return; }
+  const d = KEYMAP[e.code];
+  if(d){ if(!keyStack.includes(d)) keyStack.push(d); if(!modalOpen) e.preventDefault(); return; }
+  if((e.code==='Space'||e.code==='Enter'||e.code==='KeyE') && !e.repeat && !modalOpen){
+    if(tag==='BUTTON' && e.code!=='KeyE') return;
+    e.preventDefault();
+    if(dlg.open) advance(); else interact();
+  }
+});
+window.addEventListener('keyup', e => { const d = KEYMAP[e.code]; if(d){ const i = keyStack.indexOf(d); if(i>=0) keyStack.splice(i,1); } });
+window.addEventListener('blur', () => { keyStack.length = 0; touchDir = null; });
+const curDir = () => touchDir || keyStack[keyStack.length-1] || null;
+
+const pad = $('#pad');
+function padDir(e){
+  const r = pad.getBoundingClientRect(), dx = e.clientX-(r.left+r.width/2), dy = e.clientY-(r.top+r.height/2);
+  if(Math.hypot(dx,dy) < 14) return null;
+  return Math.abs(dx) > Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up');
+}
+function setPad(d){ touchDir = d; pad.querySelectorAll('.ar').forEach(a=>a.classList.toggle('on', !!d && a.classList.contains({up:'u',down:'d',left:'l',right:'r'}[d]))); }
+pad.addEventListener('pointerdown', e => { e.preventDefault(); pad.setPointerCapture(e.pointerId); setPad(padDir(e)); });
+pad.addEventListener('pointermove', e => { if(pad.hasPointerCapture(e.pointerId)) setPad(padDir(e)); });
+['pointerup','pointercancel','lostpointercapture'].forEach(ev => pad.addEventListener(ev, () => setPad(null)));
+$('#abtn').addEventListener('pointerdown', e => { e.preventDefault(); if(dlg.open) advance(); else if(!blocked()) interact(); });
+if(('ontouchstart' in window) || (window.matchMedia && matchMedia('(pointer: coarse)').matches)) document.body.classList.add('touch');
+window.addEventListener('touchstart', () => document.body.classList.add('touch'), {once:true, passive:true});
+
+/* ================= Movement ================= */
+let saveTick = 0;
+function update(dt){
+  if(pl.moving){
+    pl.t += dt/165;
+    if(pl.t >= 1){ pl.t = 1; pl.moving = false; arrive(); }
+  }
+  if(!pl.moving && !blocked()){
+    let d = curDir();
+    if(d && pl.path) clearRoute();
+    if(!d && pl.path){
+      if(pl.path.length){
+        const [nx,ny] = pl.path[0];
+        if(walk(nx,ny)){ pl.path.shift(); d = nx>pl.x?'right':nx<pl.x?'left':ny>pl.y?'down':'up'; }
+        else clearRoute();
+      } else { const f = pl.after; clearRoute(); if(f) f(); }
+    }
+    if(d){
+      pl.dir = d;
+      const nx = pl.x+DIRS[d][0], ny = pl.y+DIRS[d][1];
+      if(walk(nx,ny)){ pl.fx=pl.x; pl.fy=pl.y; pl.x=nx; pl.y=ny; pl.t=0; pl.moving=true; pl.step++; }
+    }
+  }
+}
+function arrive(){
+  pl.fx = pl.x; pl.fy = pl.y;
+  state.x = pl.x; state.y = pl.y; state.dir = pl.dir;
+  if(++saveTick % 4 === 0) save();
+  const i = acornPos.findIndex(a => a[0]===pl.x && a[1]===pl.y);
+  if(i >= 0 && !state.acorns.includes(i)){
+    state.acorns.push(i); save(); sfx.pick(); updateHUD(); clearRoute();
+    say('Eichel gefunden! (' + state.acorns.length + '/' + ACORNS.length + ')', [ACORNS[i]], null, 'acorn');
+  }
+}
+
+/* ================= Tippen zum Laufen ================= */
+pl.path = null; pl.after = null; pl.goal = null;
+function clearRoute(){ pl.path = null; pl.after = null; pl.goal = null; }
+const ACT_TILES = 'SULEDZO';
+function setRoute(goals, after, mark){
+  const key = (x,y) => y*MW+x, gs = new Set(goals.map(([x,y]) => key(x,y)));
+  const start = key(pl.x,pl.y), prev = new Map([[start,-1]]), q = [[pl.x,pl.y]];
+  let found = null, qi = 0;
+  while(qi < q.length){
+    const [x,y] = q[qi++], k = key(x,y);
+    if(gs.has(k)){ found = k; break; }
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx = x+dx, ny = y+dy, nk = key(nx,ny);
+      if(!prev.has(nk) && walk(nx,ny)){ prev.set(nk,k); q.push([nx,ny]); }
+    }
+  }
+  if(found === null){ toast('Da kommst du nicht hin.', 1300); return; }
+  const path = []; let k = found;
+  while(k !== start){ path.unshift([k%MW, Math.floor(k/MW)]); k = prev.get(k); }
+  pl.path = path; pl.after = after; pl.goal = mark;
+}
+function tapTo(tx, ty){
+  if(tx<0 || ty<0 || tx>=MW || ty>=MH) return;
+  const n = npcAt(tx,ty), t = map[ty][tx];
+  if(!n && walk(tx,ty)){ setRoute([[tx,ty]], null, [tx,ty]); return; }
+  const goals = [[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy]) => [tx+dx,ty+dy]).filter(([x,y]) => (x===pl.x && y===pl.y) || walk(x,y));
+  if(!goals.length) return;
+  const act = n || ACT_TILES.includes(t);
+  setRoute(goals, act ? () => { pl.dir = tx>pl.x?'right':tx<pl.x?'left':ty>pl.y?'down':'up'; interact(); } : null, [tx,ty]);
+}
+let tapStart = null;
+cv.addEventListener('pointerdown', e => { tapStart = {x:e.clientX, y:e.clientY}; });
+cv.addEventListener('pointerup', e => {
+  if(!tapStart) return;
+  const moved = Math.hypot(e.clientX-tapStart.x, e.clientY-tapStart.y); tapStart = null;
+  if(moved > 24 || startOpen || modalOpen) return;
+  if(dlg.open){ advance(); return; }
+  const r = cv.getBoundingClientRect();
+  tapTo(Math.floor((e.clientX-r.left+camX)/TS), Math.floor((e.clientY-r.top+camY)/TS));
+});
+cv.addEventListener('contextmenu', e => e.preventDefault());
+// Ältere Handys ohne Pointer-Events: Touch-Ersatz
+if(!window.PointerEvent){
+  const pt = e => e.changedTouches[0];
+  pad.addEventListener('touchstart', e => { e.preventDefault(); setPad(padDir(pt(e))); }, {passive:false});
+  pad.addEventListener('touchmove', e => { e.preventDefault(); setPad(padDir(pt(e))); }, {passive:false});
+  pad.addEventListener('touchend', () => setPad(null)); pad.addEventListener('touchcancel', () => setPad(null));
+  $('#abtn').addEventListener('touchstart', e => { e.preventDefault(); if(dlg.open) advance(); else if(!blocked()) interact(); }, {passive:false});
+  let ts = null;
+  cv.addEventListener('touchstart', e => { const t = pt(e); ts = {x:t.clientX, y:t.clientY}; }, {passive:true});
+  cv.addEventListener('touchend', e => {
+    if(!ts) return; const t = pt(e), moved = Math.hypot(t.clientX-ts.x, t.clientY-ts.y); ts = null;
+    if(moved > 24 || startOpen || modalOpen) return;
+    e.preventDefault();
+    if(dlg.open){ advance(); return; }
+    const r = cv.getBoundingClientRect();
+    tapTo(Math.floor((t.clientX-r.left+camX)/TS), Math.floor((t.clientY-r.top+camY)/TS));
+  }, {passive:false});
+}
+let aReady = false;
+function updateAReady(){
+  let ready = false;
+  if(!blocked() && !pl.moving){
+    const tx = pl.x+DIRS[pl.dir][0], ty = pl.y+DIRS[pl.dir][1];
+    ready = !!npcAt(tx,ty) || (ty>=0 && tx>=0 && ty<MH && tx<MW && ACT_TILES.includes(map[ty][tx]));
+  }
+  if(ready !== aReady){ aReady = ready; $('#abtn').classList.toggle('ready', ready); }
+}
+
+/* ================= Dialogue ================= */
+const dlg = {open:false,pages:[],i:0,typing:false,full:'',shown:0,done:null,timer:null};
+const dlgEl=$('#dlg'), dText=$('#dtext'), dCh=$('#dch'), dMore=$('#dmore');
+function drawPortrait(kind){
+  const c = $('#por').getContext('2d'); c.imageSmoothingEnabled=false; c.clearRect(0,0,48,48);
+  if(kind==='acorn') drawAcorn(c,0,0,3);
+  else if(kind==='sign') c.drawImage(T.S,0,0,48,48);
+  else if(kind==='player') drawHuman(c,0,0,3,LOOK.player,'down',0);
+  else if(kind==='meyer') drawMeyerPortrait(c);
+  else if(kind) drawKind(c,kind,0,0,3,'down',0,1);
+}
+function say(name, pages, done, portrait){
+  dlg.open = true; dlg.pages = pages; dlg.i = 0; dlg.done = done || null;
+  $('#dname').textContent = name; drawPortrait(portrait);
+  dlgEl.style.display = 'block'; document.body.classList.add('talking');
+  showPage();
+}
+function showPage(){
+  const pg = dlg.pages[dlg.i];
+  dlg.full = typeof pg === 'string' ? pg : pg.text; dlg.shown = 0; dlg.typing = true;
+  dCh.innerHTML = ''; dMore.style.visibility = 'hidden'; clearInterval(dlg.timer); sfx.blip();
+  dlg.timer = setInterval(() => { dlg.shown += 2; if(dlg.shown >= dlg.full.length) finishType(); else dText.textContent = dlg.full.slice(0, dlg.shown); }, 22);
+}
+function finishType(){
+  clearInterval(dlg.timer); dlg.typing = false; dText.textContent = dlg.full;
+  const pg = dlg.pages[dlg.i];
+  if(pg && pg.choices){
+    pg.choices.forEach((ch, k) => {
+      const b = document.createElement('button'); b.className = 'btn' + (k===0 ? ' primary' : ''); b.textContent = ch.label;
+      b.addEventListener('click', e => { e.stopPropagation(); closeDlg(); if(ch.fn) ch.fn(); });
+      dCh.appendChild(b);
+    });
+    const first = dCh.querySelector('button'); if(first) first.focus({preventScroll:true});
+  } else dMore.style.visibility = 'visible';
+}
+function advance(){
+  if(!dlg.open) return;
+  if(dlg.typing){ finishType(); return; }
+  const pg = dlg.pages[dlg.i];
+  if(pg && pg.choices) return;
+  dlg.i++;
+  if(dlg.i >= dlg.pages.length){ const d = dlg.done; closeDlg(); if(d) d(); }
+  else showPage();
+}
+function closeDlg(){ clearInterval(dlg.timer); dlg.open = false; dlgEl.style.display = 'none'; document.body.classList.remove('talking'); }
+dlgEl.addEventListener('click', () => advance());
+
+/* ================= Interaction ================= */
+const allDone = () => STATIONS.every(s => state.done[s.id]);
+function interact(){
+  const tx = pl.x + DIRS[pl.dir][0], ty = pl.y + DIRS[pl.dir][1];
+  const n = npcAt(tx, ty);
+  if(n){ n.dir = {up:'down',down:'up',left:'right',right:'left'}[pl.dir]; talk(n); return; }
+  if(ty<0||tx<0||ty>=MH||tx>=MW) return;
+  const t = map[ty][tx];
+  const msg = {
+    S: SIGNS[tx+','+ty],
+    U: 'Ein riesiger Baumstumpf. Man kann ganz viele Jahresringe zählen!',
+    L: 'Ein Holzstapel. Hier liegt Schnittholz zum Trocknen – Holz muss erst trocknen, bevor man es verarbeitet.',
+    E: 'Die uralte Eiche. Eichen bilden hartes, wertvolles Kernholz.',
+    W: 'Plätscher! Wald und Wurzeln regulieren den Wasserhaushalt.',
+    D: tx===8 ? 'Die Werkstatt ist noch zu. Erst die Mission – dann geht\'s an die Tischtennisschläger!' : 'Im Sägewerk kreischt die Säge. Besser draußen bleiben!',
+    Z: 'Das Sägeblatt. Hier wird aus Stämmen Schnittholz.',
+    O: 'Das Wasserrad treibt die Säge an.',
+    T: 'Ein Laubbaum. Laubbäume wie Buche und Eiche haben meist hartes Holz.',
+    N: 'Ein Nadelbaum. Nadelbäume haben Harzkanäle im Holz.'
+  }[t];
+  if(msg) say(t==='S' ? 'Schild' : 'Hmm …', [msg], null, t==='S' ? 'sign' : 'player');
+}
+function talk(n){
+  if(n.id === 'meyer') return talkMeyer();
+  const st = ST[n.st];
+  if(state.done[st.id]){
+    say(st.who, [{text:'Schön, dich wiederzusehen! Möchtest du meine Rätsel nochmal üben? Das gibt keine neuen Punkte, macht aber schlau.', choices:[
+      {label:'Ja, üben!', fn:()=>startQuiz(st,true)}, {label:'Nein, danke', fn:null}]}], null, n.kind);
+    return;
+  }
+  const pages = st.intro.slice(0,-1);
+  pages.push({text: st.intro[st.intro.length-1], choices:[{label:'Los geht\'s!', fn:()=>startQuiz(st,false)}, {label:'Später', fn:null}]});
+  say(st.who, pages, null, n.kind);
+}
+function talkMeyer(){
+  const nm = state.name || 'du';
+  if(!state.intro){
+    say('Herr Meyer', [
+      'Yo, ' + nm + '! Da bist du ja. Ich bin Herr Meyer, euer TuN-Lehrer. 😎',
+      'Wir starten bald ein großes Projekt: Wir bauen unsere eigenen Tischtennisschläger! Dafür brauchen wir richtig gutes Holz.',
+      'Aber Säge-Sepp im Sägewerk gibt sein Holz nur an echte Holz-Profis heraus. Und ehrlich: Wer mit Holz baut, muss Holz verstehen.',
+      'Deine Mission: Erkunde den Wald und hol dir die vier WISSENSBLÖCKE bei Förster Fritz, Eule Olga, Specht Paul und Säge-Sepp.',
+      'Unterwegs findest du Schilder und versteckte Eicheln mit Extra-Wissen. Deine Antworten auf die Forscherfragen landen in deinem Forscherpass 📒.',
+      'Wenn du alle vier Blöcke hast, kommst du zurück zu mir und gibst den Forscherpass ab. Los geht\'s – der Wald wartet!'
+    ], () => { state.intro = true; save(); toast(document.body.classList.contains('touch') ? 'Tippe auf den Weg zum Laufen und auf Figuren zum Sprechen!' : 'Pfeiltasten oder WASD: laufen · Leertaste: sprechen', 4200); }, 'meyer');
+    return;
+  }
+  if(allDone()){
+    say('Herr Meyer', [
+      'Wahnsinn, ' + nm + '! Alle vier Wissensblöcke – Wald, Baum, Stamm und Werkstoff!',
+      'Damit bist du offiziell Holz-Profi. Säge-Sepp hat schon Bescheid gegeben: Das Holz für unsere Tischtennisschläger liegt bereit!',
+      'Jetzt zeig mir deinen Forscherpass. Ich schau mir deine Antworten genau an. 😎'
+    ], () => openSheet(), 'meyer');
+    return;
+  }
+  const open = STATIONS.filter(s => !state.done[s.id]).map(s => s.who + ' (' + s.place + ')');
+  const have = STATIONS.length - open.length;
+  say('Herr Meyer', [
+    'Du hast ' + have + ' von 4 Wissensblöcken. Noch offen: ' + open.join(', ') + '.',
+    'Tipp: Folge den Wegweisern. Die gelben Ausrufezeichen zeigen dir, wer noch ein Rätsel für dich hat.'
+  ], null, 'meyer');
+}
+
+/* ================= Modal / Quiz ================= */
+const modal = $('#modal'), card = $('#card');
+let modalOpen = false, modalMode = '', quiz = null;
+function openModal(mode){ modalOpen = true; modalMode = mode; modal.style.display = 'block'; document.body.classList.add('modal'); modal.scrollTop = 0; keyStack.length = 0; setPad(null); }
+function closeModal(){ modalOpen = false; modalMode = ''; modal.style.display = 'none'; document.body.classList.remove('modal'); }
+
+function startQuiz(st, practice){
+  quiz = {st, practice, i:0, pts:0, max:0};
+  openModal('quiz'); renderPuzzle();
+}
+function renderPuzzle(){
+  const q = quiz.st.puzzles[quiz.i];
+  quiz.first = true; quiz.solved = false;
+  let h = `<div class="qhead"><span class="tag">${esc(quiz.st.short)}</span><span>Rätsel ${quiz.i+1} von ${quiz.st.puzzles.length}${quiz.practice ? ' (Übung)' : ''}</span></div><h2>${esc(q.q)}</h2>`;
+  if(q.svg) h += `<div class="fig">${q.svg()}</div>`;
+  if(q.type === 'mc'){
+    quiz.max += 1;
+    h += '<div class="opts">' + shuffle(q.o.map((t,i)=>({t,i}))).map(o=>`<button class="opt" data-i="${o.i}">${esc(o.t)}</button>`).join('') + '</div>';
+  } else {
+    quiz.max += q.rows.length;
+    quiz.rows = shuffle(q.rows);
+    h += '<div class="rows">' + quiz.rows.map((r,i)=>`<div class="row" data-i="${i}"><span>${esc(r[0])}</span><select data-i="${i}" aria-label="${esc(r[0])}"><option value="">wählen …</option>${q.opts.map(o=>`<option>${esc(o)}</option>`).join('')}</select></div>`).join('') + '</div>';
+    h += '<div class="actions"><button class="btn primary" id="chk">Prüfen</button></div>';
+  }
+  h += '<div class="fb" id="fb"></div><div class="actions" id="act"></div>';
+  card.innerHTML = h; modal.scrollTop = 0;
+  if(q.type === 'mc') card.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => pickMC(b, q)));
+  else $('#chk').addEventListener('click', () => checkAs(q));
+}
+function feedback(ok, msg, ex){
+  const fb = $('#fb'); fb.className = 'fb ' + (ok ? 'ok' : 'bad');
+  fb.innerHTML = esc(msg) + (ex ? `<span class="ex">${esc(ex)}</span>` : '');
+}
+function showNext(){
+  const last = quiz.i === quiz.st.puzzles.length-1;
+  $('#act').innerHTML = `<button class="btn primary" id="nxt">${last ? (quiz.practice ? 'Fertig' : 'Zur Forscherfrage') : 'Weiter'}</button>`;
+  const b = $('#nxt'); b.addEventListener('click', nextPuzzle); b.focus({preventScroll:true});
+  b.scrollIntoView({block:'nearest'});
+}
+function pickMC(b, q){
+  if(quiz.solved) return;
+  const i = +b.dataset.i;
+  if(i === q.a){
+    b.classList.add('ok'); quiz.solved = true; if(quiz.first) quiz.pts++;
+    card.querySelectorAll('.opt').forEach(x => x.disabled = true);
+    sfx.ok(); feedback(true, quiz.first ? 'Richtig! +1 Punkt' : 'Richtig!', q.e); showNext();
+  } else {
+    b.classList.add('bad'); b.disabled = true; quiz.first = false;
+    sfx.bad(); feedback(false, 'Leider nicht. Versuch es nochmal!');
+  }
+}
+function checkAs(q){
+  if(quiz.solved) return;
+  const sels = card.querySelectorAll('select');
+  let right = 0;
+  sels.forEach(s => {
+    const i = +s.dataset.i, ok = s.value === quiz.rows[i][1];
+    if(ok) right++;
+    s.parentElement.classList.toggle('ok', ok); s.parentElement.classList.toggle('bad', !ok);
+  });
+  if(quiz.first){ quiz.pts += right; quiz.first = false; }
+  if(right === sels.length){
+    quiz.solved = true; sels.forEach(s => s.disabled = true); $('#chk').disabled = true;
+    sfx.ok(); feedback(true, 'Alles richtig!', q.e); showNext();
+  } else {
+    sfx.bad(); feedback(false, right + ' von ' + sels.length + ' richtig. Korrigiere die roten Felder und prüfe nochmal.');
+  }
+}
+function nextPuzzle(){
+  quiz.i++;
+  if(quiz.i < quiz.st.puzzles.length) renderPuzzle();
+  else if(quiz.practice) finishPractice();
+  else renderFQ();
+}
+function renderFQ(){
+  const st = quiz.st, prev = state.answers[st.id] || '';
+  card.innerHTML = `<div class="qhead"><span class="tag">${esc(st.short)}</span><span>Forscherfrage</span></div>
+    <h2>📝 Forscherfrage für Herrn Meyer</h2><p>${esc(st.fq)}</p>
+    <p style="color:var(--muted)">Schreib in ganzen Sätzen. Deine Antwort kommt in deinen Forscherpass.</p>
+    <textarea id="fqa" aria-label="Deine Antwort">${esc(prev)}</textarea><div class="count" id="cnt"></div>
+    <div class="actions"><button class="btn primary" id="fqok" disabled>In den Forscherpass eintragen</button></div>`;
+  const ta = $('#fqa'), btn = $('#fqok'), cnt = $('#cnt');
+  const upd = () => { const n = ta.value.trim().length; btn.disabled = n < 40; cnt.textContent = n < 40 ? 'Noch ' + (40-n) + ' Zeichen' : 'Prima, das reicht!'; };
+  ta.addEventListener('input', upd); upd();
+  btn.addEventListener('click', () => { state.answers[st.id] = ta.value.trim(); finishStation(); });
+}
+function finishStation(){
+  const st = quiz.st;
+  state.done[st.id] = true; state.scores[st.id] = quiz.pts; state.max[st.id] = quiz.max; save();
+  sfx.fanfare(); updateHUD();
+  card.innerHTML = `<h2>Wissensblock erhalten!</h2>
+    <div class="reward"><canvas id="rw" width="16" height="16"></canvas><div><b class="px" style="font-size:12px">${esc(st.block)}</b><br>Punkte: ${quiz.pts} von ${quiz.max}</div></div>
+    <h3>Deine Lernkarte</h3><ul class="lk">${st.card.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>
+    <p style="color:var(--muted)">Alle Lernkarten findest du jederzeit im Forscherpass 📒.</p>
+    <div class="actions"><button class="btn primary" id="back">Zurück in den Wald</button></div>`;
+  $('#rw').getContext('2d').drawImage(ICON[st.id],0,0);
+  $('#back').addEventListener('click', () => {
+    closeModal();
+    const extra = allDone() ? ' Du hast alle vier Blöcke! Ab zurück zu Herrn Meyer in die Werkstatt!' : '';
+    say(st.who, [st.outro + extra], null, NPCS.find(n=>n.st===st.id).kind);
+  });
+}
+function finishPractice(){
+  card.innerHTML = `<h2>Übung beendet</h2><p>Du hattest ${quiz.pts} von ${quiz.max} Punkten beim ersten Versuch.</p>
+    <div class="actions"><button class="btn primary" id="back">Zurück in den Wald</button></div>`;
+  $('#back').addEventListener('click', closeModal);
+}
+
+/* ================= Forscherpass ================= */
+const total = () => STATIONS.reduce((a,s)=>a+(state.scores[s.id]||0),0);
+const totalMax = () => STATIONS.reduce((a,s)=>a+(state.max[s.id]||0),0);
+function openPass(){
+  openModal('pass');
+  let h = `<h2>📒 Forscherpass</h2><p><b>${esc(state.name)}</b>${state.klasse ? ', Klasse ' + esc(state.klasse) : ''}</p>
+    <div class="passgrid">${STATIONS.map(s=>`<div class="pg ${state.done[s.id]?'':'off'}"><canvas data-k="${s.id}" width="16" height="16"></canvas>${esc(s.short)}<br>${state.done[s.id] ? (state.scores[s.id]+'/'+state.max[s.id]) : 'offen'}</div>`).join('')}</div>
+    <p>★ ${total()} Punkte · 🌰 ${state.acorns.length} von ${ACORNS.length} Eicheln</p>`;
+  const doneSt = STATIONS.filter(s => state.done[s.id]);
+  if(doneSt.length){
+    h += '<h3>Lernkarten</h3>' + doneSt.map(s=>`<details><summary>${esc(s.block)}: ${esc(s.who)}</summary><ul class="lk">${s.card.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></details>`).join('');
+  } else h += '<p style="color:var(--muted)">Noch keine Lernkarten. Sprich mit den Waldbewohnern, die ein gelbes Ausrufezeichen haben!</p>';
+  if(state.acorns.length) h += `<details><summary>Eichel-Wissen (${state.acorns.length})</summary><ul class="lk">${state.acorns.map(i=>`<li>${esc(ACORNS[i])}</li>`).join('')}</ul></details>`;
+  h += `<div class="actions">${allDone() ? '<button class="btn primary" id="toSheet">Abgabeblatt</button>' : ''}<button class="btn" id="avBtn">👕 Avatar ändern</button><button class="btn" id="reset">Spiel zurücksetzen</button><button class="btn primary" id="cls">Schließen</button></div>`;
+  card.innerHTML = h;
+  card.querySelectorAll('canvas[data-k]').forEach(c => c.getContext('2d').drawImage(ICON[c.dataset.k],0,0));
+  $('#cls').addEventListener('click', closeModal);
+  if($('#toSheet')) $('#toSheet').addEventListener('click', openSheet);
+  $('#avBtn').addEventListener('click', () => openAvatar(openPass));
+  armReset($('#reset'));
+}
+function armReset(b){
+  let armed = false;
+  b.addEventListener('click', () => {
+    if(!armed){ armed = true; b.textContent = 'Wirklich alles löschen? Nochmal tippen'; setTimeout(()=>{armed=false;b.textContent='Spiel zurücksetzen';},4000); return; }
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    location.reload();
+  });
+}
+function openSheet(){
+  openModal('pass');
+  const date = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+  card.innerHTML = `<h2>Forscherpass: Abgabe an Herrn Meyer</h2>
+    <p>TuN Klasse 6 – Thema: Werkstoff Holz</p>
+    <table><tr><th>Name</th><td>${esc(state.name)}</td></tr><tr><th>Klasse</th><td>${esc(state.klasse||'–')}</td></tr><tr><th>Datum</th><td>${date}</td></tr></table>
+    <table><tr><th>Station</th><th>Thema</th><th>Punkte</th></tr>
+    ${STATIONS.map(s=>`<tr><td>${esc(s.who)}</td><td>${esc(s.short)}</td><td>${state.done[s.id] ? state.scores[s.id]+' / '+state.max[s.id] : 'offen'}</td></tr>`).join('')}
+    <tr><th colspan="2">Gesamt</th><th>${total()} / ${totalMax()}</th></tr></table>
+    <p>Eicheln gefunden: ${state.acorns.length} von ${ACORNS.length}</p>
+    <h3>Forscherfragen</h3>
+    ${STATIONS.map((s,i)=>`<p><b>${i+1}. ${esc(s.fq)}</b></p><div class="ans">${esc(state.answers[s.id]||'(noch nicht beantwortet)')}</div>`).join('')}
+    <div class="sig"><div>Bewertung Herr Meyer</div><div>Unterschrift</div></div>
+    <div class="actions noprint"><button class="btn primary" id="pdf">📄 PDF speichern</button><button class="btn" id="prt">Drucken</button><button class="btn" id="cls">Schließen</button></div>
+    <div class="actions noprint" id="pdfAlt" hidden></div>
+    <p class="noprint savehint">Nach „PDF speichern“ fragt das Handy, wohin die Datei soll. Auf dem iPhone im Teilen-Menü „Documents“ oder „In Dateien sichern“ wählen – oder die Datei direkt per Mail oder AirDrop an Herrn Meyer schicken.</p>`;
+  $('#pdf').addEventListener('click', () => savePdf($('#pdf')));
+
+  $('#cls').addEventListener('click', closeModal);
+  $('#prt').addEventListener('click', () => { try{ window.print(); }catch(e){ toast('Drucken klappt hier nicht. Mach bitte einen Screenshot!', 3500); } });
+}
+
+/* ================= Avatar-Editor ================= */
+function openAvatar(after){
+  openModal('avatar');
+  const av = Object.assign({}, AV_DEFAULT, state.av||{});
+  const dirs = ['down','left','up','right']; let di = 0, fr = 0;
+  let h = `<h2>👕 Gestalte deinen Avatar</h2><div class="avwrap">
+    <div class="avprev"><canvas id="avc" width="64" height="72" aria-label="Vorschau deines Avatars"></canvas>
+      <div class="turn"><button class="btn" id="avL" aria-label="Nach links drehen">↺</button><button class="btn" id="avR" aria-label="Nach rechts drehen">↻</button></div></div>
+    <div class="avopts">`;
+  for(const k in AV){
+    const d = AV[k];
+    h += `<div class="avrow" data-row="${k}"><div>${esc(d.label)}</div><div class="sw">` +
+      d.opts.map(o => d.type==='col'
+        ? `<button type="button" data-k="${k}" data-v="${o}" style="background:${o}" aria-label="${esc(d.label)} ${o}"></button>`
+        : `<button type="button" class="txt" data-k="${k}" data-v="${o[0]}">${esc(o[1])}</button>`).join('') + `</div></div>`;
+  }
+  h += `</div></div><div class="actions"><button type="button" class="btn" id="avRnd">🎲 Zufall</button><button type="button" class="btn primary" id="avOk">Fertig</button></div>`;
+  card.innerHTML = h;
+  const cv2 = $('#avc'), g = cv2.getContext('2d');
+  function paint(){
+    g.imageSmoothingEnabled = false; g.clearRect(0,0,64,72);
+    g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(32,66,20,5,0,0,Math.PI*2); g.fill();
+    drawHuman(g,0,8,4,playerLook(av),dirs[di],fr);
+    card.querySelectorAll('.sw button').forEach(b => b.classList.toggle('on', av[b.dataset.k]===b.dataset.v));
+    card.querySelector('[data-row="headCol"]').style.display = av.head==='none' ? 'none' : '';
+  }
+  card.querySelectorAll('.sw button').forEach(b => b.addEventListener('click', () => { av[b.dataset.k] = b.dataset.v; sfx.blip(); paint(); }));
+  $('#avL').addEventListener('click', () => { di = (di+3)%4; paint(); });
+  $('#avR').addEventListener('click', () => { di = (di+1)%4; paint(); });
+  $('#avRnd').addEventListener('click', () => { for(const k in AV){ const o = AV[k].opts[Math.floor(Math.random()*AV[k].opts.length)]; av[k] = AV[k].type==='col' ? o : o[0]; } sfx.blip(); paint(); });
+  $('#avOk').addEventListener('click', () => {
+    state.av = av; LOOK.player = playerLook(av); save(); closeModal(); sfx.ok();
+    if(after) after();
+  });
+  const walkAnim = setInterval(() => { if(modalMode!=='avatar'){ clearInterval(walkAnim); return; } fr = (fr+1)%3; paint(); }, 380);
+  paint();
+}
+/* ================= PDF-Export ================= */
+let dlNs = null;
+try{ if(window.claude && typeof claude.use === 'function') claude.use('downloads').then(ns => { dlNs = ns; }, () => {}); }catch(e){}
+// Eigener kleiner PDF-Erzeuger: keine externe Bibliothek, funktioniert auch offline
+const pdfTxt = t => String(t).replace(/[–—]/g,'-').replace(/[„“”]/g,'"').replace(/[‚‘’]/g,"'").replace(/…/g,'...').replace(/€/g,'EUR').replace(/[^\x20-\x7E\xA0-\xFF\n]/g,'');
+function pdfName(){ return ('Forscherpass_' + state.name + (state.klasse ? '_' + state.klasse : '')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').slice(0,60) + '.pdf'; }
+function cw(ch, bold){ // ungefähre Helvetica-Zeichenbreiten (in 1/1000 em)
+  let w;
+  if(' ilj.,:;\'!|'.includes(ch)) w = 278; else if('ftrI()[]-'.includes(ch)) w = 333;
+  else if('mwMW'.includes(ch)) w = 860; else if(/[A-ZÄÖÜ]/.test(ch)) w = 690; else w = 556;
+  return bold ? w*1.06 : w;
+}
+function textW(t, size, bold){ let w = 0; for(const ch of t) w += cw(ch, bold); return w*size/1000; }
+function wrap(t, size, maxW, bold){
+  const out = [];
+  String(t).split('\n').forEach(par => {
+    let line = '';
+    par.split(/\s+/).forEach(word => {
+      const test = line ? line + ' ' + word : word;
+      if(textW(test, size, bold) <= maxW || !line) line = test; else { out.push(line); line = word; }
+    });
+    out.push(line);
+  });
+  return out;
+}
+class MiniPDF{
+  constructor(){ this.pages = []; this.newPage(); this.img = null; }
+  newPage(){ this.cur = []; this.pages.push(this.cur); }
+  // Koordinaten in mm, Ursprung oben links
+  static n(v){ return (Math.round(v*100)/100).toString(); }
+  pt(mm){ return mm*72/25.4; }
+  esc(t){ return pdfTxt(t).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)'); }
+  text(t, x, y, size, bold){ const N = MiniPDF.n; this.cur.push(`BT /${bold?'F2':'F1'} ${size} Tf ${N(this.pt(x))} ${N(842-this.pt(y))} Td (${this.esc(t)}) Tj ET`); }
+  color(r,g,b, fill){ this.cur.push(`${(r/255).toFixed(3)} ${(g/255).toFixed(3)} ${(b/255).toFixed(3)} ${fill?'rg':'RG'}`); }
+  rect(x, y, w, h, fill){ const N = MiniPDF.n; this.cur.push(`${N(this.pt(x))} ${N(842-this.pt(y+h))} ${N(this.pt(w))} ${N(this.pt(h))} re ${fill?'f':'S'}`); }
+  line(x1, y1, x2, y2){ const N = MiniPDF.n; this.cur.push(`0.6 w ${N(this.pt(x1))} ${N(842-this.pt(y1))} m ${N(this.pt(x2))} ${N(842-this.pt(y2))} l S`); }
+  image(canvas, x, y, w, h){
+    const g = canvas.getContext('2d'), d = g.getImageData(0,0,canvas.width,canvas.height).data;
+    let bin = ''; for(let i=0;i<d.length;i+=4) bin += String.fromCharCode(d[i], d[i+1], d[i+2]);
+    this.img = {w:canvas.width, h:canvas.height, data:bin};
+    const N = MiniPDF.n; this.cur.push(`q ${N(this.pt(w))} 0 0 ${N(this.pt(h))} ${N(this.pt(x))} ${N(842-this.pt(y+h))} cm /Im1 Do Q`);
+    this.imgPage = this.pages.length-1;
+  }
+  blob(){
+    const objs = [];
+    const add = str => { objs.push(str); return objs.length; };
+    const cat = add(''), pagesId = add('');
+    const f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+    const f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+    let im = 0;
+    if(this.img) im = add(`<< /Type /XObject /Subtype /Image /Width ${this.img.w} /Height ${this.img.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Length ${this.img.data.length} >>\nstream\n${this.img.data}\nendstream`);
+    const kids = [];
+    this.pages.forEach((p, i) => {
+      const c = p.join('\n');
+      const cid = add(`<< /Length ${c.length} >>\nstream\n${c}\nendstream`);
+      const xo = (im && i === this.imgPage) ? ` /XObject << /Im1 ${im} 0 R >>` : '';
+      kids.push(add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >>${xo} >> /Contents ${cid} 0 R >>`));
+    });
+    objs[cat-1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
+    objs[pagesId-1] = `<< /Type /Pages /Kids [${kids.map(k=>k+' 0 R').join(' ')}] /Count ${kids.length} >>`;
+    let out = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'; const offs = [];
+    objs.forEach((o, i) => { offs.push(out.length); out += `${i+1} 0 obj\n${o}\nendobj\n`; });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length+1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10,'0') + ' 00000 n \n').join('');
+    out += `trailer\n<< /Size ${objs.length+1} /Root ${cat} 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    const bytes = new Uint8Array(out.length); for(let i=0;i<out.length;i++) bytes[i] = out.charCodeAt(i) & 255;
+    return new Blob([bytes], {type:'application/pdf'});
+  }
+}
+async function buildPdf(){
+  const doc = new MiniPDF();
+  const W = 210, M = 18; let y = 20;
+  const date = new Date().toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const need = h => { if(y + h > 280){ doc.newPage(); y = 20; } };
+  doc.color(79,154,49,true); doc.rect(0,0,W,8,true);
+  doc.color(0,0,0,true); doc.text('Forscherpass: Abgabe an Herrn Meyer', M, y+4, 18, true);
+  doc.text('HOLZCRAFT - TuN Klasse 6 - Thema: Werkstoff Holz', M, y+11, 11);
+  try{ const c = document.createElement('canvas'); c.width = 72; c.height = 72; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#5fae3d'; g.fillRect(0,0,72,72); drawHuman(g,4,8,4,LOOK.player,'down',0); doc.image(c, W-M-26, 12, 26, 26); }catch(e){}
+  y += 24;
+  [['Name', state.name], ['Klasse', state.klasse || '-'], ['Datum', date]].forEach(([k,v]) => { doc.text(k + ':', M, y, 12, true); doc.text(v, M+24, y, 12); y += 7; });
+  y += 4;
+  doc.color(230,204,150,true); doc.rect(M, y-5, W-2*M, 8, true); doc.color(0,0,0,true);
+  doc.text('Station', M+2, y, 12, true); doc.text('Thema', M+70, y, 12, true); doc.text('Punkte', W-M-30, y, 12, true); y += 8;
+  doc.color(190,190,190,false);
+  STATIONS.forEach(st => {
+    doc.text(st.who, M+2, y, 12); doc.text(st.short, M+70, y, 12);
+    doc.text(state.done[st.id] ? state.scores[st.id]+' / '+state.max[st.id] : 'offen', W-M-30, y, 12);
+    doc.line(M, y+2.5, W-M, y+2.5); y += 8;
+  });
+  doc.text('Gesamt', M+2, y, 12, true); doc.text(total()+' / '+totalMax(), W-M-30, y, 12, true); y += 7;
+  doc.text('Eicheln gefunden: ' + state.acorns.length + ' von ' + ACORNS.length, M+2, y, 12); y += 12;
+  doc.text('Forscherfragen', M, y, 14, true); y += 8;
+  doc.color(60,60,60,false);
+  STATIONS.forEach((st,i) => {
+    const q = wrap(pdfTxt((i+1) + '. ' + st.fq), 11, (W-2*M)*72/25.4, true);
+    const a = wrap(pdfTxt(state.answers[st.id] || '(noch nicht beantwortet)'), 11, (W-2*M-8)*72/25.4, false);
+    const h = a.length*5 + 5;
+    need(q.length*5 + 2 + h + 7);
+    q.forEach(l => { doc.text(l, M, y, 11, true); y += 5; }); y += 1;
+    doc.rect(M, y-1, W-2*M, h, false);
+    a.forEach((l,k) => doc.text(l, M+3, y+4+k*5, 11)); y += h + 7;
+  });
+  need(24); y += 10;
+  doc.line(M, y, M+75, y); doc.line(W-M-75, y, W-M, y);
+  doc.text('Bewertung Herr Meyer', M, y+5, 10); doc.text('Unterschrift', W-M-75, y+5, 10);
+  return doc.blob();
+}
+let pdfBlob = null, pdfUrl = null;
+function pdfFile(){ return new File([pdfBlob], pdfName(), {type:'application/pdf'}); }
+function canShareFile(){ try{ return !!(navigator.share && navigator.canShare && navigator.canShare({files:[pdfFile()]})); }catch(e){ return false; } }
+// Ersatzknöpfe: jeder reagiert direkt auf den Tipp (wichtig für iPhones)
+function showPdfAlt(msg){
+  const box = $('#pdfAlt'); if(!box) return;
+  if(pdfUrl) URL.revokeObjectURL(pdfUrl);
+  pdfUrl = URL.createObjectURL(pdfBlob);
+  box.innerHTML = (canShareFile() ? '<button type="button" class="btn primary" id="pdfShare">Teilen-Menü öffnen</button>' : '') +
+    `<a class="btn" id="pdfDl" href="${pdfUrl}" download="${esc(pdfName())}">PDF herunterladen</a>` +
+    `<a class="btn" id="pdfOpen" href="${pdfUrl}" target="_blank" rel="noopener">PDF öffnen</a>`;
+  box.hidden = false;
+  if($('#pdfShare')) $('#pdfShare').addEventListener('click', async () => {
+    try{ await navigator.share({files:[pdfFile()], title:'Forscherpass'}); toast('Geteilt! Gib die Datei Herrn Meyer.', 3000); }
+    catch(e){ if(!(e && e.name==='AbortError')) toast('Teilen klappt hier nicht. Nutze „PDF herunterladen“.', 3500); }
+  });
+  if(msg) toast(msg, 4000);
+  box.scrollIntoView({block:'nearest'});
+}
+async function savePdf(btn){
+  const label = btn.textContent;
+  try{ pdfBlob = await buildPdf(); }
+  catch(e){ toast('PDF konnte nicht erstellt werden. Nutze „Drucken“ oder einen Screenshot.', 4500); return; }
+  const name = pdfName();
+  // 1. Weg: Speichern über Claude (iPhone-App: Teilen-Menü, z. B. „Documents“ oder „In Dateien sichern“)
+  if(dlNs){
+    btn.disabled = true; btn.textContent = 'Bitte bestätigen …';
+    try{
+      await dlNs.save({filename:name, data:pdfBlob});
+      btn.disabled = false; btn.textContent = label;
+      toast('Gespeichert! Gib die Datei Herrn Meyer.', 3500); return;
+    }catch(e){
+      btn.disabled = false; btn.textContent = label;
+      const c = e && e.code;
+      if(c==='declined'){ toast('Speichern abgebrochen.', 2500); return; }
+      if(c==='rate_limited'){ toast('Bitte kurz warten und nochmal tippen.', 2500); return; }
+      showPdfAlt('Der direkte Weg klappt hier nicht. Wähle unten einen anderen Weg.'); return;
+    }
+  }
+  // 2. Weg: Teilen-Menü des Handys (direkt im Tipp)
+  if(canShareFile()){
+    try{ await navigator.share({files:[pdfFile()], title:'Forscherpass'}); toast('Geteilt! Gib die Datei Herrn Meyer.', 3000); return; }
+    catch(e){ if(e && e.name==='AbortError') return; }
+  }
+  // 3. Weg: Ersatzknöpfe zeigen
+  showPdfAlt();
+}
+/* ================= HUD / Toast ================= */
+function updateHUD(){
+  document.querySelectorAll('#blocks canvas').forEach(c => { const g=c.getContext('2d'); g.clearRect(0,0,16,16); g.drawImage(ICON[c.dataset.k],0,0); c.classList.toggle('off', !state.done[c.dataset.k]); });
+  $('#acn').textContent = '🌰 ' + state.acorns.length + '/' + ACORNS.length;
+  $('#pts').textContent = '★ ' + total();
+}
+let toastT = null;
+function toast(msg, ms){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'), ms||2500); }
+$('#mus').addEventListener('click', () => { initAudio(); setMusic(!state.music); });
+$('#passBtn').addEventListener('click', () => { if(!dlg.open && !startOpen) openPass(); });
+
+/* ================= Start screen ================= */
+let startOpen = true;
+function buildStart(){
+  $('#inName').value = state.name || ''; $('#inKlasse').value = state.klasse || '';
+  const sb = $('#startBtns');
+  sb.innerHTML = state.started
+    ? '<a href="#los" class="btn primary" id="go" role="button">Weiterspielen</a><button type="button" class="btn" id="reset">Neues Spiel</button>'
+    : '<a href="#los" class="btn primary" id="go" role="button">Spiel starten</a>';
+  // Mehrere unabhängige Wege, damit der Start auf jedem Handy klappt:
+  // Link-Sprung (#los), Klick, Touch-Ende und Pointer-Ende
+  $('#go').addEventListener('click', () => startGame());
+  $('#go').addEventListener('touchend', () => startGame());
+  $('#go').addEventListener('pointerup', () => startGame());
+  if($('#reset')) armReset($('#reset'));
+  $('#help').textContent = document.body.classList.contains('touch')
+    ? 'Tippe auf ein Feld, um hinzulaufen, oder auf eine Figur, um mit ihr zu sprechen. Das Steuerkreuz und der A-Knopf gehen auch.'
+    : 'Pfeiltasten oder WASD: laufen. Leertaste oder Enter: sprechen. Du kannst auch auf Felder und Figuren klicken.';
+}
+let starting = false;
+function clearHash(){ try{ if(location.hash) history.replaceState(null, '', location.pathname + location.search); }catch(e){} }
+clearHash();
+window.addEventListener('hashchange', () => { if(location.hash === '#los'){ clearHash(); startGame(); } });
+// Diagnose: zeigt, wo ein Tipp wirklich ankommt
+['touchstart','pointerdown','click'].forEach(ev => window.addEventListener(ev, e => {
+  if(!startOpen) return;
+  const t = e.target, d = $('#diag'); if(!d || !t) return;
+  d.textContent = 'Tipp erkannt (' + ev + '): ' + (t.id ? '#' + t.id : (t.tagName || '?').toLowerCase());
+}, true));
+function startGame(){
+  if(starting || !startOpen) return;
+  const nm = $('#inName').value.trim(), kl = $('#inKlasse').value.trim();
+  if(nm.length < 2){ $('#err').textContent = 'Bitte gib deinen Namen ein – Herr Meyer muss wissen, wessen Pass das ist.'; return; }
+  starting = true;
+  state.name = nm; state.klasse = kl; state.started = true; save();
+  try{ initAudio(); setMusic(state.music); }catch(e){}
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  const go = $('#go'); go.style.pointerEvents = 'none'; go.textContent = 'Lädt …';
+  // kurz warten, bis die iPhone-Tastatur zu ist, dann umschalten
+  setTimeout(() => {
+    try{
+      document.documentElement.classList.remove('onstart');
+      $('#start').style.display = 'none'; startOpen = false; $('#err').textContent = '';
+      window.scrollTo(0,0); resize(); updateHUD();
+      setTimeout(() => { window.scrollTo(0,0); resize(); }, 400);
+      if(!state.av){ pl.dir = 'up'; setTimeout(() => openAvatar(() => setTimeout(() => talk(NPCS[0]), 300)), 300); }
+      else if(!state.intro){ pl.dir = 'up'; setTimeout(() => talk(NPCS[0]), 450); }
+      else toast('Willkommen zurück, ' + nm + '!', 2500);
+    }catch(e){
+      starting = false; go.style.pointerEvents = ''; go.textContent = 'Spiel starten';
+      document.documentElement.classList.add('onstart'); $('#start').style.display = ''; startOpen = true;
+      window.__holzErr(e.message || String(e));
+    }
+  }, 250);
+}
+$('#inKlasse').addEventListener('keydown', e => { if(e.key === 'Enter' || e.keyCode === 13){ e.preventDefault(); startGame(); } });
+$('#inName').addEventListener('keydown', e => { if(e.key === 'Enter' || e.keyCode === 13){ e.preventDefault(); $('#inKlasse').focus(); } });
+['inName','inKlasse'].forEach(id => $('#'+id).addEventListener('input', () => { $('#err').textContent = ''; }));
+
+
+/* ================= Loop ================= */
+resize(); updateHUD(); setMusic(state.music); buildStart();
+let last = performance.now();
+let loopErr = false;
+function loop(now){
+  const dt = Math.min(50, now-last); last = now;
+  try{ update(dt); draw(now); updateAReady(); }
+  catch(e){ if(!loopErr){ loopErr = true; window.__holzErr(e.message || String(e)); } }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+window.__holzReady = true;
+})();
+</script>
+</body>
+</html>
