@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Energiepark Rheinsonne – Die Netz-Rettung</title>
+<meta name="description" content="Lernspiel zu erneuerbaren Energien für TuN Klasse 9 (Rheinland-Pfalz): Erkunde den Energiepark und bringe sechs Anlagen wieder ans Netz.">
+<meta name="theme-color" content="#121a3a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Energiepark">
+<style>
+/* Schriften werden lokal aus dem Ordner fonts/ geladen (keine Verbindung zu Google).
+   Fehlen die Dateien, nutzt das Spiel automatisch Systemschriften. */
+@font-face{ font-family:'Press Start 2P'; src:local('Press Start 2P'), local('PressStart2P-Regular'), url('fonts/PressStart2P-Regular.ttf') format('truetype'); font-weight:400; font-display:swap; }
+@font-face{ font-family:'Pixelify Sans'; src:local('Pixelify Sans'), url('fonts/PixelifySans-VariableFont_wght.ttf') format('truetype'); font-weight:400 700; font-display:swap; }
+@font-face{ font-family:'Atkinson Hyperlegible'; src:local('Atkinson Hyperlegible'), url('fonts/AtkinsonHyperlegible-Regular.ttf') format('truetype'); font-weight:400; font-display:swap; }
+@font-face{ font-family:'Atkinson Hyperlegible'; src:local('Atkinson Hyperlegible Bold'), url('fonts/AtkinsonHyperlegible-Bold.ttf') format('truetype'); font-weight:700; font-display:swap; }
+</style>
+<style>
+:root{
+  --bg:#1a2140; --frame:#0e1430; --hud:#121a3a; --hudink:#fff4d6;
+  --panel:#fff8e6; --ink:#1c2247; --muted:#5d6385;
+  --amber:#ffb627; --numc:#1846a8; --amberD:#c27c00; --ok:#2f9e57; --bad:#d64538; --sel:#2d6fd2;
+  --btn:#26305e; --btnB:#3f4c8c;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --numc:#ffd27a; --panel:#1f274d; --ink:#f1f0ff; --muted:#aab0d6; --bg:#0d1229; --frame:#060a1c; --hud:#0a1030; }
+}
+:root[data-theme="dark"]{ --numc:#ffd27a; --panel:#1f274d; --ink:#f1f0ff; --muted:#aab0d6; --bg:#0d1229; --frame:#060a1c; --hud:#0a1030; }
+:root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); background:var(--bg); }
+html{ height:100%; height:100dvh; overscroll-behavior:none; scroll-padding-top:env(safe-area-inset-top,0px); }
+*,*::before,*::after{ box-sizing:border-box; }
+body{ margin:0; height:100%; background:var(--bg); color:var(--ink);
+  font-family:'Atkinson Hyperlegible', Verdana, 'Segoe UI', system-ui, sans-serif; font-variant-numeric:lining-nums tabular-nums; overflow:hidden; overscroll-behavior:none; touch-action:manipulation;
+  -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+button{ font-family:inherit; }
+button:focus-visible, input:focus-visible{ outline:3px solid var(--amber); outline-offset:2px; }
+#app{ display:flex; flex-direction:column; height:100%; max-width:960px; margin:0 auto; }
+#hud{ display:flex; align-items:center; gap:6px; padding:6px 8px; background:var(--hud); color:var(--hudink); border-bottom:3px solid var(--frame); }
+.cores{ display:flex; gap:3px; }
+.core{ width:28px; height:28px; display:grid; place-items:center; border-radius:6px; background:#222a52; filter:grayscale(1); opacity:.4; font-size:15px; transition:all .4s; }
+.core.on{ filter:none; opacity:1; background:#3a3415; box-shadow:0 0 0 2px var(--amber), 0 0 10px rgba(255,182,39,.6); }
+#score{ font-family:'Press Start 2P', 'Courier New', monospace; font-size:10px; margin-left:auto; color:var(--amber); white-space:nowrap; }
+.hbtn{ background:var(--btn); color:var(--hudink); border:2px solid var(--btnB); border-radius:8px; font-size:17px; width:38px; height:36px; cursor:pointer; padding:0; }
+.hbtn:active{ transform:translateY(1px); }
+#stage{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; position:relative; background:#05081a; overflow:hidden; }
+#game{ touch-action:none; image-rendering:pixelated; image-rendering:crisp-edges; display:block; }
+#toast{ position:absolute; top:10px; left:50%; transform:translateX(-50%); background:var(--amber); color:#2a1a00; font-weight:700; padding:8px 14px; border-radius:8px; border:3px solid #2a1a00; box-shadow:0 4px 0 rgba(0,0,0,.4); font-size:15px; max-width:92%; text-align:center; z-index:5; pointer-events:none; }
+#toast[hidden]{ display:none; }
+#dialog{ position:absolute; left:8px; right:8px; bottom:8px; display:flex; gap:10px; align-items:flex-start; background:var(--panel); color:var(--ink); border:4px solid var(--frame); border-radius:10px; padding:10px 12px 18px; box-shadow:0 4px 0 rgba(0,0,0,.45), inset 0 0 0 2px var(--amber); cursor:pointer; max-height:62%; overflow:auto; z-index:4; }
+#dialog[hidden]{ display:none; }
+.dav{ font-size:30px; line-height:1; width:44px; height:44px; flex:0 0 44px; display:grid; place-items:center; background:rgba(255,182,39,.18); border-radius:8px; }
+.dmain{ flex:1; min-width:0; }
+.dname{ font-family:'Press Start 2P', 'Courier New', monospace; font-size:10px; color:var(--amberD); margin:2px 0 6px; line-height:1.4; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .dname{ color:var(--amber); } }
+:root[data-theme="dark"] .dname{ color:var(--amber); }
+.dtext{ font-size:18px; line-height:1.45; white-space:pre-wrap; min-height:2.8em; }
+.dnext{ position:absolute; right:12px; bottom:4px; font-size:12px; color:var(--amberD); animation:blink 1s steps(2) infinite; }
+@keyframes blink{ 50%{ opacity:0; } }
+#controls{ background:var(--hud); border-top:3px solid var(--frame); padding:10px 22px; display:flex; align-items:center; justify-content:space-between; color:var(--hudink); }
+#dpad{ width:138px; height:138px; position:relative; touch-action:none; flex:0 0 auto; }
+#dpad .k{ position:absolute; width:46px; height:46px; background:var(--btn); border:3px solid var(--btnB); display:grid; place-items:center; font-size:16px; color:#cfd6ff; }
+#dpad .k.on{ background:var(--sel); }
+#dpad .u{ left:46px; top:0; border-radius:8px 8px 0 0; } #dpad .d{ left:46px; bottom:0; border-radius:0 0 8px 8px; }
+#dpad .l{ left:0; top:46px; border-radius:8px 0 0 8px; } #dpad .r{ right:0; top:46px; border-radius:0 8px 8px 0; }
+#dpad .c{ left:46px; top:46px; border-radius:0; }
+#abtn{ width:78px; height:78px; border-radius:50%; background:var(--amber); border:4px solid var(--amberD); color:#2a1a00; font-family:'Press Start 2P', 'Courier New', monospace; font-size:20px; box-shadow:0 5px 0 #6b4300; touch-action:none; cursor:pointer; flex:0 0 auto; }
+#abtn:active{ transform:translateY(3px); box-shadow:0 2px 0 #6b4300; }
+.alabel{ display:block; font-size:8px; margin-top:4px; }
+#keyhint{ display:none; font-size:15px; text-align:center; width:100%; }
+.nontouch #dpad, .nontouch #abtn{ display:none; } .nontouch #keyhint{ display:block; } .nontouch #controls{ padding:8px; }
+#tbtn{ display:none; position:absolute; right:8px; bottom:8px; z-index:3; font-size:13px; padding:6px 10px; border-radius:8px; background:rgba(18,26,58,.85); color:#fff4d6; border:2px solid #3f4c8c; cursor:pointer; }
+.nontouch #tbtn{ display:block; }
+/* kleine Bildschirmhöhe (Querformat am Handy): Steuerung schwebt über dem Spielfeld */
+@media (orientation:landscape) and (max-height:540px){
+  .touch #controls{ position:fixed; left:0; right:0; bottom:0; background:transparent; border:0; pointer-events:none; z-index:6;
+    padding:0 calc(14px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(14px + env(safe-area-inset-left,0px)); }
+  .touch #dpad, .touch #abtn{ pointer-events:auto; opacity:.82; }
+  .touch #dpad{ width:120px; height:120px; } .touch #dpad .k{ width:40px; height:40px; }
+  .touch #dpad .u, .touch #dpad .d, .touch #dpad .c{ left:40px; } .touch #dpad .l, .touch #dpad .r, .touch #dpad .c{ top:40px; }
+  .touch #abtn{ width:66px; height:66px; font-size:17px; }
+  #hud{ padding:3px 8px; } .core{ width:24px; height:24px; font-size:13px; } .hbtn{ height:30px; width:34px; font-size:15px; }
+  #dialog{ left:150px; right:100px; max-height:70%; }
+}
+/* sehr kleine Handys im Hochformat */
+@media (orientation:portrait) and (max-height:640px){
+  #dpad{ width:114px; height:114px; } #dpad .k{ width:38px; height:38px; }
+  #dpad .u, #dpad .d, #dpad .c{ left:38px; } #dpad .l, #dpad .r, #dpad .c{ top:38px; }
+  #abtn{ width:62px; height:62px; font-size:16px; } #controls{ padding:6px 16px; }
+  .dtext{ font-size:15px; }
+}
+.ov{ position:fixed; inset:0; background:rgba(5,8,26,.78); display:flex; align-items:center; justify-content:center; z-index:20;
+  padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px)); }
+.ov[hidden]{ display:none; }
+.card{ background:var(--panel); color:var(--ink); border:4px solid var(--frame); border-radius:12px; box-shadow:0 6px 0 rgba(0,0,0,.5), inset 0 0 0 2px var(--amber); width:100%; max-width:580px; max-height:100%; overflow-y:auto; padding:16px 18px; -webkit-user-select:text; user-select:text; }
+.card h2{ font-family:'Press Start 2P', 'Courier New', monospace; font-size:14px; line-height:1.5; margin:0 0 10px; }
+.ptop{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+#ptitle{ font-family:'Press Start 2P', 'Courier New', monospace; font-size:10px; line-height:1.5; color:var(--muted); flex:1; }
+.x{ background:transparent; border:2px solid var(--muted); color:var(--ink); border-radius:8px; width:36px; height:36px; font-size:16px; cursor:pointer; flex:0 0 auto; }
+.pq{ font-size:20px; line-height:1.5; font-weight:400; margin:6px 0 10px; }
+.ptype{ font-size:14px; color:var(--muted); margin-bottom:6px; }
+.opt{ display:block; width:100%; text-align:left; background:transparent; color:var(--ink); border:3px solid var(--muted); border-radius:10px; padding:12px 13px; font-size:18px; line-height:1.4; margin:7px 0; cursor:pointer; }
+.opt:hover:not(:disabled){ border-color:var(--sel); }
+.opt.sel{ border-color:var(--sel); background:rgba(45,111,210,.16); }
+.opt.chk::before{ content:'☐ '; } .opt.chk.sel::before{ content:'☑ '; }
+.opt.right{ border-color:var(--ok); background:rgba(47,158,87,.2); opacity:1 !important; }
+.opt.wrong{ border-color:var(--bad); background:rgba(214,69,56,.15); text-decoration:line-through; }
+.opt:disabled{ opacity:.55; cursor:default; }
+.numrow{ display:flex; align-items:center; gap:10px; margin:8px 0; }
+.numin{ font-family:inherit; font-weight:700; letter-spacing:.04em; font-size:26px; width:min(220px,60%); padding:10px 12px; border:3px solid var(--muted); border-radius:10px; background:transparent; color:var(--ink); }
+.unit{ font-size:22px; font-weight:700; }
+.olabel{ font-size:14px; color:var(--muted); margin:10px 0 4px; }
+.seq{ border:3px dashed var(--muted); border-radius:10px; padding:6px; min-height:50px; }
+.sitem{ background:rgba(255,182,39,.2); border:2px solid var(--amberD); border-radius:8px; padding:8px 10px; margin:5px 0; font-size:16px; cursor:pointer; }
+.ph{ color:var(--muted); font-size:15px; padding:8px; }
+.num{ font-weight:700; color:var(--numc); font-size:1.1em; letter-spacing:.03em; white-space:nowrap; font-variant-numeric:lining-nums tabular-nums; }
+.op{ font-weight:700; color:var(--numc); font-size:1.15em; padding:0 .08em; }
+.opt.right .num, .opt.wrong .num{ color:inherit; }
+.helpbox{ margin-top:8px; padding:10px 12px; border-radius:8px; background:rgba(255,182,39,.2); border:2px dashed var(--amberD); font-size:21px; font-weight:400; line-height:1.5; }
+.helpbox[hidden]{ display:none; }
+.lvl{ display:flex; gap:8px; justify-content:center; margin:12px 0 4px; flex-wrap:wrap; }
+.lvl button{ flex:1; min-width:140px; max-width:220px; padding:10px; border-radius:10px; border:3px solid var(--muted); background:transparent; color:var(--ink); font-size:16px; cursor:pointer; line-height:1.25; }
+.lvl button[aria-pressed="true"]{ border-color:var(--sel); background:rgba(45,111,210,.18); font-weight:700; }
+.lvl small{ display:block; font-size:13px; color:var(--muted); font-weight:400; }
+.fb{ margin-top:10px; font-size:17px; line-height:1.5; }
+.fb:empty{ display:none; }
+.fb.ok{ background:rgba(47,158,87,.16); border-left:6px solid var(--ok); padding:10px 12px; border-radius:6px; }
+.fb.bad{ background:rgba(214,69,56,.13); border-left:6px solid var(--bad); padding:10px 12px; border-radius:6px; }
+.fb.info{ color:var(--muted); }
+.fb p{ margin:6px 0 0; }
+.pact{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap; }
+.big{ background:var(--amber); color:#2a1a00; border:3px solid var(--amberD); border-radius:10px; padding:11px 18px; font-size:17px; font-weight:700; cursor:pointer; box-shadow:0 4px 0 #6b4300; }
+.big:active{ transform:translateY(2px); box-shadow:0 2px 0 #6b4300; }
+.big.alt{ background:transparent; color:var(--ink); border-color:var(--muted); box-shadow:none; }
+.big[hidden]{ display:none; }
+.shake{ animation:shake .35s; }
+@keyframes shake{ 25%{ transform:translateX(-6px); } 75%{ transform:translateX(6px); } }
+/* Title */
+#title .card{ text-align:center; max-width:520px; }
+.logo{ font-family:'Press Start 2P', 'Courier New', monospace; font-size:clamp(17px,5vw,26px); line-height:1.35; margin:6px 0 4px; color:var(--ink); text-shadow:3px 3px 0 var(--amber); }
+.sub{ font-family:'Press Start 2P', 'Courier New', monospace; font-size:11px; color:var(--amberD); margin-bottom:14px; }
+.story{ font-size:17px; line-height:1.45; text-align:left; margin:10px 0 14px; }
+.namein{ font-family:inherit; font-size:19px; padding:10px 12px; width:100%; max-width:300px; border:3px solid var(--muted); border-radius:10px; background:transparent; color:var(--ink); text-align:center; }
+.tiny{ font-size:13px; color:var(--muted); margin-top:12px; line-height:1.4; }
+.emrow{ font-size:26px; letter-spacing:6px; margin:6px 0; }
+/* Log */
+.logsec{ border-top:2px dashed var(--muted); padding:8px 0; }
+.logsec h3{ font-size:18px; margin:4px 0; }
+.logsec p{ font-size:16px; line-height:1.45; margin:6px 0; }
+.muted{ color:var(--muted); }
+#mapcv{ width:100%; height:auto; image-rendering:pixelated; border:3px solid var(--frame); border-radius:6px; display:block; }
+/* Certificate */
+.cert{ text-align:center; }
+.certin{ border:3px double var(--amberD); border-radius:8px; padding:14px; }
+.cname{ font-family:'Press Start 2P', 'Courier New', monospace; font-size:16px; margin:10px 0; color:var(--amberD); line-height:1.4; word-break:break-word; }
+.cscore{ font-size:20px; font-weight:700; }
+.crank{ font-size:18px; }
+@media (prefers-reduced-motion: reduce){ .dnext{ animation:none; } .shake{ animation:none; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud">
+    <div class="cores" id="cores"></div>
+    <div id="score">⚡ 0</div>
+    <button class="hbtn" id="bMap" aria-label="Karte öffnen" title="Karte">🗺️</button>
+    <button class="hbtn" id="bLog" aria-label="Logbuch öffnen" title="Logbuch">📖</button>
+    <button class="hbtn" id="bMus" aria-label="Musik ein/aus" title="Musik">🎵</button>
+  </header>
+  <main id="stage">
+    <canvas id="game" width="256" height="208" aria-label="Spielwelt Energiepark"></canvas>
+    <div id="toast" hidden></div>
+    <button id="tbtn" type="button">🎮 Touch-Steuerung</button>
+    <div id="dialog" hidden role="dialog" aria-live="polite">
+      <div class="dav" id="dav">💬</div>
+      <div class="dmain"><div class="dname" id="dname"></div><div class="dtext" id="dtext"></div></div>
+      <div class="dnext">▼ weiter</div>
+    </div>
+  </main>
+  <footer id="controls">
+    <div id="dpad" aria-hidden="true">
+      <div class="k u">▲</div><div class="k l">◀</div><div class="k c"></div><div class="k r">▶</div><div class="k d">▼</div>
+    </div>
+    <div id="keyhint">Bewegen: Pfeiltasten, WASD oder ins Bild tippen · Sprechen: Leertaste oder E</div>
+    <button id="abtn" aria-label="Sprechen / Weiter">A<span class="alabel">Sprechen</span></button>
+  </footer>
+</div>
+
+<div class="ov" id="title">
+  <div class="card">
+    <div class="emrow">🌬️☀️💧🌱🌋🌡️</div>
+    <div class="logo">Energiepark Rheinsonne</div>
+    <div class="sub">Die Netz-Rettung</div>
+    <p class="story">Sturmtief „Zephyr“ hat in der Nacht alle sechs Anlagen des Energieparks vom Netz gerissen. Das Dorf sitzt im Dunkeln. Du bist heute Praktikant:in bei den Stadtwerken – und die Sicherheitssysteme geben jede Anlage nur frei, wenn jemand beweist, dass er sie versteht.</p>
+    <div class="lvl" role="group" aria-label="Schwierigkeit"><button data-lvl="easy" aria-pressed="false">🟢 Einsteiger<small>kurze Texte, Rechenhilfe</small></button><button data-lvl="std" aria-pressed="true">🔵 Profi<small>mehr Fachwissen</small></button></div>
+    <input class="namein" id="namein" maxlength="18" placeholder="Dein Vorname" autocomplete="off" aria-label="Dein Vorname">
+    <div class="pact" style="justify-content:center">
+      <button class="big alt" id="bCont" hidden>Weiterspielen</button>
+      <button class="big" id="bNew">Neues Spiel</button>
+    </div>
+    <p class="tiny">Technik und Naturwissenschaften · Klasse 9 · Rheinland-Pfalz<br>Mit Musik – Ton am Gerät einschalten. Dein Fortschritt wird in diesem Browser gespeichert.</p>
+  </div>
+</div>
+
+<div class="ov" id="panel" hidden>
+  <div class="card" id="pcard">
+    <div class="ptop"><span id="ptitle"></span><button class="x" id="pclose" aria-label="Später weitermachen">✕</button></div>
+    <p class="pq" id="pq"></p>
+    <div id="pbody"></div>
+    <div id="pfb" class="fb" aria-live="polite"></div>
+    <div class="pact"><button class="big" id="pcheck">Prüfen</button><button class="big" id="pnext" hidden>Weiter ▶</button></div>
+  </div>
+</div>
+
+<div class="ov" id="log" hidden>
+  <div class="card">
+    <div class="ptop"><h2 style="flex:1;margin:0">📖 Logbuch</h2><button class="x" data-close="log" aria-label="Schließen">✕</button></div>
+    <div id="logbody"></div>
+    <div class="lvl" role="group" aria-label="Schwierigkeit"><button data-lvl="easy" aria-pressed="false">🟢 Einsteiger</button><button data-lvl="std" aria-pressed="true">🔵 Profi</button></div>
+    <div class="pact"><button class="big alt" id="bReset">Spielstand löschen</button><button class="big" data-close="log">Schließen</button></div>
+  </div>
+</div>
+
+<div class="ov" id="mapov" hidden>
+  <div class="card" style="max-width:820px">
+    <div class="ptop"><h2 style="flex:1;margin:0">🗺️ Karte</h2><button class="x" data-close="mapov" aria-label="Schließen">✕</button></div>
+    <canvas id="mapcv"></canvas>
+    <p class="tiny">Roter Punkt: du. ✔ = Anlage wieder am Netz.</p>
+  </div>
+</div>
+
+<div class="ov" id="cert" hidden>
+  <div class="card cert">
+    <div class="certin">
+      <div class="emrow">⚡</div>
+      <h2>Urkunde</h2>
+      <p>Hiermit wird bestätigt, dass</p>
+      <p class="cname" id="cname"></p>
+      <p>den Energiepark Rheinsonne nach Sturmtief „Zephyr“ erfolgreich wieder ans Netz gebracht hat.</p>
+      <p class="cscore" id="cscore"></p>
+      <p class="crank" id="crank"></p>
+      <div class="emrow">🌬️☀️💧🌱🌋🌡️</div>
+      <p class="tiny" id="cdate"></p>
+      <p class="tiny">Stadtwerke Rheinsonne, Leitwarte – gez. Herr Meyer, TuN</p>
+    </div>
+    <div class="pact"><button class="big alt" id="bAgain">Neues Spiel</button><button class="big" data-close="cert">Weiter erkunden</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const TS = 16, MW = 48, MH = 36;
+let VW = 256, VH = 208;
+const cv = $('game'), ctx = cv.getContext('2d');
+const stage = $('stage');
+let G = ctx;
+function P(col, x, y, w, h){ G.fillStyle = col; G.fillRect(x, y, w, h); }
+function hash(x, y){ let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; }
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+
+/* =================== INHALTE =================== */
+const ORDER = ['wind','solar','wasser','bio','geo','luft'];
+const MENTOR = { name:'Herr Meyer', av:'👨‍🏫', hair:'#4a2e1a', shirt:'#2f4f8f', shirt2:'#c9a227' };
+
+const ST = {
+ wind:{ name:'Windpark', emoji:'🌬️', dir:'Norden',
+  npc:{ name:'Windmeister Hannes', av:'👷‍♂️', x:26, y:6, hair:'#c9a46a', shirt:'#2f6fc0', hat:'#f4f4f4' },
+  intro:[
+   'Moin, {name}! Ich bin Hannes. Bevor ich die Windräder wieder anwerfe, muss ich wissen, ob du verstehst, wie sie funktionieren.',
+   'Wind entsteht, weil die Sonne die Erde ungleichmäßig erwärmt. Warme Luft steigt auf, kühlere Luft strömt nach – das ist Wind. Windenergie ist also eigentlich umgewandelte Sonnenenergie!',
+   'Der Rotor nimmt die Bewegungsenergie (kinetische Energie) des Windes auf und dreht sich. In der Gondel oben am Turm wandelt der Generator diese Drehbewegung in elektrische Energie um.',
+   'Jetzt das Wichtigste: Die Leistung wächst mit der DRITTEN Potenz der Windgeschwindigkeit: P = ½ · ρ · A · v³. Doppelte Windgeschwindigkeit bedeutet 2³ = 8-fache Leistung! A ist die Fläche, die der Rotor überstreicht.',
+   'Ganz kann man dem Wind die Energie nie entziehen – sonst stünde die Luft hinter dem Rotor still. Physikalisch sind höchstens 59 % nutzbar (Betz-Gesetz). In Rheinland-Pfalz stehen viele Anlagen auf den windigen Höhen, zum Beispiel im Hunsrück.'
+  ],
+  win:'Stark, {name}! Freigabe erteilt – hörst du, wie die Rotoren anlaufen? Hier ist dein Energiekern!',
+  recap:'Läuft wie geschmiert! Merke dir: P ~ v³ – doppelte Windgeschwindigkeit, achtfache Leistung.',
+  puzzles:[
+   { type:'order', q:'Bringe die Energieumwandlung im Windrad in die richtige Reihenfolge.',
+     items:['Bewegungsenergie des Windes','Rotationsenergie des Rotors','Generator in der Gondel','Elektrische Energie im Netz'],
+     hint:'Am Anfang steht der Wind selbst, am Ende der Strom im Netz.',
+     explain:'Der Rotor nimmt Bewegungsenergie aus dem Wind auf, der Generator wandelt die Drehbewegung in elektrische Energie um.' },
+   { type:'mc', q:'Die Windgeschwindigkeit steigt von 5 m/s auf 10 m/s. Wie verändert sich die Leistung des Windrads? (P ~ v³)',
+     options:['Sie verdoppelt sich','Sie vervierfacht sich','Sie wird 8-mal so groß','Sie bleibt gleich'], correct:2,
+     hint:'Die Geschwindigkeit verdoppelt sich. Rechne 2 hoch 3.',
+     explain:'2³ = 2 · 2 · 2 = 8. Deshalb baut man Windräder dort, wo der Wind kräftig weht – auf Höhenzügen und weit über dem Boden.' },
+   { type:'num', q:'Bei 5 m/s Wind liefert ein Windrad 100 kW. Bei 10 m/s liefert es 8-mal so viel. Wie viele kW sind das?', answer:800, unit:'kW',
+     help:'Rechne: 100 kW · 8 = ? kW',
+     hint:'Multipliziere 100 mit 8.',
+     explain:'100 kW · 8 = 800 kW. Doppelte Windgeschwindigkeit bringt achtfache Leistung!' }
+  ]},
+ solar:{ name:'Solarfeld', emoji:'☀️', dir:'Nordosten',
+  npc:{ name:'Ingenieurin Sonja', av:'👩‍🔧', x:43, y:5, hair:'#e0b44a', shirt:'#f0a52a', hat:'#ffffff' },
+  intro:[
+   'Hallo {name}, ich bin Sonja! Mein Solarfeld ist ausgefallen. Lass uns schnell klären, wie Photovoltaik funktioniert.',
+   'Photovoltaik – kurz PV – wandelt Sonnenlicht DIREKT in elektrische Energie um. Ganz ohne Turbine, ohne bewegte Teile, ohne Lärm.',
+   'Solarzellen bestehen meist aus Silizium, einem Halbleiter. Zwei unterschiedlich dotierte Schichten (n- und p-Schicht) bilden eine Grenzschicht. Trifft Licht darauf, werden Elektronen gelöst – es entsteht eine Gleichspannung.',
+   'Solarzellen liefern Gleichstrom (DC). Unser Netz arbeitet aber mit Wechselstrom (AC). Deshalb braucht jede PV-Anlage einen Wechselrichter.',
+   'Verwechslungsgefahr: Solarthermie erzeugt WÄRME (z. B. warmes Wasser), Photovoltaik erzeugt STROM. Gute Module wandeln etwa 20 % der Strahlung in Strom um. In Deutschland zeigen sie ideal nach Süden, mit etwa 30–35° Neigung.'
+  ],
+  win:'Die Module glänzen wieder! Sauber gelöst, {name}. Hier ist dein Energiekern!',
+  recap:'Läuft! Merke dir: PV macht aus Licht direkt Gleichstrom, der Wechselrichter macht ihn netztauglich.',
+  puzzles:[
+   { type:'mc', q:'Was ist der Unterschied zwischen Photovoltaik und Solarthermie?',
+     options:['PV erzeugt Strom, Solarthermie erzeugt Wärme','PV erzeugt Wärme, Solarthermie erzeugt Strom','Beide erzeugen nur Strom','Es gibt keinen Unterschied'], correct:0,
+     hint:'„Photo-Volt“ – denk an die Einheit Volt.',
+     explain:'Photovoltaik liefert elektrische Energie, Solarthermie erwärmt eine Flüssigkeit, etwa für Warmwasser oder Heizung.' },
+   { type:'num', q:'1 m² Solarmodul liefert mittags 200 W. Auf dem Dach liegen 10 m² Module. Wie viel Watt liefert die Anlage?', answer:2000, unit:'W',
+     help:'Rechne: 200 W · 10 = ? W',
+     hint:'Multipliziere die Leistung pro m² mit der Fläche.',
+     explain:'200 W · 10 = 2000 W = 2 kW. Auf 1 m² treffen etwa 1000 W Sonnenlicht – das Modul macht rund 20 % davon zu Strom.' },
+   { type:'mc', q:'Wozu braucht eine PV-Anlage einen Wechselrichter?',
+     options:['Er wandelt Gleichstrom in Wechselstrom für das Netz um','Er dreht die Module zur Sonne','Er kühlt die Solarzellen','Er speichert den Strom für die Nacht'], correct:0,
+     hint:'DC und AC – was davon liefert die Zelle, was braucht das Netz?',
+     explain:'Solarzellen liefern Gleichstrom. Das Stromnetz arbeitet mit Wechselstrom (230 V, 50 Hz) – der Wechselrichter übersetzt.' }
+  ]},
+ wasser:{ name:'Wasserkraft', emoji:'💧', dir:'Nordwesten',
+  npc:{ name:'Wasserbauer Moritz', av:'👨‍🔧', x:11, y:14, hair:'#3a2616', shirt:'#2b8a8a', hat:'#2d6fd2' },
+  intro:[
+   'Servus, {name}! Moritz mein Name. Mein Stausee ist voll, aber die Turbine steht. Zeit für eine kleine Lektion!',
+   'Wasserkraftwerke nutzen die Lageenergie (potenzielle Energie) von hoch gelegenem Wasser. Die Formel: E = m · g · h. Also: Masse mal Ortsfaktor mal Höhe.',
+   'Das Wasser fließt durch Rohre nach unten, wird dabei schnell und treibt eine Turbine an. Die Turbine dreht den Generator. Je mehr Wasser und je größer die Fallhöhe, desto mehr Energie.',
+   'Es gibt Laufwasserkraftwerke an Flüssen – an der Mosel arbeiten mehrere an den Staustufen – sowie Speicherkraftwerke mit Stausee.',
+   'Besonders schlau: Pumpspeicherkraftwerke! Bei Stromüberschuss pumpen sie Wasser nach oben, bei Bedarf lassen sie es wieder durch die Turbine fließen. Ein riesiger Akku aus Wasser.'
+  ],
+  win:'Das Wasser rauscht wieder durch die Turbine! Klasse gemacht, {name}. Hier ist dein Energiekern!',
+  recap:'Es rauscht! Merke dir: E = m · g · h – Masse und Fallhöhe bestimmen die Energie.',
+  puzzles:[
+   { type:'mc', q:'Welche Energieform besitzt das Wasser im hoch gelegenen Stausee vor allem?',
+     options:['Lageenergie (potenzielle Energie)','Chemische Energie','Elektrische Energie','Kernenergie'], correct:0,
+     hint:'Es kommt darauf an, WO sich das Wasser befindet.',
+     explain:'Hoch gelegenes Wasser besitzt Lageenergie. Beim Herabfließen wird sie zu Bewegungsenergie, die Turbine macht daraus Rotationsenergie.' },
+   { type:'num', q:'100 kg Wasser fallen 10 m tief durch die Turbine. Berechne die Lageenergie: E = m · g · h (g = 10 N/kg).', answer:10000, accept:[9810], unit:'J',
+     help:'Einsetzen: E = 100 · 10 · 10 = ? J',
+     hint:'Multipliziere die drei Zahlen: 100 · 10 · 10.',
+     explain:'E = 100 kg · 10 N/kg · 10 m = 10 000 J = 10 kJ. Mehr Wasser oder mehr Höhe bedeutet mehr Energie.' },
+   { type:'mc', q:'Was macht ein Pumpspeicherkraftwerk, wenn gerade zu viel Strom im Netz ist?',
+     options:['Es pumpt Wasser ins obere Becken und speichert so Energie','Es lässt Wasser ab und erzeugt noch mehr Strom','Es schaltet sich komplett ab','Es verwandelt das Wasser in Dampf'], correct:0,
+     hint:'Denk an einen Akku: Wann wird er geladen?',
+     explain:'Pumpspeicher arbeiten wie riesige Akkus: Überschuss wird als Lageenergie gespeichert und später wieder in Strom verwandelt.' }
+  ]},
+ bio:{ name:'Biohof', emoji:'🌱', dir:'Südwesten',
+  npc:{ name:'Landwirtin Petra', av:'👩‍🌾', x:9, y:23, hair:'#8a3b1e', shirt:'#4f8a2a', hat:'#d9b45a' },
+  intro:[
+   'Guten Tag, {name}! Ich bin Petra. Auf meinem Hof machen Bakterien aus Mist Strom – kein Witz! Aber dazu musst du erst Bescheid wissen.',
+   'Biomasse ist gespeicherte Sonnenenergie: Pflanzen bauen durch Fotosynthese aus Kohlenstoffdioxid, Wasser und Licht ihre Biomasse auf.',
+   'In der Biogasanlage zersetzen Bakterien Gülle, Mist und Pflanzenreste im Fermenter – ohne Sauerstoff, also anaerob. Dabei entsteht Biogas, das hauptsächlich aus Methan (CH₄) besteht.',
+   'Im Blockheizkraftwerk (BHKW) verbrennt ein Motor das Biogas und treibt einen Generator an. Strom UND Abwärme werden genutzt – das nennt man Kraft-Wärme-Kopplung.',
+   'Beim Verbrennen wird nur so viel CO₂ frei, wie die Pflanzen vorher aufgenommen haben – nahezu CO₂-neutral. Kritik gibt es auch: Mais für Biogas wächst auf Äckern, die sonst Lebensmittel liefern könnten („Tank oder Teller“).'
+  ],
+  win:'Das BHKW brummt wieder! Die Kühe sind beeindruckt, {name}. Hier ist dein Energiekern!',
+  recap:'Es brummt! Merke dir: Bakterien machen ohne Sauerstoff aus Gülle Methan – das BHKW liefert Strom UND Wärme.',
+  puzzles:[
+   { type:'mc', q:'Welches Gas ist der Hauptbestandteil von Biogas?',
+     options:['Methan (CH₄)','Sauerstoff (O₂)','Wasserstoff (H₂)','Stickstoff (N₂)'], correct:0,
+     hint:'Petra hat die Formel CH₄ genannt.',
+     explain:'Biogas besteht zu etwa 50–75 % aus Methan. Methan ist brennbar – damit läuft der Motor im BHKW.' },
+   { type:'order', q:'Bringe den Weg von der Pflanze bis zum Strom in die richtige Reihenfolge.',
+     items:['Pflanzen wachsen durch Fotosynthese','Gülle und Pflanzenreste kommen in den Fermenter','Bakterien erzeugen ohne Sauerstoff Biogas','Das BHKW erzeugt Strom und Wärme'],
+     hint:'Ganz am Anfang steht die Sonne, die Pflanzen wachsen lässt.',
+     explain:'Sonnenenergie → Biomasse → Biogas → Strom und Wärme. Eine lange Kette von Energieumwandlungen!' },
+   { type:'mc', q:'Warum gilt Biomasse als nahezu CO₂-neutral?',
+     options:['Beim Verbrennen wird nur so viel CO₂ frei, wie die Pflanzen beim Wachsen aufgenommen haben','Biogas enthält überhaupt keinen Kohlenstoff','Kühe atmen CO₂ ein','Das BHKW steht unter der Erde'], correct:0,
+     hint:'Denk an den Kreislauf aus Wachsen und Verbrennen.',
+     explain:'Der Kohlenstoff bleibt im Kreislauf. „Nahezu“, weil Traktoren, Dünger und Transport zusätzliche Emissionen verursachen.' }
+  ]},
+ geo:{ name:'Geothermie', emoji:'🌋', dir:'Osten',
+  npc:{ name:'Geologe Dr. Erdmann', av:'👨‍🔬', x:39, y:15, hair:'#9a9a9a', shirt:'#8a4f2a', hat:'#ff8a1f' },
+  intro:[
+   'Ah, {name}! Erdmann, Geologe. Unter unseren Füßen schlummert eine gewaltige Heizung. Lass mich erklären.',
+   'Geothermie nutzt die Wärme aus dem Erdinneren. Im Durchschnitt steigt die Temperatur pro 100 m Tiefe um etwa 3 °C.',
+   'Bei der tiefen Geothermie wird heißes Wasser aus mehreren tausend Metern Tiefe gefördert. Seine Wärme verdampft ein Arbeitsmittel, das eine Turbine antreibt. Das abgekühlte Wasser wird wieder in die Tiefe gepumpt.',
+   'Der Oberrheingraben ist im Untergrund besonders warm, weil die Erdkruste dort aufgebrochen ist. In der Südpfalz gibt es deshalb Geothermiekraftwerke, zum Beispiel in Landau und Insheim.',
+   'Der große Vorteil: Erdwärme ist rund um die Uhr verfügbar – egal ob Tag oder Nacht, Sturm oder Flaute. Fachleute sagen: Sie ist grundlastfähig.'
+  ],
+  win:'Die Pumpen fördern wieder! Ausgezeichnet, {name}. Hier ist dein Energiekern!',
+  recap:'Die Erde liefert! Merke dir: etwa 3 °C mehr pro 100 m – und das rund um die Uhr.',
+  puzzles:[
+   { type:'num', q:'An der Oberfläche hat der Boden 10 °C. Pro 100 m Tiefe wird es 3 °C wärmer. Wie warm ist es in 1000 m Tiefe?', answer:40, unit:'°C', tol:0.5,
+     help:'1000 m sind 10 · 100 m. Also: 10 · 3 °C = ? °C. Dann noch + 10 °C.',
+     hint:'Vergiss die 10 °C an der Oberfläche nicht.',
+     explain:'10 · 3 °C = 30 °C, plus 10 °C = 40 °C. In 3000 m Tiefe wären es schon etwa 100 °C!' },
+   { type:'mc', q:'Was bedeutet „grundlastfähig“?',
+     options:['Die Anlage kann rund um die Uhr zuverlässig Strom liefern','Die Anlage steht auf festem Grund','Die Anlage liefert nur bei Sonnenschein','Die Anlage braucht keinen Generator'], correct:0,
+     hint:'Dr. Erdmann hat es am Ende seiner Erklärung gesagt.',
+     explain:'Grundlast ist der Strombedarf, der immer anfällt – auch nachts. Geothermie kann ihn unabhängig vom Wetter decken.' },
+   { type:'mc', q:'In welcher Region von Rheinland-Pfalz wird tiefe Geothermie zur Stromerzeugung genutzt?',
+     options:['Im Westerwald','Im Oberrheingraben in der Südpfalz','In der Eifel','Im Hunsrück'], correct:1,
+     hint:'Schau ins Logbuch (📖) – Dr. Erdmann hat Landau und Insheim erwähnt.',
+     explain:'Im Oberrheingraben liegt heißes Tiefenwasser näher an der Oberfläche. Die Eifel ist zwar vulkanisch geprägt, die Geothermie-Kraftwerke von RLP stehen aber in der Südpfalz.' }
+  ]},
+ luft:{ name:'Wärmepumpen-Siedlung', emoji:'🌡️', dir:'Südosten',
+  npc:{ name:'Heizungsbauerin Lu', av:'👩‍🏭', x:38, y:27, hair:'#1c1c1c', shirt:'#c0392b', hat:null },
+  intro:[
+   'Hey {name}, ich bin Lu! In der Siedlung frieren alle, weil die Wärmepumpen stillstehen. Lass uns das ändern.',
+   'Auch kalte Luft enthält Wärmeenergie! Eine Luft-Wärmepumpe holt sie aus der Umgebungsluft – sogar bei Minusgraden.',
+   'Das Prinzip ist wie beim Kühlschrank, nur umgekehrt: Ein Kältemittel verdampft schon bei sehr niedrigen Temperaturen und nimmt dabei Wärme aus der Luft auf. Ein Verdichter presst den Dampf zusammen – dadurch wird er richtig heiß.',
+   'Im Verflüssiger gibt das heiße Kältemittel seine Wärme an das Heizungswasser ab und wird wieder flüssig. Ein Expansionsventil senkt den Druck – und der Kreislauf beginnt von vorn.',
+   'Die Jahresarbeitszahl (JAZ) zeigt, wie effizient das ist: Bei einer JAZ von 4 werden aus 1 kWh Strom 4 kWh Wärme. Den Rest liefert gratis die Umwelt. Läuft die Pumpe mit Wind- und Solarstrom, heizt sie fast klimaneutral.'
+  ],
+  win:'Die Ventilatoren drehen sich, die Häuser werden warm! Danke, {name}. Hier ist dein Energiekern!',
+  recap:'Mollig warm! Merke dir: JAZ 4 bedeutet, aus 1 kWh Strom werden 4 kWh Wärme.',
+  puzzles:[
+   { type:'mc', q:'Woher stammt bei einer Luft-Wärmepumpe der größte Teil der Heizwärme?',
+     options:['Aus der Umgebungsluft','Aus dem Strom','Aus verbranntem Erdgas','Aus dem Kühlschrank der Nachbarn'], correct:0,
+     hint:'Der Strom treibt nur den Verdichter an.',
+     explain:'Der Strom treibt den Verdichter an, die meiste Wärme stammt aus der Luft. Darum ist eine Wärmepumpe so effizient.' },
+   { type:'num', q:'Eine Wärmepumpe macht aus 1 kWh Strom 4 kWh Wärme (JAZ 4). Sie verbraucht 100 kWh Strom. Wie viel Wärme liefert sie?', answer:400, unit:'kWh',
+     help:'Rechne: 100 kWh · 4 = ? kWh',
+     hint:'JAZ 4 heißt: Aus 1 kWh Strom werden 4 kWh Wärme.',
+     explain:'100 kWh · 4 = 400 kWh Wärme. 300 kWh davon holt die Pumpe kostenlos aus der Luft!' },
+   { type:'order', q:'Bringe den Kreislauf in der Wärmepumpe in die richtige Reihenfolge.',
+     items:['Kältemittel verdampft und nimmt Wärme aus der Luft auf','Verdichter presst das Gas zusammen – es wird heiß','Verflüssiger gibt die Wärme an die Heizung ab','Expansionsventil senkt den Druck – der Kreislauf beginnt neu'],
+     hint:'Zuerst muss das Kältemittel Wärme aus der Luft aufnehmen.',
+     explain:'Verdampfen → Verdichten → Verflüssigen → Entspannen. Genau umgekehrt wie im Kühlschrank, der Wärme nach außen pumpt.' }
+  ]}
+};
+
+/* Einsteiger-Modus (Berufsreife): null = gleiche Aufgabe wie im Profi-Modus */
+const KURZ = {
+ wind:'Das Wichtigste: Wind dreht den Rotor. Der Generator macht daraus Strom. Mehr Wind = viel mehr Strom.',
+ solar:'Das Wichtigste: Solarzellen machen aus Sonnenlicht direkt Strom. Nachts gibt es keinen Solarstrom. Der Wechselrichter macht den Strom passend fürs Netz.',
+ wasser:'Das Wichtigste: Wasser fließt von oben nach unten und dreht eine Turbine. Je höher das Wasser liegt, desto mehr Energie. Ein Pumpspeicher ist wie ein großer Akku.',
+ bio:'Das Wichtigste: Bakterien machen aus Gülle und Pflanzen Biogas. Im BHKW wird daraus Strom und Wärme. Biogas kann man speichern.',
+ geo:'Das Wichtigste: Tief in der Erde ist es heiß. Pro 100 m wird es etwa 3 °C wärmer. Erdwärme gibt es Tag und Nacht.',
+ luft:'Das Wichtigste: Die Wärmepumpe holt Wärme aus der Luft. Aus 1 kWh Strom werden 3 bis 4 kWh Wärme. Sie arbeitet wie ein umgekehrter Kühlschrank.'
+};
+const EASY = {
+ wind:[ null,
+  { type:'mc', q:'Der Wind weht stärker. Was passiert mit dem Windrad?', options:['Es liefert mehr Strom','Es liefert weniger Strom','Es liefert gleich viel Strom'], correct:0,
+    hint:'Mehr Wind dreht den Rotor schneller.', explain:'Mehr Wind bedeutet viel mehr Strom. Doppelt so viel Wind bringt sogar achtmal so viel Leistung!' },
+  { type:'num', q:'Ein Windrad liefert 2 Megawatt (MW). Im Windpark stehen 4 Windräder. Wie viel liefern alle zusammen?', answer:8, unit:'MW',
+    help:'2 + 2 + 2 + 2 = ?   oder:   2 · 4 = ?', hint:'Jedes der 4 Windräder liefert 2 MW.', explain:'2 MW · 4 = 8 MW.' } ],
+ solar:[
+  { type:'mc', q:'Was erzeugt eine Photovoltaik-Anlage?', options:['Strom','Warmes Wasser','Wind'], correct:0,
+    hint:'„Volt“ steckt im Namen – das ist eine Einheit für Strom.', explain:'Photovoltaik macht aus Sonnenlicht direkt Strom.' },
+  { type:'num', q:'Ein Solarmodul liefert 400 W. Auf dem Dach liegen 5 Module. Wie viel Watt liefern alle zusammen?', answer:2000, unit:'W',
+    help:'Rechne: 400 W · 5 = ? W', hint:'Jedes der 5 Module liefert 400 W.', explain:'400 W · 5 = 2000 W = 2 kW.' },
+  { type:'mc', q:'Wann liefert eine Solaranlage KEINEN Strom?', options:['In der Nacht','Am Mittag','Im Sommer'], correct:0,
+    hint:'Wann scheint keine Sonne?', explain:'Ohne Licht kein Solarstrom. Nachts müssen andere Anlagen oder Speicher einspringen.' } ],
+ wasser:[
+  { type:'mc', q:'Wo hat das Wasser mehr Lageenergie?', options:['Oben im Stausee','Unten im Fluss','Das ist überall gleich'], correct:0,
+    hint:'Lageenergie hängt von der Höhe ab.', explain:'Je höher das Wasser liegt, desto mehr Lageenergie hat es.' },
+  { type:'num', q:'Im Stausee A fällt das Wasser 10 m tief, im Stausee B 30 m tief. Wie viel Mal so viel Energie liefert die gleiche Wassermenge in B?', answer:3, unit:'-mal',
+    help:'Rechne: 30 m : 10 m = ?', hint:'Wie oft passen 10 m in 30 m?', explain:'30 : 10 = 3. Dreifache Höhe bedeutet dreifache Energie.' },
+  { type:'mc', q:'Ein Pumpspeicherkraftwerk ist wie ein …', options:['riesiger Akku','großer Ventilator','Kühlschrank'], correct:0,
+    hint:'Es speichert Energie und gibt sie später wieder ab.', explain:'Bei zu viel Strom wird Wasser hochgepumpt, bei Bedarf fließt es zurück durch die Turbine.' } ],
+ bio:[
+  { type:'mc', q:'Welches Gas entsteht vor allem in der Biogasanlage?', options:['Methan','Sauerstoff','Helium'], correct:0,
+    hint:'Petra hat die Formel CH₄ genannt.', explain:'Biogas besteht vor allem aus Methan. Methan ist brennbar.' },
+  { type:'order', q:'Bringe den Weg vom Mist zum Strom in die richtige Reihenfolge.',
+    items:['Gülle und Pflanzenreste kommen in den Fermenter','Bakterien machen daraus Biogas','Das BHKW macht aus Biogas Strom und Wärme'],
+    hint:'Zuerst muss etwas in den Fermenter.', explain:'Gülle → Biogas → Strom und Wärme.' },
+  { type:'mc', q:'Was liefert ein Blockheizkraftwerk (BHKW)?', options:['Strom und Wärme','Nur Wasser','Nur Licht'], correct:0,
+    hint:'„Heiz“ und „Kraft“ stecken im Namen.', explain:'Das BHKW liefert Strom UND Wärme – so wird die Energie gut genutzt.' } ],
+ geo:[
+  { type:'num', q:'Pro 100 m Tiefe wird es 3 °C wärmer. Um wie viel Grad wird es in 300 m Tiefe wärmer?', answer:9, unit:'°C',
+    help:'300 m sind 3 · 100 m. Rechne: 3 · 3 °C = ? °C', hint:'Für jede 100 m kommen 3 °C dazu.', explain:'3 · 3 °C = 9 °C.' },
+  { type:'mc', q:'Wann liefert ein Geothermie-Kraftwerk Strom?', options:['Immer – Tag und Nacht','Nur wenn die Sonne scheint','Nur wenn Wind weht'], correct:0,
+    hint:'Die Wärme in der Erde ist immer da.', explain:'Erdwärme gibt es rund um die Uhr. Das nennt man grundlastfähig.' },
+  { type:'mc', q:'Wo in Rheinland-Pfalz stehen Geothermie-Kraftwerke?', options:['In der Südpfalz','Im Westerwald','Im Hunsrück'], correct:0,
+    hint:'Landau und Insheim liegen in der Südpfalz.', explain:'In der Südpfalz (Oberrheingraben) ist es tief unten besonders heiß.' } ],
+ luft:[
+  { type:'mc', q:'Woher holt eine Luft-Wärmepumpe die meiste Wärme?', options:['Aus der Luft draußen','Aus verbranntem Gas','Aus dem Kühlschrank der Nachbarn'], correct:0,
+    hint:'Der Name verrät es: LUFT-Wärmepumpe.', explain:'Sogar kalte Luft enthält Wärme – die Wärmepumpe holt sie heraus.' },
+  { type:'num', q:'Aus 1 kWh Strom macht die Wärmepumpe 3 kWh Wärme. Wie viel Wärme macht sie aus 2 kWh Strom?', answer:6, unit:'kWh',
+    help:'Rechne: 2 · 3 = ?', hint:'Jede kWh Strom wird zu 3 kWh Wärme.', explain:'2 · 3 = 6 kWh Wärme.' },
+  { type:'order', q:'Bringe die Schritte der Wärmepumpe in die richtige Reihenfolge.',
+    items:['Der Ventilator holt Wärme aus der Außenluft','Der Verdichter macht das Kältemittel heiß','Die Heizung im Haus wird warm'],
+    hint:'Zuerst muss die Wärme aus der Luft geholt werden.', explain:'Luft → Verdichter → warme Heizung.' } ],
+ final:[ null,
+  { type:'multi', q:'Lage 2: Sonniger, windiger Mittag. Es gibt mehr Strom, als das Dorf braucht. Was ist sinnvoll?',
+    options:['Pumpspeicher füllen: Wasser nach oben pumpen','Wärmepumpen jetzt laufen lassen','Nichts tun – Strom verschwindet einfach'], correct:[0,1],
+    hint:'Den Überschuss sollte man speichern oder nutzen.', explain:'Überschüssiger Strom wird gespeichert oder genutzt. Er verschwindet nicht einfach.' },
+  null, null ]
+};
+function plist(k){ const L = k==='final' ? FINAL : ST[k].puzzles; return state.level==='easy' ? L.map((p,i)=>(EASY[k]&&EASY[k][i])||p) : L; }
+
+const INTRO = [
+ 'Hallo {name}! Willkommen zum Praktikumstag bei den Stadtwerken Rheinsonne. Ich bin Herr Meyer, dein TuN-Lehrer – ja, genau, der gutaussehende. 😎',
+ 'Die Leiterin der Leitwarte steckt wegen des Sturms fest. Also übernehme ich heute ausnahmsweise das Kommando.',
+ 'Leider erwischst du einen chaotischen Tag: Heute Nacht ist Sturmtief „Zephyr“ über den Energiepark gefegt. Ein Überspannungsschaden hat alle sechs Anlagen vom Netz getrennt.',
+ 'Das ganze Dorf hat weder Strom noch Heizung. Die Bürgermeisterin sitzt im Dunkeln, und in der Schule fällt die Mensa aus. 😬',
+ 'Die Sicherheitssysteme geben jede Anlage nur frei, wenn jemand vor Ort zeigt, dass er sie wirklich versteht. Die Fachleute der Stadtwerke warten draußen auf dich.',
+ 'Erkunde den Park, sprich mit den Fachleuten – achte auf das gelbe ! – und löse ihre Freigabe-Aufgaben. Jede Anlage gibt dir einen Energiekern.',
+ 'Mit allen sechs Kernen kommst du zu mir zurück. Dann bringen wir das Netz gemeinsam ins Gleichgewicht. Die Wissenstafeln im Park, die Karte (🗺️) und dein Logbuch (📖) helfen dir. Viel Erfolg!'
+];
+const FINAL_INTRO = [
+ 'Unglaublich, {name}! Alle sechs Energiekerne – jede Anlage ist wieder bereit.',
+ 'Jetzt kommt der schwierigste Teil: Im Stromnetz muss in jedem Moment genau so viel Strom erzeugt werden, wie verbraucht wird. Sonst gerät die Netzfrequenz von 50 Hertz aus dem Takt.',
+ 'Ich spiele dir verschiedene Wetterlagen vor. Entscheide, wie wir den Park steuern. Los geht’s!'
+];
+const FINAL = [
+ { type:'multi', q:'Lage 1: Windstille Winternacht, −5 °C. Es ist dunkel, kein Lüftchen weht – aber alle wollen Licht und Wärme. Welche Anlagen können JETZT zuverlässig Strom liefern?',
+   options:['🌬️ Windpark','☀️ Solarfeld','💧 Wasserkraft und Pumpspeicher','🌱 Biogas-BHKW','🌋 Geothermie'], correct:[2,3,4],
+   hint:'Welche Quellen brauchen weder Sonne noch Wind? Denk auch an gespeicherte Energie.',
+   explain:'Nachts liefert PV nichts, ohne Wind steht der Windpark. Geothermie läuft rund um die Uhr, Biogas lässt sich speichern, und der Pumpspeicher gibt seine Lageenergie ab.' },
+ { type:'multi', q:'Lage 2: Sonniger, windiger Mittag im Juni. Die Anlagen erzeugen mehr Strom, als das Dorf gerade braucht. Was ist jetzt sinnvoll?',
+   options:['Pumpspeicher füllen: Wasser ins obere Becken pumpen','Wärmepumpen laufen lassen und Warmwasserspeicher aufheizen','Biogas im Gasspeicher sammeln und das BHKW drosseln','Das Geothermiekraftwerk zusätzlich hochfahren','Nichts tun – überschüssiger Strom verschwindet einfach'], correct:[0,1,2],
+   hint:'Gesucht sind Maßnahmen, die den Überschuss speichern oder sinnvoll nutzen – nicht noch mehr erzeugen.',
+   explain:'Überschüssiger Strom muss gespeichert oder genutzt werden. Er „verschwindet“ nicht: Erzeugung und Verbrauch müssen immer gleich groß sein.' },
+ { type:'mc', q:'Lage 3: Die Wärmepumpen im Dorf brauchen im Winter viel Strom. Wann sollten sie ihre Wärmespeicher am besten aufladen?',
+   options:['Wenn gerade viel Wind- und Solarstrom im Netz ist','Immer genau um Mitternacht','Nur bei völliger Windstille','Nie – Wärmepumpen brauchen keinen Strom'], correct:0,
+   hint:'Wärmepumpen sind Stromverbraucher. Wann gibt es besonders viel Ökostrom?',
+   explain:'Wer Strom dann verbraucht, wenn viel davon da ist, entlastet das Netz. So werden Wärmepumpen selbst zu einer Art Speicher.' },
+ { type:'mc', q:'Letzte Frage: Warum braucht ein Energiepark möglichst VERSCHIEDENE erneuerbare Energien?',
+   options:['Weil sie sich ergänzen: Schwächelt eine Quelle, springen andere ein','Weil es schöner aussieht','Weil jede Anlage nur eine Stunde am Tag läuft','Weil es gesetzlich genau sechs sein müssen'], correct:0,
+   hint:'Denk an Lage 1 und Lage 2.',
+   explain:'Wind, Sonne, Wasser, Biomasse und Erdwärme haben unterschiedliche Stärken. Gemeinsam und mit Speichern sichern sie eine stabile Versorgung.' }
+];
+const ENDING = [
+ { who:'Leitwarte-Computer', av:'🖥️', text:'NETZ STABIL. Spannung: 230 Volt. Frequenz: 50,00 Hertz. Alle Anlagen im Gleichgewicht. ⚡' },
+ { who:MENTOR.name, av:MENTOR.av, text:'Schau aus dem Fenster, {name}: In Rheinsonne gehen die Lichter an! Die Mensa kocht wieder, die Häuser werden warm, und die Bürgermeisterin hat schon dreimal angerufen, um sich zu bedanken.' },
+ { who:MENTOR.name, av:MENTOR.av, text:'Du hast heute gezeigt: Die Energiewende gelingt nicht mit EINER Technik, sondern mit einem klugen Mix – und mit Menschen, die verstehen, wie er funktioniert. Hier ist deine Urkunde!' }
+];
+const SIGNS = [
+ { x:26, y:16, t:'Wegweiser', text:'Norden: Windpark. Nordosten: Solarfeld. Nordwesten: Stausee. Südwesten: Biohof. Osten: Geothermie. Südosten: Wärmepumpen-Siedlung.' },
+ { x:23, y:24, t:'Energie-Grundgesetz', text:'Energie kann weder erzeugt noch vernichtet werden – sie wird nur umgewandelt (Energieerhaltungssatz). „Erneuerbar“ heißt: Die Quelle erneuert sich ständig und geht nicht zur Neige.' },
+ { x:22, y:6, t:'Wissenstafel Wind', text:'Wusstest du? Moderne Windenergieanlagen an Land erreichen Nabenhöhen von über 150 Metern – fast so hoch wie der Kölner Dom (157 m). Weiter oben weht der Wind stärker und gleichmäßiger.' },
+ { x:31, y:5, t:'Wissenstafel Sonne', text:'Wusstest du? An einem klaren Sommermittag treffen in Deutschland bis zu rund 1000 Watt Sonnenstrahlung auf jeden Quadratmeter. Ein Solarmodul macht daraus etwa ein Fünftel elektrische Energie.' },
+ { x:13, y:15, t:'Wissenstafel Wasser', text:'Wusstest du? Wasserkraft ist eine der ältesten Energiequellen der Menschheit: Schon vor über 2000 Jahren trieben Wasserräder Mühlen an.' },
+ { x:12, y:23, t:'Wissenstafel Biogas', text:'Wusstest du? Biogas lässt sich speichern. Deshalb kann ein Blockheizkraftwerk genau dann Strom liefern, wenn Wind und Sonne gerade Pause machen.' },
+ { x:34, y:16, t:'Wissenstafel Erdwärme', text:'Wusstest du? Im Erdkern ist es etwa 5000 bis 6000 °C heiß – ungefähr so heiß wie die Oberfläche der Sonne. Ein Teil dieser Wärme entsteht durch den Zerfall radioaktiver Elemente im Gestein.' },
+ { x:42, y:29, t:'Wissenstafel Luft', text:'Wusstest du? Viele Wärmepumpen können im Sommer umgekehrt arbeiten und Räume kühlen. Und Druckluftspeicher pressen Luft in unterirdische Salzkavernen, um Energie zu speichern.' }
+];
+const PLANT = {
+ wind:{ main:['Das Windrad steht still. Display: „OFFLINE – Freigabe durch Fachpersonal nötig.“ Windmeister Hannes steht in der Nähe.','Die Rotorblätter drehen sich! In der Gondel oben sitzt der Generator.'] },
+ solar:{ main:['Die Module sind vom Netz getrennt. Sie liegen zwar in der Sonne – aber der Strom kommt nicht an.','Licht trifft auf Silizium-Zellen – und schon fließt Gleichstrom. ⚡'],
+  inv:['Ein Wechselrichter. Anzeige: 0 W. Status: GESPERRT.','Wechselrichter: „DC → AC … 230 V, 50 Hz. Alles im grünen Bereich!“'] },
+ wasser:{ main:['Die Staumauer hält das Wasser zurück. Die Schleuse zur Turbine ist geschlossen.','Wasser schießt durch die Druckrohre hinunter zur Turbine. Lageenergie wird zu Strom!'],
+  house:['Das Krafthaus ist dunkel. Hier drin stehen Turbine und Generator.','Im Krafthaus summt die Turbine. Es riecht nach Maschinenöl.'] },
+ bio:{ main:['Ein Fermenter. Drinnen arbeiten Bakterien – aber das Gas darf gerade nicht zum BHKW.','Unter der Kuppel sammelt sich Biogas. Die Bakterien arbeiten bei etwa 40 °C – kuschelig warm!'],
+  bhkw:['Das Blockheizkraftwerk (BHKW) ist aus. Kein Strom, keine Wärme.','Das BHKW brummt: Ein Gasmotor treibt den Generator an, die Abwärme heizt den Hof.'] },
+ geo:{ main:['Der Bohrturm. Das Bohrloch reicht über 3000 m tief – die Förderpumpe steht aber still.','Aus der Tiefe wird über 150 °C heißes Wasser gefördert. Respekt!'],
+  plant:['Das Geothermie-Kraftwerk ist offline.','Im Kraftwerk verdampft die Erdwärme ein Arbeitsmittel und treibt eine Turbine an.'],
+  vent:['Heißer Dampf steigt aus dem Boden. Hier spürt man, dass es unter uns warm ist!','Heißer Dampf steigt aus dem Boden. Hier spürt man, dass es unter uns warm ist!'] },
+ luft:{ main:['Das Außengerät einer Wärmepumpe. Der Ventilator steht still – im Haus wird es kalt.','Der Ventilator saugt Luft an und entzieht ihr Wärme. Die ausgeblasene Luft ist spürbar kälter!'],
+  house:['Ein Wohnhaus. Drinnen ist es kalt und dunkel. Brrr!','Drinnen ist es warm und hell. Jemand hört laut Musik. 🎶'] }
+};
+
+/* =================== SPIELSTAND =================== */
+const SKEY = 'energiepark-rheinsonne-v1';
+function fresh(){ return { name:'', score:0, done:{}, prog:{}, learned:{}, signs:{}, final:false, introSeen:false, music:true, level:'std' }; }
+function load(){ try{ const s = localStorage.getItem(SKEY); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
+let saved = load();
+let state = Object.assign(fresh(), saved || {});
+function save(){ try{ state.px = player.x; state.py = player.y; localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){} }
+const fmt = s => String(s).replace(/\{name\}/g, state.name || 'Praktikant:in');
+const countDone = () => ORDER.filter(k => state.done[k]).length;
+const isOn = k => !!state.done[k];
+const MAXSCORE = (ORDER.reduce((a,k)=>a+ST[k].puzzles.length,0) + FINAL.length) * 100;
+
+/* =================== KARTE =================== */
+const T = { GRASS:0, FLOW:1, PATH:2, WATER:3, TREE:4, SAND:5, FIELD:6, ROCK:7, HOT:8, STONE:9, FENCE:10 };
+const SOLID = { 3:1, 4:1, 7:1, 10:1 };
+const map = [];
+for(let y=0;y<MH;y++){ const r=[]; for(let x=0;x<MW;x++) r.push(hash(x,y)<0.1?T.FLOW:T.GRASS); map.push(r); }
+function R(x,y,w,h,t){ for(let j=y;j<y+h;j++) for(let i=x;i<x+w;i++) if(i>=0&&j>=0&&i<MW&&j<MH) map[j][i]=t; }
+const CLEAR = [[18,2,14,10],[32,2,14,10],[2,2,13,15],[2,18,14,16],[33,12,13,11],[32,23,14,11],[18,12,13,10],[18,22,14,12]];
+const inClear = (x,y) => CLEAR.some(c => x>=c[0] && y>=c[1] && x<c[0]+c[2] && y<c[1]+c[3]);
+for(let y=2;y<MH-2;y++) for(let x=2;x<MW-2;x++) if(!inClear(x,y) && hash(x+17,y+5)<0.42) map[y][x]=T.TREE;
+R(0,0,MW,2,T.TREE); R(0,MH-2,MW,2,T.TREE); R(0,0,2,MH,T.TREE); R(MW-2,0,2,MH,T.TREE);
+R(2,2,13,12,T.SAND); R(3,3,11,9,T.WATER); R(8,2,1,1,T.WATER); R(3,14,2,2,T.WATER);
+R(33,12,13,10,T.HOT); map[13][33]=T.ROCK; map[21][44]=T.ROCK; map[12][45]=T.ROCK;
+R(3,26,12,1,T.FENCE); R(3,27,12,6,T.FIELD);
+R(19,15,11,5,T.STONE);
+R(18,28,5,5,T.SAND); R(19,29,3,3,T.WATER); R(27,30,4,3,T.TREE);
+R(24,3,1,9,T.PATH); R(24,11,5,1,T.PATH); R(28,11,1,4,T.PATH);
+R(25,6,20,1,T.PATH);
+R(4,17,15,1,T.PATH); R(30,17,16,1,T.PATH);
+R(24,20,1,13,T.PATH); R(25,28,20,1,T.PATH);
+R(10,15,1,2,T.PATH); R(8,18,1,8,T.PATH); map[26][8]=T.PATH;
+R(35,27,1,1,T.PATH); R(41,27,1,1,T.PATH);
+
+function grassBase(X,Y,x,y){ P('#6cbf4f',X,Y,16,16); for(let k=0;k<5;k++){ P('#59a843',X+Math.floor(hash(x*3+k,y*7-k)*15),Y+Math.floor(hash(x*5-k,y*3+k*2)*14),1,2); } }
+function specks(X,Y,x,y,col,n){ for(let k=0;k<n;k++) P(col,X+Math.floor(hash(x*7+k,y*11-k)*15),Y+Math.floor(hash(x*13-k,y*5+k)*15),1,1); }
+function drawTile(t,x,y){
+ const X=x*TS, Y=y*TS, h=hash(x,y);
+ switch(t){
+  case T.GRASS: grassBase(X,Y,x,y); break;
+  case T.FLOW: { grassBase(X,Y,x,y); const cols=['#ffffff','#ffe066','#ff9ecb','#b9a7ff']; const c=cols[Math.floor(h*4)]; P(c,X+3+Math.floor(h*8),Y+4,2,2); P(c,X+10-Math.floor(h*5),Y+10,2,2); P('#3f8f35',X+4+Math.floor(h*8),Y+6,1,2); break; }
+  case T.PATH: P('#e2cd93',X,Y,16,16); specks(X,Y,x,y,'#c9b076',6); break;
+  case T.SAND: P('#eedc9f',X,Y,16,16); specks(X,Y,x,y,'#d6c07f',5); break;
+  case T.WATER: P('#3b82d6',X,Y,16,16); P('#5d9ce4',X+Math.floor(h*8),Y+4,5,1); P('#5d9ce4',X+Math.floor(hash(y,x)*8)+3,Y+11,4,1); break;
+  case T.TREE: grassBase(X,Y,x,y); P('rgba(0,0,0,.2)',X+2,Y+12,12,3); P('#7a4a24',X+6,Y+10,4,5); P('#2e7d3a',X+2,Y+1,12,10); P('#2e7d3a',X+1,Y+3,14,6); P('#24672f',X+2,Y+9,12,2); P('#3f9a4a',X+3,Y+2,6,4); P('#5cb862',X+4,Y+3,2,2); break;
+  case T.FIELD: P('#8b5a33',X,Y,16,16); for(const r of [1,5,9,13]){ P('#77b947',X+1,Y+r,14,2); P('#5e9a37',X+1+Math.floor(hash(x+r,y)*12),Y+r,2,2); } break;
+  case T.HOT: P('#a0714f',X,Y,16,16); specks(X,Y,x,y,'#b98a66',7); if(h<0.3) P('#d0643f',X+Math.floor(h*40),Y+9,2,1); break;
+  case T.ROCK: P('#a0714f',X,Y,16,16); P('#7d7f88',X+2,Y+4,12,10); P('#9a9ca6',X+3,Y+5,6,4); P('#5f616b',X+2,Y+12,12,2); break;
+  case T.STONE: P('#bcbcc6',X,Y,16,16); P('#a3a3ae',X,Y+15,16,1); P('#a3a3ae',X,Y+7,16,1); P('#a3a3ae',X+(y%2?3:11),Y,1,7); P('#a3a3ae',X+(y%2?11:3),Y+8,1,7); break;
+  case T.FENCE: grassBase(X,Y,x,y); P('#8a5a2b',X,Y+5,16,2); P('#8a5a2b',X,Y+10,16,2); P('#6e441f',X+1,Y+3,3,11); P('#6e441f',X+12,Y+3,3,11); break;
+ }
+}
+const mapCv = document.createElement('canvas'); mapCv.width=MW*TS; mapCv.height=MH*TS;
+G = mapCv.getContext('2d');
+for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) drawTile(map[y][x],x,y);
+G = ctx;
+
+/* =================== OBJEKTE =================== */
+const ents = [];
+function E(o){ o.w=o.w||1; o.h=o.h||1; if(o.solid===undefined) o.solid=true; ents.push(o); return o; }
+function ebox(o){ if(o.bx) return { x:o.x*TS+o.bx[0], y:o.y*TS+o.bx[1], w:o.bx[2], h:o.bx[3] }; return { x:o.x*TS, y:o.y*TS, w:o.w*TS, h:o.h*TS }; }
+for(const k of ORDER){ const n=ST[k].npc; E({ kind:'npc', x:n.x, y:n.y, bx:[3,7,10,9], npc:n, st:k, act:()=>talkStation(k) }); }
+E({ kind:'npc', x:22, y:16, bx:[3,7,10,9], npc:MENTOR, mentor:true, act:()=>talkMentor() });
+SIGNS.forEach((s,i)=>E({ kind:'sign', x:s.x, y:s.y, bx:[3,6,10,10], act:()=>readSign(i) }));
+[[20,5],[29,4],[20,9],[30,9]].forEach(p=>E({ kind:'wind', x:p[0], y:p[1], bx:[4,8,8,8], tall:48, act:()=>plantMsg('wind','main') }));
+[[33,3],[38,3],[33,8],[38,8]].forEach(p=>E({ kind:'solar', x:p[0], y:p[1], w:4, act:()=>plantMsg('solar','main') }));
+E({ kind:'inverter', x:43, y:8, act:()=>plantMsg('solar','inv') });
+E({ kind:'dam', x:3, y:12, w:11, act:()=>plantMsg('wasser','main') });
+E({ kind:'phouse', x:6, y:13, w:3, h:2, act:()=>plantMsg('wasser','house') });
+E({ kind:'ferm', x:3, y:19, w:2, h:2, act:()=>plantMsg('bio','main') });
+E({ kind:'ferm', x:6, y:19, w:2, h:2, act:()=>plantMsg('bio','main') });
+E({ kind:'bhkw', x:11, y:19, w:3, h:2, tall:14, act:()=>plantMsg('bio','bhkw') });
+E({ kind:'cow', x:4, y:24, act:cowMsg }); E({ kind:'cow', x:14, y:22, flip:true, act:cowMsg });
+E({ kind:'derrick', x:36, y:13, w:2, tall:44, act:()=>plantMsg('geo','main') });
+E({ kind:'gplant', x:41, y:13, w:3, h:2, tall:20, act:()=>plantMsg('geo','plant') });
+[[35,19],[39,20],[43,19]].forEach(p=>E({ kind:'vent', x:p[0], y:p[1], tall:26, act:()=>plantMsg('geo','vent') }));
+[[34,24],[40,24],[36,30]].forEach(p=>E({ kind:'house', x:p[0], y:p[1], w:3, h:3, act:()=>plantMsg('luft','house') }));
+[[37,25],[43,25],[39,31]].forEach(p=>E({ kind:'hp', x:p[0], y:p[1], act:()=>plantMsg('luft','main') }));
+E({ kind:'leit', x:21, y:12, w:7, h:3, tall:12, act:()=>talkMentor() });
+
+/* =================== SPIELER =================== */
+const player = { x:24*TS, y:17*TS, dir:'down', moving:false, anim:0 };
+if(typeof state.px === 'number'){ player.x = state.px; player.y = state.py; }
+const DIRS = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0] };
+
+function collides(b){
+ const x0=Math.floor(b.x/TS), x1=Math.floor((b.x+b.w-0.01)/TS), y0=Math.floor(b.y/TS), y1=Math.floor((b.y+b.h-0.01)/TS);
+ for(let ty=y0;ty<=y1;ty++) for(let tx=x0;tx<=x1;tx++){ if(tx<0||ty<0||tx>=MW||ty>=MH) return true; if(SOLID[map[ty][tx]]) return true; }
+ for(const o of ents){ if(!o.solid) continue; const e=ebox(o); if(b.x<e.x+e.w && b.x+b.w>e.x && b.y<e.y+e.h && b.y+b.h>e.y) return true; }
+ return false;
+}
+function moveAxis(dx,dy){ const nx=player.x+dx, ny=player.y+dy; if(!collides({ x:nx+3, y:ny+10, w:10, h:5 })){ player.x=nx; player.y=ny; return true; } return false; }
+function findTarget(){
+ const cx=player.x+8, cy=player.y+12, d=DIRS[player.dir], qx=cx+d[0]*11, qy=cy+d[1]*11;
+ let best=null, bd=1e9;
+ for(const o of ents){ if(!o.act) continue; const b=ebox(o); const ex=clamp(qx,b.x-3,b.x+b.w+3), ey=clamp(qy,b.y-3,b.y+b.h+3); const dd=Math.hypot(ex-qx,ey-qy); if(dd<bd){ bd=dd; best=o; } }
+ return bd<5 ? best : null;
+}
+
+/* =================== AUDIO =================== */
+const AU = { ctx:null, step:0, next:0 };
+const mtof = m => 440*Math.pow(2,(m-69)/12);
+const MEL = [72,0,76,79,76,74,72,0, 69,0,72,76,74,72,69,0, 65,69,72,77,76,74,72,69, 71,0,74,79,77,76,74,0,
+             77,0,76,74,72,0,69,72, 74,0,72,71,67,0,71,74, 76,79,76,72,71,72,74,76, 72,0,0,79,72,0,0,0];
+const ROOTS = [48,45,41,43,41,43,40,48];
+const BASSP = [0,12,0,12,0,12,7,12];
+const STEP = 60/132/2;
+function auInit(){
+ if(AU.ctx){ if(AU.ctx.state==='suspended') AU.ctx.resume(); return; }
+ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+ try{ AU.ctx = new AC(); }catch(e){ return; }
+ const c=AU.ctx;
+ AU.master=c.createGain(); AU.master.gain.value=0.6; AU.master.connect(c.destination);
+ AU.mus=c.createGain(); AU.mus.gain.value=state.music?0.22:0; AU.mus.connect(AU.master);
+ AU.fx=c.createGain(); AU.fx.gain.value=0.4; AU.fx.connect(AU.master);
+ const len=Math.floor(c.sampleRate*0.1), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+ for(let i=0;i<len;i++) d[i]=Math.random()*2-1; AU.noise=buf;
+ AU.next=c.currentTime+0.15; setInterval(sched,30);
+}
+function tone(f,st,dur,type,vol,dest){
+ const c=AU.ctx, o=c.createOscillator(), g=c.createGain();
+ o.type=type; o.frequency.value=f;
+ g.gain.setValueAtTime(0.0001,st); g.gain.exponentialRampToValueAtTime(vol,st+0.01); g.gain.exponentialRampToValueAtTime(0.0001,st+dur);
+ o.connect(g); g.connect(dest); o.start(st); o.stop(st+dur+0.03);
+}
+function hat(st){ const c=AU.ctx, s=c.createBufferSource(), f=c.createBiquadFilter(), g=c.createGain(); s.buffer=AU.noise; f.type='highpass'; f.frequency.value=7000; g.gain.setValueAtTime(0.12,st); g.gain.exponentialRampToValueAtTime(0.001,st+0.05); s.connect(f); f.connect(g); g.connect(AU.mus); s.start(st); s.stop(st+0.06); }
+function sched(){
+ const c=AU.ctx; if(!c || c.state!=='running') return;
+ if(AU.next < c.currentTime) AU.next = c.currentTime + 0.05;
+ while(AU.next < c.currentTime+0.15){
+  const s=AU.step%64, m=MEL[s], loop2=(Math.floor(AU.step/64)%2)===1;
+  if(m) tone(mtof(loop2&&s%8===0?m+12:m),AU.next,STEP*0.9,'square',0.08,AU.mus);
+  const r=ROOTS[Math.floor(s/8)]; tone(mtof(r+BASSP[s%8]),AU.next,STEP*0.85,'triangle',0.3,AU.mus);
+  if(s%2===1) hat(AU.next);
+  if(loop2 && s%4===2) tone(mtof(r+24+4),AU.next,STEP*0.6,'square',0.025,AU.mus);
+  AU.next+=STEP; AU.step++;
+ }
+}
+function sfx(n){
+ if(!AU.ctx) return; const t=AU.ctx.currentTime, o=AU.fx;
+ if(n==='tick') tone(1200,t,0.03,'square',0.03,o);
+ else if(n==='open'){ tone(660,t,0.05,'square',0.06,o); tone(990,t+0.05,0.06,'square',0.06,o); }
+ else if(n==='ok') [72,76,79,84].forEach((m,i)=>tone(mtof(m),t+i*0.07,0.14,'square',0.11,o));
+ else if(n==='bad'){ tone(220,t,0.14,'sawtooth',0.08,o); tone(160,t+0.12,0.22,'sawtooth',0.08,o); }
+ else if(n==='jingle'){ [67,72,76,79,84,88].forEach((m,i)=>tone(mtof(m),t+i*0.09,0.2,'square',0.11,o)); [60,64,67,72].forEach(m=>tone(mtof(m),t+0.56,0.8,'triangle',0.15,o)); }
+}
+function setMusicBtn(){ $('bMus').textContent = state.music ? '🎵' : '🔇'; }
+$('bMus').onclick = () => { auInit(); state.music=!state.music; if(AU.mus) AU.mus.gain.setTargetAtTime(state.music?0.22:0,AU.ctx.currentTime,0.05); setMusicBtn(); save(); };
+document.addEventListener('visibilitychange',()=>{ if(!AU.ctx) return; if(document.hidden) AU.ctx.suspend(); else AU.ctx.resume(); });
+
+/* =================== DIALOG =================== */
+const dlg = { open:false, pages:[], i:0, shown:0, full:'', cb:null };
+function say(pages, cb){ dlg.pages=pages; dlg.i=0; dlg.cb=cb||null; dlg.open=true; $('dialog').hidden=false; showPage(); }
+function showPage(){ const p=dlg.pages[dlg.i]; $('dname').textContent=p.who||''; $('dav').textContent=p.av||'💬'; dlg.full=fmt(p.text); dlg.shown=0; $('dtext').textContent=''; $('dialog').scrollTop=0; }
+function advance(){
+ if(!dlg.open) return;
+ if(dlg.shown<dlg.full.length){ dlg.shown=dlg.full.length; rich($('dtext'),dlg.full); return; }
+ dlg.i++; sfx('tick');
+ if(dlg.i>=dlg.pages.length){ dlg.open=false; $('dialog').hidden=true; const cb=dlg.cb; dlg.cb=null; if(cb) cb(); }
+ else showPage();
+}
+$('dialog').addEventListener('click', advance);
+
+let toastT=null;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2800); }
+
+/* =================== INTERAKTIONEN =================== */
+function talkStation(k){
+ const S=ST[k], sp=t=>({ who:S.npc.name, av:S.npc.av, text:t });
+ if(state.done[k]){ say([sp(S.recap)]); return; }
+ const pages = state.learned[k]
+  ? [sp('Willkommen zurück, {name}! Die Erklärungen findest du jederzeit im Logbuch (📖). Weiter mit den Freigabe-Aufgaben!')]
+  : S.intro.map(sp).concat(state.level==='easy'?[sp('📌 '+KURZ[k])]:[]).concat([sp('Alles klar? Dann zeig mir, dass du es verstanden hast – hier kommen die Freigabe-Aufgaben!')]);
+ say(pages, ()=>{ state.learned[k]=true; save(); startPuzzles(k, plist(k), S.emoji+' '+S.name, ()=>completeStation(k)); });
+}
+function completeStation(k){
+ const S=ST[k]; state.done[k]=true; delete state.prog[k]; save(); updateHUD(); sfx('jingle'); flash=1;
+ toast(S.emoji+' Energiekern „'+S.name+'“ erhalten!');
+ const n=countDone();
+ say([{ who:S.npc.name, av:S.npc.av, text:S.win },
+      { who:'Leitwarte-Funk', av:'📡', text:S.name+' ist wieder am Netz! Energiekerne: '+n+' von 6.'+(n===6?' Alle Kerne gesammelt – komm zurück zur Leitwarte zu Herrn Meyer!':'') }]);
+}
+function talkMentor(){
+ const sp=t=>({ who:MENTOR.name, av:MENTOR.av, text:t });
+ if(!state.introSeen){ say(INTRO.map(sp), ()=>{ state.introSeen=true; save(); toast('Ziel: 6 Energiekerne sammeln!'); }); return; }
+ if(state.final){ say([sp('Das Netz läuft stabil – dank dir, {name}! Hier ist noch einmal deine Urkunde.')], showCert); return; }
+ const n=countDone();
+ if(n<6){
+  const open=ORDER.filter(k=>!state.done[k]).map(k=>ST[k].name+' ('+ST[k].dir+')').join(', ');
+  say([sp('Du hast '+n+' von 6 Energiekernen. Noch offline: '+open+'.'), sp('Wenn du dich verläufst, öffne oben die Karte (🗺️). Das gelbe ! zeigt dir, wer noch auf dich wartet.')]);
+  return;
+ }
+ const pages = (state.prog.final>0) ? [sp('Weiter geht’s mit der Netzsteuerung!')] : FINAL_INTRO.map(sp);
+ say(pages, ()=>startPuzzles('final', plist('final'), '⚡ Netzsteuerung', finishGame));
+}
+function finishGame(){ state.final=true; delete state.prog.final; save(); updateHUD(); sfx('jingle'); flash=1; say(ENDING, showCert); }
+function readSign(i){ const s=SIGNS[i]; if(!state.signs[i]){ state.signs[i]=1; save(); } say([{ who:s.t, av:'🪧', text:s.text }]); }
+function plantMsg(k,part){ const m=PLANT[k][part]; say([{ who:ST[k].name, av:ST[k].emoji, text:isOn(k)?m[1]:m[0] }]); }
+function cowMsg(){ say([{ who:'Kuh Berta', av:'🐄', text:'Muuuh! (Aus Bertas Gülle wird im Fermenter Biogas. Ganz schön nützlich, diese Kuh.)' }]); }
+function markFor(o){
+ if(o.mentor){ if(!state.introSeen || (countDone()===6 && !state.final)) return '!'; return state.final ? 'v' : null; }
+ return state.done[o.st] ? 'v' : '!';
+}
+
+/* =================== AUFGABEN =================== */
+/* Zahlen und Rechenzeichen hervorheben (fett, farbig, gut lesbar) */
+const RICH=/(\d+(?:[.,]\d+)*(?: \d{3})*[²³]?(?: (?=[A-Za-z°%µ]))?|\?(?: (?=[A-Za-z°%µ]))?)|( [·×=+−:] )/g;
+function rich(el,text){
+ el.textContent=''; text=String(text); let last=0, m; RICH.lastIndex=0;
+ while((m=RICH.exec(text))){ if(m[1]&&m[1][0]==='?'&&text[m.index-1]!==' ') continue; if(m.index>last) el.appendChild(document.createTextNode(text.slice(last,m.index))); const sp=document.createElement('span'); sp.className=m[1]?'num':'op'; sp.textContent=m[1]?m[0].replace(/ $/,''):m[0].trim();
+  if(!m[1]){ el.appendChild(document.createTextNode(' ')); el.appendChild(sp); el.appendChild(document.createTextNode(' ')); last=RICH.lastIndex; continue; }
+  const u=/ $/.test(m[0]) ? (/^[A-Za-z°%µ\/²³]+/.exec(text.slice(RICH.lastIndex))||[''])[0] : '';
+  if(u){ const w=document.createElement('span'); w.style.whiteSpace='nowrap'; w.appendChild(sp); w.appendChild(document.createTextNode('\u00A0'+u)); el.appendChild(w); RICH.lastIndex+=u.length; } else el.appendChild(sp);
+  last=RICH.lastIndex; }
+ if(last<text.length) el.appendChild(document.createTextNode(text.slice(last)));
+ return el;
+}
+const mkR=(tag,cls,text)=>rich(mk(tag,cls),text);
+let pz=null;
+function mk(tag,cls,text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function startPuzzles(key,list,title,onDone){ pz={ key, list, title, onDone, i:Math.min(state.prog[key]||0,list.length-1) }; $('panel').hidden=false; renderPz(); }
+function renderPz(){
+ const p=pz.list[pz.i]; pz.att=0; pz.solved=false;
+ $('ptitle').textContent=pz.title+' · Aufgabe '+(pz.i+1)+' von '+pz.list.length;
+ rich($('pq'),fmt(p.q));
+ const body=$('pbody'); body.innerHTML='';
+ const fb=$('pfb'); fb.className='fb'; fb.textContent='';
+ $('pnext').hidden=true; $('pcheck').hidden=(p.type==='mc');
+ body.appendChild(mk('div','ptype',{ mc:'Tippe die richtige Antwort an.', multi:'Mehrere Antworten können richtig sein – wähle alle passenden aus.', num:'Rechne und gib das Ergebnis ein.', order:'Tippe die Bausteine in der richtigen Reihenfolge an.' }[p.type]));
+ if(p.type==='mc'){
+  p.options.forEach((o,i)=>{ const b=mkR('button','opt',o); b.onclick=()=>{ if(pz.solved||b.disabled) return; if(i===p.correct){ b.classList.add('right'); solved(p); } else { b.classList.add('wrong'); b.disabled=true; miss(p); } }; body.appendChild(b); });
+ } else if(p.type==='multi'){
+  pz.sel=new Set();
+  p.options.forEach((o,i)=>{ const b=mkR('button','opt chk',o); b.onclick=()=>{ if(pz.solved) return; if(pz.sel.has(i)){ pz.sel.delete(i); b.classList.remove('sel'); } else { pz.sel.add(i); b.classList.add('sel'); } sfx('tick'); }; body.appendChild(b); });
+ } else if(p.type==='num'){
+  const row=mk('div','numrow'), inp=mk('input','numin'); inp.type='text'; inp.inputMode='decimal'; inp.autocomplete='off'; inp.placeholder='Ergebnis'; inp.id='numin'; inp.setAttribute('aria-label','Ergebnis');
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); pzCheck(); } });
+  row.appendChild(inp); row.appendChild(mk('span','unit',p.unit||'')); body.appendChild(row);
+  if(p.help){ const hb=mk('button','big alt','💡 Rechenhilfe'), ht=mkR('div','helpbox',p.help); ht.hidden=state.level!=='easy'; hb.hidden=!ht.hidden; hb.style.marginTop='6px'; hb.onclick=()=>{ ht.hidden=false; hb.hidden=true; }; body.appendChild(hb); body.appendChild(ht); }
+  if(matchMedia('(pointer:fine)').matches) setTimeout(()=>inp.focus(),60);
+ } else if(p.type==='order'){
+  pz.seq=[]; const idx=p.items.map((_,i)=>i);
+  do{ for(let i=idx.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [idx[i],idx[j]]=[idx[j],idx[i]]; } } while(idx.every((v,i)=>v===i));
+  pz.pool=idx;
+  body.appendChild(mk('div','olabel','Deine Reihenfolge (antippen zum Entfernen):'));
+  const seq=mk('div','seq'); seq.id='seq'; body.appendChild(seq);
+  body.appendChild(mk('div','olabel','Bausteine:'));
+  const pool=mk('div'); pool.id='pool'; body.appendChild(pool);
+  drawOrder();
+ }
+ $('pcard').scrollTop=0;
+}
+function drawOrder(){
+ const p=pz.list[pz.i], seq=$('seq'), pool=$('pool'); seq.innerHTML=''; pool.innerHTML='';
+ if(!pz.seq.length) seq.appendChild(mk('div','ph','Noch leer – tippe unten den ersten Schritt an.'));
+ pz.seq.forEach((v,j)=>{ const d=mkR('div','sitem',(j+1)+'. '+p.items[v]); d.onclick=()=>{ if(pz.solved) return; pz.seq.splice(j,1); sfx('tick'); drawOrder(); }; seq.appendChild(d); });
+ pz.pool.filter(v=>!pz.seq.includes(v)).forEach(v=>{ const b=mkR('button','opt',p.items[v]); b.onclick=()=>{ if(pz.solved) return; pz.seq.push(v); sfx('tick'); drawOrder(); }; pool.appendChild(b); });
+}
+function parseNum(s){
+ s=String(s).trim().replace(/\s/g,'').replace(/[a-zA-Z°%²³\-]+$/,'');
+ if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s=s.replace(/\./g,'');
+ s=s.replace(',','.');
+ if(!/^-?\d*\.?\d+$/.test(s)) return null;
+ return parseFloat(s);
+}
+function info(msg){ const fb=$('pfb'); fb.className='fb info'; fb.textContent=msg; }
+function pzCheck(){
+ if(!pz||pz.solved) return; const p=pz.list[pz.i];
+ if(p.type==='multi'){
+  if(!pz.sel.size){ info('Wähle mindestens eine Antwort aus.'); return; }
+  const ok=p.correct.length===pz.sel.size && p.correct.every(i=>pz.sel.has(i)); ok?solved(p):miss(p);
+ } else if(p.type==='num'){
+  const v=parseNum($('numin').value); if(v===null){ info('Gib eine Zahl ein, zum Beispiel 250 oder 2,5.'); return; }
+  const tol=p.tol!=null?p.tol:0; const ok=[p.answer].concat(p.accept||[]).some(a=>Math.abs(v-a)<=Math.max(tol,Math.abs(a)*0.005)); ok?solved(p):miss(p);
+ } else if(p.type==='order'){
+  if(pz.seq.length<p.items.length){ info('Ordne zuerst alle Bausteine ein.'); return; }
+  const right=pz.seq.filter((v,i)=>v===i).length;
+  right===p.items.length ? solved(p) : miss(p, right+' von '+p.items.length+' Bausteinen stehen schon an der richtigen Stelle.');
+ }
+}
+function solved(p){
+ pz.solved=true; const pts=pz.att===0?100:pz.att===1?60:30; state.score+=pts; save(); updateHUD();
+ const fb=$('pfb'); fb.className='fb ok'; fb.innerHTML='';
+ fb.appendChild(mk('strong',null,'✔ Richtig! +'+pts+' Punkte')); fb.appendChild(mkR('p',null,fmt(p.explain)));
+ if(p.type==='multi') $('pbody').querySelectorAll('.opt').forEach((b,i)=>{ if(p.correct.includes(i)) b.classList.add('right'); });
+ $('pbody').querySelectorAll('button,input').forEach(e=>e.disabled=true);
+ $('pcheck').hidden=true; $('pnext').hidden=false; sfx('ok');
+ setTimeout(()=>fb.scrollIntoView({ block:'nearest', behavior:'smooth' }),50);
+}
+function miss(p,extra){
+ pz.att++; const fb=$('pfb'); fb.className='fb bad'; fb.innerHTML='';
+ fb.appendChild(mk('strong',null,'✘ Noch nicht ganz.')); fb.appendChild(mkR('p',null,(extra?extra+' ':'')+'Tipp: '+fmt(p.hint)));
+ sfx('bad'); const c=$('pcard'); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
+}
+$('pcheck').onclick=pzCheck;
+$('pnext').onclick=()=>{
+ if(!pz) return; pz.i++; const key=pz.key;
+ if(pz.i>=pz.list.length){ const cb=pz.onDone; $('panel').hidden=true; pz=null; cb(); }
+ else { state.prog[key]=pz.i; save(); renderPz(); }
+};
+$('pclose').onclick=()=>{ $('panel').hidden=true; pz=null; toast('Pausiert – sprich die Person erneut an, um weiterzumachen.'); };
+
+/* =================== HUD, LOGBUCH, KARTE, URKUNDE =================== */
+function updateHUD(){
+ const c=$('cores'); c.innerHTML='';
+ for(const k of ORDER){ const d=mk('div','core'+(state.done[k]?' on':''),ST[k].emoji); d.title=ST[k].name+(state.done[k]?' – am Netz':' – offline'); c.appendChild(d); }
+ $('score').textContent='⚡ '+state.score;
+}
+function openLog(){
+ const b=$('logbody'); b.innerHTML='';
+ b.appendChild(mk('p','muted','Energiekerne: '+countDone()+' von 6 · Punkte: '+state.score+' von '+MAXSCORE+' · Modus: '+(state.level==='easy'?'Einsteiger':'Profi')+' (oben umschaltbar)'));
+ for(const k of ORDER){
+  const S=ST[k], sec=mk('section','logsec');
+  sec.appendChild(mk('h3',null,S.emoji+' '+S.name+(state.done[k]?' ✔':'')));
+  if(state.learned[k]){ const kz=mk('p'); kz.appendChild(mk('strong',null,'📌 '+KURZ[k])); sec.appendChild(kz); if(state.level!=='easy') S.intro.slice(1).forEach(t=>sec.appendChild(mkR('p',null,fmt(t)))); }
+  else sec.appendChild(mk('p','muted','Noch nicht entdeckt – sprich mit '+S.npc.name+' im '+S.dir+'.'));
+  b.appendChild(sec);
+ }
+ const found=SIGNS.filter((s,i)=>state.signs[i]);
+ const sec=mk('section','logsec'); sec.appendChild(mk('h3',null,'🪧 Wissenstafeln ('+found.length+' von '+SIGNS.length+')'));
+ if(!found.length) sec.appendChild(mk('p','muted','Noch keine gefunden. Sie stehen überall im Park.'));
+ found.forEach(s=>{ const p=mk('p'); p.appendChild(mk('strong',null,s.t+': ')); p.appendChild(document.createTextNode(s.text)); sec.appendChild(p); });
+ b.appendChild(sec);
+ $('log').hidden=false;
+}
+function openMap(){
+ const c=$('mapcv'), m=c.getContext('2d'); c.width=MW*TS; c.height=MH*TS; m.imageSmoothingEnabled=false;
+ m.drawImage(mapCv,0,0);
+ m.fillStyle='rgba(40,40,60,.55)';
+ for(const o of ents){ if(['wind','solar','dam','phouse','ferm','bhkw','derrick','gplant','house','leit','inverter','hp'].includes(o.kind)){ const b={x:o.x*TS,y:o.y*TS,w:o.w*TS,h:o.h*TS}; m.fillRect(b.x,b.y,b.w,b.h); } }
+ const label=(x,y,em,txt,done)=>{ m.font='30px sans-serif'; m.textAlign='center'; m.fillText(em,x,y); m.font='bold 19px "Pixelify Sans", sans-serif'; m.lineWidth=5; m.strokeStyle='#fff'; m.strokeText(txt+(done?' ✔':''),x,y+24); m.fillStyle=done?'#1d7a3e':'#1c2247'; m.fillText(txt+(done?' ✔':''),x,y+24); m.fillStyle='rgba(40,40,60,.55)'; };
+ for(const k of ORDER){ const n=ST[k].npc; label(n.x*TS+8,n.y*TS-4,ST[k].emoji,ST[k].name,state.done[k]); }
+ label(24*TS+8,15*TS-4,'🏢','Leitwarte',state.final);
+ const px=player.x+8, py=player.y+10; m.fillStyle='#fff'; m.beginPath(); m.arc(px,py,12,0,7); m.fill(); m.fillStyle='#e0262a'; m.beginPath(); m.arc(px,py,8,0,7); m.fill();
+ $('mapov').hidden=false;
+}
+function showCert(){
+ $('cname').textContent=state.name||'Praktikant:in';
+ $('cscore').textContent='⚡ '+state.score+' von '+MAXSCORE+' Punkten';
+ const r=state.score/MAXSCORE;
+ $('crank').textContent = r>=0.9 ? '⭐⭐⭐ Energie-Expert:in' : r>=0.7 ? '⭐⭐ Energie-Profi' : '⭐ Energie-Einsteiger:in';
+ $('cdate').textContent=new Date().toLocaleDateString('de-DE',{ day:'numeric', month:'long', year:'numeric' });
+ $('cert').hidden=false; sfx('ok');
+}
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{ $(b.dataset.close).hidden=true; });
+$('bLog').onclick=openLog; $('bMap').onclick=openMap;
+function newGame(name){ const lv=state.level||pickLvl||'std'; state=fresh(); state.name=name; state.level=lv; state.music=true; player.x=24*TS; player.y=17*TS; player.dir='down'; save(); updateHUD(); setMusicBtn(); }
+$('bReset').onclick=()=>{ if(!confirm('Spielstand wirklich löschen? Alle Energiekerne und Punkte gehen verloren.')) return; const n=state.name; newGame(n); $('log').hidden=true; setTimeout(talkMentor,200); };
+$('bAgain').onclick=()=>{ if(!confirm('Neues Spiel starten? Dein Spielstand wird zurückgesetzt.')) return; const n=state.name; newGame(n); $('cert').hidden=true; setTimeout(talkMentor,200); };
+
+function syncLvl(){ document.querySelectorAll('[data-lvl]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.lvl===(state.level||'std')))); }
+let pickLvl = (saved&&saved.level)||'std';
+document.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>{ pickLvl=b.dataset.lvl; state.level=pickLvl; save(); syncLvl(); if(!$('log').hidden) openLog(); });
+/* =================== TITEL =================== */
+if(saved && saved.introSeen){ $('bCont').hidden=false; $('namein').value=saved.name||''; }
+const nameVal=()=>$('namein').value.trim().slice(0,18);
+$('bNew').onclick=()=>{
+ if(saved && saved.introSeen && !confirm('Neues Spiel starten? Dein bisheriger Spielstand wird gelöscht.')) return;
+ newGame(nameVal()); begin();
+};
+$('bCont').onclick=()=>{ if(nameVal()) state.name=nameVal(); save(); begin(); };
+$('namein').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); ($('bCont').hidden?$('bNew'):$('bCont')).click(); } });
+function begin(){ auInit(); $('title').hidden=true; updateHUD(); setMusicBtn(); if(!state.introSeen) setTimeout(talkMentor,350); }
+
+/* =================== EINGABE =================== */
+const root=document.documentElement;
+const hasTouch=('ontouchstart' in window)||(navigator.maxTouchPoints>0)||(window.matchMedia&&matchMedia('(any-pointer:coarse)').matches);
+function setTouch(on){ root.classList.toggle('touch',on); root.classList.toggle('nontouch',!on); setTimeout(resize,30); }
+setTouch(hasTouch);
+window.addEventListener('touchstart',()=>{ if(!root.classList.contains('touch')) setTouch(true); },{ passive:true, once:true });
+$('tbtn').onclick=()=>setTouch(true);
+const unlock=()=>{ if(AU.ctx && AU.ctx.state!=='running'){ try{ AU.ctx.resume(); }catch(e){} } };
+['touchend','pointerup','click','keydown'].forEach(ev=>document.addEventListener(ev,unlock,{ passive:true }));
+document.addEventListener('contextmenu',e=>{ if(e.target.closest && e.target.closest('#game,#dpad,#abtn')) e.preventDefault(); });
+let walkTo=null;
+const keys={}; let touchDir={ x:0, y:0 };
+const anyOv=()=>['title','panel','log','mapov','cert'].some(id=>!$(id).hidden);
+function action(){ if(anyOv()) return; if(dlg.open){ advance(); return; } const o=findTarget(); if(o){ sfx('open'); o.act(); } }
+addEventListener('keydown',e=>{
+ const k=e.key.toLowerCase();
+ if(e.key==='Escape'){ ['log','mapov'].forEach(id=>$(id).hidden=true); return; }
+ if(anyOv() || e.target.tagName==='INPUT') return;
+ if(['arrowup','arrowdown','arrowleft','arrowright',' ','enter'].includes(k)) e.preventDefault();
+ keys[k]=true;
+ if((k===' '||k==='e'||k==='enter') && !e.repeat) action();
+});
+addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; touchDir={ x:0, y:0 }; });
+const dpad=$('dpad');
+function dpadSet(e){
+ const r=dpad.getBoundingClientRect(), dx=e.clientX-(r.left+r.width/2), dy=e.clientY-(r.top+r.height/2);
+ touchDir={ x:0, y:0 }; if(Math.hypot(dx,dy)>12){ if(Math.abs(dx)>Math.abs(dy)*0.5) touchDir.x=Math.sign(dx); if(Math.abs(dy)>Math.abs(dx)*0.5) touchDir.y=Math.sign(dy); }
+ dpad.querySelector('.u').classList.toggle('on',touchDir.y<0); dpad.querySelector('.d').classList.toggle('on',touchDir.y>0);
+ dpad.querySelector('.l').classList.toggle('on',touchDir.x<0); dpad.querySelector('.r').classList.toggle('on',touchDir.x>0);
+}
+function dpadEnd(){ touchDir={ x:0, y:0 }; dpad.querySelectorAll('.k').forEach(k=>k.classList.remove('on')); }
+if(window.PointerEvent){
+ dpad.addEventListener('pointerdown',e=>{ e.preventDefault(); auInit(); walkTo=null; try{ dpad.setPointerCapture(e.pointerId); }catch(_){} dpadSet(e); });
+ dpad.addEventListener('pointermove',e=>{ if(e.buttons||e.pointerType!=='mouse') dpadSet(e); });
+ dpad.addEventListener('pointerup',dpadEnd); dpad.addEventListener('pointercancel',dpadEnd); dpad.addEventListener('lostpointercapture',dpadEnd);
+ $('abtn').addEventListener('pointerdown',e=>{ e.preventDefault(); auInit(); action(); });
+} else {
+ const tp=e=>e.touches&&e.touches[0]?e.touches[0]:e.changedTouches[0];
+ dpad.addEventListener('touchstart',e=>{ e.preventDefault(); auInit(); walkTo=null; dpadSet(tp(e)); },{ passive:false });
+ dpad.addEventListener('touchmove',e=>{ e.preventDefault(); dpadSet(tp(e)); },{ passive:false });
+ dpad.addEventListener('touchend',dpadEnd); dpad.addEventListener('touchcancel',dpadEnd);
+ dpad.addEventListener('mousedown',e=>{ dpadSet(e); const up=()=>{ dpadEnd(); removeEventListener('mouseup',up); }; addEventListener('mouseup',up); });
+ $('abtn').addEventListener('touchstart',e=>{ e.preventDefault(); auInit(); action(); },{ passive:false });
+ $('abtn').addEventListener('click',()=>action());
+}
+/* Ins Bild tippen: dorthin laufen, Figuren/Objekte antippen = hinlaufen und ansprechen */
+let camX=0, camY=0;
+function canvasTap(clientX,clientY){
+ auInit();
+ if(dlg.open){ advance(); return; }
+ if(anyOv()) return;
+ const r=cv.getBoundingClientRect(); if(!r.width) return;
+ const wx=(clientX-r.left)/r.width*VW+camX, wy=(clientY-r.top)/r.height*VH+camY;
+ let ent=null;
+ for(const o of ents){ if(!o.act) continue; const b=ebox(o); const top=b.y-(o.tall||(o.kind==='npc'?10:4)); if(wx>=b.x-4&&wx<=b.x+b.w+4&&wy>=top-4&&wy<=b.y+b.h+4){ ent=o; break; } }
+ if(ent){ const b=ebox(ent); walkTo={ x:clamp(player.x+8,b.x-2,b.x+b.w+2), y:clamp(player.y+12,b.y-2,b.y+b.h+2), ent, stuck:0, tx:b.x+b.w/2, ty:b.y+b.h/2 }; }
+ else walkTo={ x:wx, y:wy, ent:null, stuck:0 };
+}
+if(window.PointerEvent) cv.addEventListener('pointerdown',e=>{ e.preventDefault(); canvasTap(e.clientX,e.clientY); });
+else { cv.addEventListener('touchstart',e=>{ e.preventDefault(); const t=e.changedTouches[0]; canvasTap(t.clientX,t.clientY); },{ passive:false }); cv.addEventListener('mousedown',e=>canvasTap(e.clientX,e.clientY)); }
+function nearEnt(o){ const b=ebox(o), cx=player.x+8, cy=player.y+12; const ex=clamp(cx,b.x,b.x+b.w), ey=clamp(cy,b.y,b.y+b.h); return Math.hypot(ex-cx,ey-cy)<14; }
+
+/* =================== ZEICHNEN =================== */
+function puffs(x,y,t,col,n,rise,size){ for(let k=0;k<n;k++){ const ph=(t*0.7+k/n)%1; G.globalAlpha=(1-ph)*0.8; const s=Math.round(size+ph*4); P(col,Math.round(x+Math.sin(ph*6+k*2)*3-s/2),Math.round(y-ph*rise-s/2),s,s); } G.globalAlpha=1; }
+function bld(sx,sy,W,H,roof,roofD,wall,lit){
+ const rh=Math.round(H*0.45);
+ P('rgba(0,0,0,.22)',sx+2,sy+H-2,W,4); P(wall,sx,sy+rh,W,H-rh); P('rgba(0,0,0,.12)',sx,sy+H-3,W,3);
+ P(roof,sx-1,sy,W+2,rh); P(roofD,sx-1,sy+rh-2,W+2,2); for(let i=sx+3;i<sx+W-2;i+=6) P(roofD,i,sy+2,1,rh-5);
+ const win=lit?'#ffe27a':'#39425a', wy=sy+rh+3; P(win,sx+4,wy,6,5); P(win,sx+W-10,wy,6,5);
+ if(lit){ G.globalAlpha=.25; P('#ffe27a',sx+2,wy-2,10,9); P('#ffe27a',sx+W-12,wy-2,10,9); G.globalAlpha=1; }
+ P('#5b3a22',sx+Math.floor(W/2)-3,sy+H-10,6,10); P('#d9b45a',sx+Math.floor(W/2)+1,sy+H-6,1,1);
+}
+function drawNPC(sx,sy,o,t){
+ const n=o.npc, b=(Math.sin(t*3+o.x*1.3)>0)?0:1;
+ P('rgba(0,0,0,.2)',sx+3,sy+14,10,2); P('#2c3550',sx+5,sy+12,2,3); P('#2c3550',sx+9,sy+12,2,3);
+ P(n.shirt,sx+4,sy+7+b,8,6); P(n.shirt2||'rgba(0,0,0,.18)',sx+4,sy+11+b,8,1);
+ P('#f1c39b',sx+3,sy+8+b,1,4); P('#f1c39b',sx+12,sy+8+b,1,4); P('#f1c39b',sx+5,sy+2+b,6,5);
+ P(n.hair,sx+5,sy+1+b,6,2); P(n.hair,sx+4,sy+2+b,1,4); P(n.hair,sx+11,sy+2+b,1,4);
+ if(n.hat){ P(n.hat,sx+4,sy+b,8,2); P(n.hat,sx+5,sy-1+b,6,1); }
+ P('#222',sx+6,sy+4+b,1,1); P('#222',sx+9,sy+4+b,1,1);
+ const m=markFor(o);
+ if(m){ const by=sy-12+Math.round(Math.sin(t*4)*1.5);
+  if(m==='!'){ P('#1f2433',sx+4,by,8,9); P('#ffd54a',sx+5,by+1,6,7); P('#1f2433',sx+7,by+2,2,3); P('#1f2433',sx+7,by+6,2,1); }
+  else { P('#1f2433',sx+4,by+1,8,8); P('#3ccf6a',sx+5,by+2,6,6); P('#fff',sx+6,by+5,1,1); P('#fff',sx+7,by+6,1,1); P('#fff',sx+8,by+5,1,1); P('#fff',sx+9,by+4,1,1); }
+ }
+}
+function drawPlayer(sx,sy){
+ const d=player.dir, f=player.moving?(Math.floor(player.anim*9)%2):0;
+ P('rgba(0,0,0,.22)',sx+3,sy+14,10,2);
+ if(d==='left'||d==='right'){ P('#2c3550',sx+6,sy+12,2,f?3:2); P('#2c3550',sx+8,sy+12,2,f?2:3); }
+ else { P('#2c3550',sx+5,sy+12,2,f?2:3); P('#2c3550',sx+9,sy+12,2,f?3:2); }
+ P('#3b4a7a',sx+4,sy+7,8,6); P('#ff8a1f',sx+4,sy+7,3,6); P('#ff8a1f',sx+9,sy+7,3,6);
+ if(d==='up') P('#ff8a1f',sx+4,sy+7,8,6);
+ P('#fff3a0',sx+4,sy+10,8,1);
+ P('#f1c39b',sx+3,sy+8,1,4); P('#f1c39b',sx+12,sy+8,1,4);
+ P('#f1c39b',sx+5,sy+2,6,5);
+ if(d==='up') P('#5a3a1e',sx+5,sy+3,6,3);
+ else if(d==='down'){ P('#222',sx+6,sy+4,1,1); P('#222',sx+9,sy+4,1,1); P('#c98a6a',sx+7,sy+6,2,1); }
+ else if(d==='left'){ P('#222',sx+6,sy+4,1,1); P('#5a3a1e',sx+10,sy+3,1,3); }
+ else { P('#222',sx+9,sy+4,1,1); P('#5a3a1e',sx+5,sy+3,1,3); }
+ P('#ffd21f',sx+4,sy,8,3); P('#ffd21f',sx+5,sy-1,6,1); P('#d9a800',sx+4,sy+2,8,1);
+}
+function drawEnt(o,sx,sy,t){
+ const W=o.w*TS;
+ switch(o.kind){
+  case 'npc': drawNPC(sx,sy,o,t); break;
+  case 'sign': P('rgba(0,0,0,.2)',sx+4,sy+14,8,2); P('#6e441f',sx+7,sy+8,2,7); P('#a8743f',sx+2,sy+2,12,7); P('#c48c52',sx+2,sy+2,12,1); P('#7a4f26',sx+4,sy+4,8,1); P('#7a4f26',sx+4,sy+6,6,1);
+   { const i=SIGNS.findIndex(s=>s.x===o.x&&s.y===o.y); if(i>=0&&!state.signs[i]&&Math.floor(t*2)%2) P('#ffd54a',sx+13,sy,2,2); } break;
+  case 'wind': { const on=isOn('wind');
+   P('rgba(0,0,0,.2)',sx+2,sy+13,12,3); P('#e9edf3',sx+6,sy-30,4,44); P('#c3c9d4',sx+9,sy-30,1,44); P('#cfd5df',sx+5,sy+11,6,3);
+   P('#e9edf3',sx+3,sy-35,10,5); P('#b8bfcb',sx+3,sy-31,10,1);
+   const hx=sx+8, hy=sy-33, a=on?t*2.6+o.x:0.35;
+   G.save(); G.translate(hx,hy); G.rotate(a); for(let k=0;k<3;k++){ G.rotate(Math.PI*2/3); G.fillStyle='#f7f9fc'; G.fillRect(-1,-19,2,18); G.fillStyle='#c94b4b'; G.fillRect(-1,-19,2,3); } G.restore();
+   P('#9aa3b2',hx-1,hy-1,3,3);
+   P(on?'#4cff7a':(Math.floor(t*2)%2?'#ff4a4a':'#7a2020'),sx+7,sy+3,2,2); break; }
+  case 'solar': { const on=isOn('solar');
+   P('rgba(0,0,0,.18)',sx+1,sy+12,W-2,3); P('#7d838d',sx+3,sy+9,2,6); P('#7d838d',sx+W-5,sy+9,2,6); P('#7d838d',sx+W/2-1,sy+9,2,6);
+   P('#c9cdd6',sx,sy+1,W,11); P('#1f3d85',sx+1,sy+2,W-2,9); for(let i=sx+5;i<sx+W-1;i+=5) P('#3d66c6',i,sy+2,1,9); P('#3d66c6',sx+1,sy+6,W-2,1);
+   if(on){ const gx=((t*40+o.y*9)%(W+30))-15; G.save(); G.beginPath(); G.rect(sx+1,sy+2,W-2,9); G.clip(); P('rgba(255,255,255,.55)',Math.round(sx+gx),sy+2,4,9); P('rgba(255,255,255,.3)',Math.round(sx+gx+6),sy+2,2,9); G.restore(); }
+   else P('rgba(20,20,30,.38)',sx+1,sy+2,W-2,9); break; }
+  case 'inverter': { const on=isOn('solar'); P('rgba(0,0,0,.2)',sx+3,sy+13,10,3); P('#9aa3ae',sx+3,sy+3,10,12); P('#c3cad3',sx+3,sy+3,10,1); P(on?'#5df08a':'#33403a',sx+5,sy+5,6,3); P('#555',sx+5,sy+10,6,1); break; }
+  case 'dam': { const on=isOn('wasser');
+   P('#8f939e',sx,sy,W,16); P('#b4b8c2',sx,sy,W,3); for(let i=16;i<W;i+=16) P('#7c808b',sx+i,sy+3,1,13); P('#6d717b',sx,sy+14,W,2);
+   if(on){ P('#5aa0e8',sx+17,sy+8,6,22); for(let k=0;k<4;k++){ const yy=(t*50+k*7)%22; P('#d6ecff',sx+18,Math.round(sy+8+yy),4,2); } puffs(sx+20,sy+31,t,'#e6f3ff',3,6,2); }
+   else P('#5c606a',sx+17,sy+6,6,7);
+   P(on?'#4cff7a':(Math.floor(t*2)%2?'#ff4a4a':'#7a2020'),sx+W-8,sy+5,2,2); break; }
+  case 'phouse': bld(sx,sy,W,32,'#3b6fb5','#2c5590','#e9e3d4',isOn('wasser')); break;
+  case 'ferm': { const on=isOn('bio'); P('rgba(0,0,0,.2)',sx+2,sy+28,30,4); P('#5f7f3c',sx+1,sy+16,30,14); P('#4c6a2e',sx+1,sy+22,30,2); P('#4c6a2e',sx+1,sy+28,30,2);
+   const dc=on?'#d6dfbf':'#a9ad9c'; for(let r=0;r<13;r++){ const w=Math.round(30*Math.sqrt(1-(r/13)*(r/13))); P(dc,sx+16-Math.floor(w/2),sy+16-r,w,1); }
+   P('rgba(255,255,255,.5)',sx+9,sy+8,4,2); break; }
+  case 'bhkw': { const on=isOn('bio'); bld(sx,sy,W,32,'#8a4f2a','#6c3c1f','#efe5cf',on); P('#6b6b6b',sx+38,sy-8,5,14); P('#888',sx+38,sy-8,5,2); if(on) puffs(sx+40,sy-10,t,'#d9d9d9',4,20,3); break; }
+  case 'cow': { const b=Math.sin(t*2+o.x)>0.9?1:0, tw=Math.sin(t*5+o.y)>0?0:1;
+   G.save(); if(o.flip){ G.translate(sx*2+16,0); G.scale(-1,1); }
+   P('rgba(0,0,0,.2)',sx+2,sy+13,13,3); P('#f5f5f5',sx+2,sy+5,10,6); P('#222',sx+4,sy+6,3,2); P('#222',sx+8,sy+8,2,2);
+   P('#f5f5f5',sx+11,sy+3+b,4,4); P('#f0a0a0',sx+13,sy+5+b,2,2); P('#222',sx+12,sy+4+b,1,1);
+   P('#555',sx+3,sy+11,1,3); P('#555',sx+5,sy+11,1,3); P('#555',sx+9,sy+11,1,3); P('#555',sx+11,sy+11,1,3); P('#555',sx+1,sy+5+tw,1,4);
+   G.restore(); break; }
+  case 'derrick': { const on=isOn('geo'); P('rgba(0,0,0,.2)',sx+2,sy+12,28,4); const H=40;
+   for(let i=0;i<H;i++){ const y=sy+14-i, f=i/H, lx=Math.round(sx+4+f*9), rx=Math.round(sx+26-f*9); P('#c0392b',lx,y,2,1); P('#c0392b',rx,y,2,1); if(i%8===4) P('#a93226',lx,y,rx-lx+2,1); }
+   P('#7f8c8d',sx+10,sy+14-H-2,12,3); P('#555',sx+13,sy+7,6,8);
+   if(on) P('#f1c40f',sx+14,Math.round(sy+1+Math.sin(t*4)*2),4,4);
+   P(on?'#4cff7a':(Math.floor(t*2)%2?'#ff4a4a':'#7a2020'),sx+15,sy+10,2,2); break; }
+  case 'gplant': { const on=isOn('geo'); bld(sx,sy,W,32,'#7d8796','#626b78','#e3e6ea',on); P('#b0b6bf',sx-6,sy+20,6,3); P('#b0b6bf',sx+W,sy+22,6,3); if(on){ puffs(sx+12,sy-2,t,'#ffffff',4,20,3); puffs(sx+34,sy-2,t+0.4,'#ffffff',4,18,3); } break; }
+  case 'vent': { const on=isOn('geo'); P('#6e5a4c',sx+3,sy+7,10,7); P('#5a483c',sx+3,sy+12,10,2); P('#2a201a',sx+5,sy+9,6,3); puffs(sx+8,sy+8,t+o.x*0.3,'#f2f2f2',4,on?24:14,on?4:2); break; }
+  case 'house': bld(sx,sy,W,48,'#c4583b','#9e4027','#f4ead2',isOn('luft')); break;
+  case 'hp': { const on=isOn('luft'); P('rgba(0,0,0,.2)',sx+1,sy+13,14,3); P('#b9bec7',sx+1,sy+3,14,12); P('#eef0f3',sx+2,sy+4,12,10); P('#59606b',sx+4,sy+5,8,8); P('#3a3f48',sx+5,sy+6,6,6);
+   G.save(); G.translate(sx+8,sy+9); G.rotate(on?t*12:0.3); G.fillStyle='#aab1bd'; G.fillRect(-3,-1,6,2); G.fillRect(-1,-3,2,6); G.restore();
+   P(on?'#4cff7a':'#ff4a4a',sx+12,sy+12,1,1); break; }
+  case 'leit': { const lit=state.final;
+   bld(sx,sy,W,48,'#46507a','#353d60','#dfe2ea',lit);
+   P('#888',sx+56,sy-10,2,10); P(lit?'#4cff7a':(Math.floor(t*2)%2?'#ff4a4a':'#7a2020'),sx+55,sy-12,4,3);
+   P('#1f2433',sx+20,sy+24,72,11); G.fillStyle=lit?'#4cff7a':'#ffd54a'; G.font='8px "Press Start 2P", monospace'; G.textBaseline='top'; G.fillText('LEITWARTE',sx+21,sy+26);
+   if(lit){ G.globalAlpha=.25+Math.sin(t*3)*.1; P('#ffe27a',sx-4,sy+20,W+8,30); G.globalAlpha=1; } break; }
+ }
+}
+
+let flash=0, T0=0, last=performance.now(), saveT=0;
+function update(dt){
+ let ix=0, iy=0;
+ if(keys.arrowleft||keys.a) ix-=1; if(keys.arrowright||keys.d) ix+=1; if(keys.arrowup||keys.w) iy-=1; if(keys.arrowdown||keys.s) iy+=1;
+ ix=clamp(ix+touchDir.x,-1,1); iy=clamp(iy+touchDir.y,-1,1);
+ if(ix||iy) walkTo=null;
+ let walking=false;
+ if(!ix&&!iy&&walkTo&&!dlg.open&&!anyOv()){
+  if(walkTo.ent && nearEnt(walkTo.ent)){ const o=walkTo.ent; walkTo=null; const dx=(o.x*TS+o.w*8)-(player.x+8), dy=(o.y*TS+o.h*8)-(player.y+12); player.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down'); sfx('open'); o.act(); }
+  else { const dx=walkTo.x-(player.x+8), dy=walkTo.y-(player.y+12), d=Math.hypot(dx,dy);
+   if(d<3) walkTo=null; else { ix=dx/d; iy=dy/d; walking=true; } }
+ }
+ if(dlg.open||anyOv()){ ix=0; iy=0; walkTo=null; }
+ if(ix||iy){
+  const l=Math.hypot(ix,iy); ix/=l; iy/=l;
+  player.dir = Math.abs(ix)>Math.abs(iy) ? (ix<0?'left':'right') : (iy<0?'up':'down');
+  const sp=74*dt, ox=player.x, oy=player.y; moveAxis(ix*sp,0); moveAxis(0,iy*sp); player.moving=true; player.anim+=dt;
+  if(walking && walkTo){ if(Math.abs(player.x-ox)+Math.abs(player.y-oy)<sp*0.2){ walkTo.stuck+=dt; if(walkTo.stuck>0.35) walkTo=null; } else walkTo.stuck=0; }
+  saveT+=dt; if(saveT>4){ saveT=0; save(); }
+ } else player.moving=false;
+ if(dlg.open && dlg.shown<dlg.full.length){
+  const prev=Math.floor(dlg.shown); dlg.shown=Math.min(dlg.full.length,dlg.shown+dt*80); const now=Math.floor(dlg.shown);
+  if(now!==prev){ if(now>=dlg.full.length) rich($('dtext'),dlg.full); else $('dtext').textContent=dlg.full.slice(0,now); if(now%6===0) sfx('tick'); }
+ }
+ if(flash>0) flash=Math.max(0,flash-dt*1.5);
+}
+function render(t){
+ camX=clamp(Math.round(player.x+8-VW/2),0,Math.max(0,MW*TS-VW)); camY=clamp(Math.round(player.y+8-VH/2),0,Math.max(0,MH*TS-VH));
+ ctx.fillStyle='#05081a'; ctx.fillRect(0,0,VW,VH);
+ ctx.drawImage(mapCv,camX,camY,Math.min(VW,MW*TS),Math.min(VH,MH*TS),0,0,Math.min(VW,MW*TS),Math.min(VH,MH*TS));
+ const tx0=Math.floor(camX/TS), ty0=Math.floor(camY/TS), tx1=Math.min(MW-1,Math.floor((camX+VW)/TS)), ty1=Math.min(MH-1,Math.floor((camY+VH)/TS));
+ for(let ty=ty0;ty<=ty1;ty++) for(let tx=tx0;tx<=tx1;tx++) if(map[ty][tx]===T.WATER){ const h=hash(tx,ty), o=Math.floor((t*6+h*16)%14); P('#9cc9f5',tx*TS-camX+o,ty*TS-camY+3+Math.floor(h*9),2,1); }
+ const list=[];
+ for(const o of ents){ const sx=o.x*TS-camX, sy=o.y*TS-camY; if(sx>VW+16||sy>VH+16||sx+o.w*TS<-16||sy+o.h*TS<-(o.tall||16)-16) continue; list.push({ k:(o.y+o.h)*TS-0.5, o, sx, sy }); }
+ list.push({ k:player.y+15, p:true });
+ list.sort((a,b)=>a.k-b.k);
+ for(const it of list){ if(it.p) drawPlayer(Math.round(player.x-camX),Math.round(player.y-camY)); else drawEnt(it.o,it.sx,it.sy,t); }
+ if(!dlg.open && !anyOv() && findTarget()){ const sx=Math.round(player.x-camX), sy=Math.round(player.y-camY)-12+Math.round(Math.sin(t*5));
+  P('#1f2433',sx+9,sy-1,11,8); P('#fff',sx+10,sy,9,6); P('#fff',sx+11,sy+6,2,2); P('#1f2433',sx+11,sy+2,1,1); P('#1f2433',sx+14,sy+2,1,1); P('#1f2433',sx+17,sy+2,1,1); }
+ if(walkTo&&!walkTo.ent){ const mx=Math.round(walkTo.x-camX), my=Math.round(walkTo.y-camY); P('rgba(255,255,255,.8)',mx-3,my,7,1); P('rgba(255,255,255,.8)',mx,my-3,1,7); }
+ const dark=state.final?0:(6-countDone())*0.035;
+ if(dark>0){ ctx.fillStyle='rgba(10,14,48,'+dark+')'; ctx.fillRect(0,0,VW,VH); }
+ if(flash>0){ ctx.fillStyle='rgba(255,240,180,'+(flash*0.6)+')'; ctx.fillRect(0,0,VW,VH); }
+}
+function resize(){
+ const r=stage.getBoundingClientRect(), W=Math.max(1,r.width), H=Math.max(1,r.height);
+ const dpr=window.devicePixelRatio||1, Wd=W*dpr, Hd=H*dpr;
+ /* ganzzahliger Faktor: jedes Spielpixel = exakt k Bildschirmpixel -> scharfe Kanten */
+ let k = (W>H*1.4) ? Math.round(Hd/216) : Math.round(Wd/256);
+ k=Math.max(1,k);
+ VW=Math.min(Math.floor(Wd/k),MW*TS); VH=Math.min(Math.floor(Hd/k),MH*TS);
+ cv.width=VW; cv.height=VH; ctx.imageSmoothingEnabled=false;
+ cv.style.width=(VW*k/dpr)+'px'; cv.style.height=(VH*k/dpr)+'px';
+}
+if(window.ResizeObserver) new ResizeObserver(resize).observe(stage); addEventListener('resize',resize); addEventListener('orientationchange',()=>setTimeout(resize,250));
+if(window.visualViewport) visualViewport.addEventListener('resize',resize);
+resize(); updateHUD(); setMusicBtn(); syncLvl();
+function loop(now){ const dt=Math.min(0.05,(now-last)/1000); last=now; T0+=dt; update(dt); render(T0); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

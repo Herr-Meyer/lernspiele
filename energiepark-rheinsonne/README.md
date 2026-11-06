@@ -1,0 +1,87 @@
+# Energiepark Rheinsonne – Die Netz-Rettung
+
+Ein Browser-Lernspiel zu erneuerbaren Energien für **Technik und Naturwissenschaften (TuN), Klasse 9** in Rheinland-Pfalz. Im Stil früher Zelda-Spiele erkunden die Schülerinnen und Schüler einen Energiepark, sprechen mit Fachleuten und lösen Aufgaben, um sechs Anlagen nach einem Sturm wieder ans Netz zu bringen.
+
+**Spielen:** https://herr-meyer.github.io/lernspiele/energiepark-rheinsonne/
+
+| Start | Spielwelt | Aufgabe |
+| --- | --- | --- |
+| ![Startbildschirm](docs/titel.png) | ![Spielwelt mit Windpark](docs/spiel.png) | ![Rechenaufgabe zur Wasserkraft](docs/raetsel.png) |
+
+## Worum es geht
+
+Sturmtief „Zephyr“ hat alle Anlagen des Energieparks vom Netz getrennt. Als Praktikantin oder Praktikant der Stadtwerke besuchen die Lernenden sechs Stationen. Jede Station erklärt ihre Technik in kurzen Dialogen und gibt die Anlage erst frei, wenn drei Aufgaben gelöst sind. Mit allen sechs Energiekernen geht es zurück in die Leitwarte zu Herrn Meyer. Dort muss das Netz bei verschiedenen Wetterlagen im Gleichgewicht gehalten werden. Am Ende gibt es eine Urkunde.
+
+| Station | Inhalte |
+| --- | --- |
+| Windpark | Energieumwandlung im Windrad, Leistung und Windgeschwindigkeit, Betz-Gesetz |
+| Solarfeld | Photovoltaik und Solarthermie, Wirkungsgrad, Wechselrichter |
+| Wasserkraft | Lageenergie, E = m · g · h, Pumpspeicherkraftwerk |
+| Biohof | Biogas, Fermenter, Blockheizkraftwerk, CO₂-Kreislauf |
+| Geothermie | Temperaturanstieg mit der Tiefe, Grundlast, Oberrheingraben |
+| Wärmepumpen-Siedlung | Kreislauf der Luft-Wärmepumpe, Jahresarbeitszahl |
+| Leitwarte (Finale) | Netzstabilität, Speicher, Energiemix |
+
+Aufgabentypen: Multiple Choice, Mehrfachauswahl, einfache Rechenaufgaben mit Rechenhilfe und Reihenfolgen.
+
+## Zwei Schwierigkeitsstufen
+
+- **Einsteiger:** kürzere Texte, Zusammenfassung nach jeder Erklärung, Rechenhilfe immer sichtbar, Aufgaben mit drei Antwortmöglichkeiten. Passend für das Berufsreife-Niveau.
+- **Profi:** ausführlichere Erklärungen und anspruchsvollere Aufgaben. Die Rechenhilfe lässt sich bei Bedarf aufklappen.
+
+Die Stufe wird im Startbildschirm gewählt und lässt sich jederzeit im Logbuch umschalten. Auf der Urkunde erscheint sie nicht.
+
+## Bedienung
+
+- **Smartphone und Tablet:** Steuerkreuz und A-Knopf, oder einfach ins Bild tippen. Die Figur läuft dorthin und spricht angetippte Personen direkt an.
+- **Computer:** Pfeiltasten oder WASD zum Laufen, Leertaste oder E zum Sprechen.
+- **Zum Startbildschirm hinzufügen:** Im Browser-Menü „Zum Home-Bildschirm“ wählen. Dann startet das Spiel wie eine App.
+
+Die Spielzeit beträgt etwa 30 bis 45 Minuten.
+
+## Datenschutz
+
+Das Spiel ist eine einzelne HTML-Datei ohne Server-Anteil. Es lädt nichts von fremden Servern (keine Google Fonts, kein Tracking, keine Cookies). Der Spielstand wird nur im Browser des jeweiligen Geräts gespeichert (`localStorage`) und verlässt das Gerät nicht.
+
+## Veröffentlichen mit GitHub Pages
+
+Das Spiel liegt im Repository `lernspiele` im Ordner `energiepark-rheinsonne`. Ist GitHub Pages für das Repository eingeschaltet (**Settings → Pages**, Source „Deploy from a branch“, Branch **main**, Ordner **/ (root)**), ist es unter https://herr-meyer.github.io/lernspiele/energiepark-rheinsonne/ erreichbar.
+
+Tipp: Wer den Link als QR-Code an die Tafel projiziert, hat die Klasse in einer Minute im Spiel.
+
+## Schriftarten (optional)
+
+Ohne weitere Dateien nutzt das Spiel die Systemschriften des Geräts. Für das ursprüngliche Pixel-Aussehen die folgenden Schriften kostenlos herunterladen (Lizenz: SIL Open Font License) und die Dateien in den Ordner `fonts` legen:
+
+| Schrift | Download | Datei(en) für `fonts/` |
+| --- | --- | --- |
+| Press Start 2P | fonts.google.com/specimen/Press+Start+2P | `PressStart2P-Regular.ttf` |
+| Pixelify Sans | fonts.google.com/specimen/Pixelify+Sans | `PixelifySans-VariableFont_wght.ttf` |
+| Atkinson Hyperlegible | fonts.google.com/specimen/Atkinson+Hyperlegible | `AtkinsonHyperlegible-Regular.ttf`, `AtkinsonHyperlegible-Bold.ttf` |
+
+Die Schriften werden dann von GitHub Pages ausgeliefert, nicht von Google.
+
+## Inhalte anpassen
+
+Alle Texte stehen in `index.html` im Abschnitt `INHALTE`:
+
+- `ST` – die sechs Stationen mit Figuren, Erklärungen und Aufgaben (Profi-Stufe)
+- `EASY` – abweichende Aufgaben der Einsteiger-Stufe (`null` bedeutet: gleiche Aufgabe wie bei Profi)
+- `KURZ` – die Zusammenfassungen der Einsteiger-Stufe
+- `INTRO`, `FINAL_INTRO`, `FINAL`, `ENDING` – Geschichte und Finale in der Leitwarte
+- `SIGNS` – die Wissenstafeln im Park
+
+Eine Aufgabe sieht zum Beispiel so aus:
+
+```js
+{ type:'num', q:'100 kg Wasser fallen 10 m tief …', answer:10000, unit:'J',
+  help:'Einsetzen: E = 100 · 10 · 10 = ? J',
+  hint:'Multipliziere die drei Zahlen.',
+  explain:'E = 100 kg · 10 N/kg · 10 m = 10 000 J.' }
+```
+
+Mögliche Typen: `mc` (eine richtige Antwort), `multi` (mehrere richtige Antworten), `num` (Zahl eingeben), `order` (Reihenfolge).
+
+## Lizenz
+
+Noch festzulegen. Für Unterrichtsmaterial bietet sich zum Beispiel **CC BY-SA 4.0** an: Andere Lehrkräfte dürfen das Spiel nutzen und verändern, wenn sie die Quelle nennen und ihre Version unter derselben Lizenz weitergeben.

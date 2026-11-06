@@ -1,0 +1,10 @@
+Hier können optional diese Schriftdateien abgelegt werden:
+
+  PressStart2P-Regular.ttf
+  PixelifySans-VariableFont_wght.ttf
+  AtkinsonHyperlegible-Regular.ttf
+  AtkinsonHyperlegible-Bold.ttf
+
+Download kostenlos über fonts.google.com (SIL Open Font License).
+Ohne diese Dateien verwendet das Spiel automatisch die Systemschriften.
+Näheres steht in der README.md im Hauptordner.
