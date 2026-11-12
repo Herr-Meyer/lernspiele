@@ -6,11 +6,11 @@ Ein 3D-Browser-Lernspiel für **Technik und Naturwissenschaften (TuN), Klasse 10
 
 **Spielen:** https://herr-meyer.github.io/lernspiele/bta6/
 
-| Avatar mit Marschall-Frisur | Ankunft am Campus | Schulhof |
+| Titel | Ankunft am Campus | Schulhof |
 | --- | --- | --- |
-| ![Avatar](screenshots/4-marschall-frisur.jpg) | ![Ankunft](screenshots/5-ankunft-campus.jpg) | ![Schulhof](screenshots/6-schulhof.jpg) |
-| **Wortblock-Editor** | **Testlauf auf dem Testgelände** | **Avatar-Editor** |
-| ![Wortblöcke](screenshots/9-wortbloecke.jpg) | ![Testlauf](screenshots/10-testlauf.jpg) | ![Avatar-Editor](screenshots/3-avatar-gekauft.jpg) |
+| ![Titel](screenshots/1-titel.jpg) | ![Ankunft](screenshots/2-ankunft.jpg) | ![Schulhof](screenshots/3-schulhof.jpg) |
+| **Wortblock-Editor** | **Testlauf auf dem Schulhof** | **Avatar-Editor** |
+| ![Wortblöcke](screenshots/5-wortbloecke.jpg) | ![Testlauf](screenshots/6-testlauf.jpg) | ![Avatar-Editor](screenshots/7-avatar.jpg) |
 
 ## Worum es geht
 
