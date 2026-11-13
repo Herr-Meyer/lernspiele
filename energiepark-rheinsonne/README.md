@@ -4,9 +4,9 @@ Ein Browser-Lernspiel zu erneuerbaren Energien für **Technik und Naturwissensch
 
 **Spielen:** https://herr-meyer.github.io/lernspiele/energiepark-rheinsonne/
 
-| Start | Spielwelt | Aufgabe |
-| --- | --- | --- |
-| ![Startbildschirm](docs/titel.png) | ![Spielwelt mit Windpark](docs/spiel.png) | ![Rechenaufgabe zur Wasserkraft](docs/raetsel.png) |
+| Start | Spielwelt | Aufgabe | Netz-Minispiel |
+| --- | --- | --- | --- |
+| ![Startbildschirm](docs/titel.png) | ![Spielwelt mit Windpark und Stromleitungen](docs/spiel.png) | ![Freigabe-Aufgabe](docs/raetsel.png) | ![Minispiel: Netzfrequenz halten](docs/netz.png) |
 
 ## Worum es geht
 
@@ -23,6 +23,18 @@ Sturmtief „Zephyr“ hat alle Anlagen des Energieparks vom Netz getrennt. Als 
 | Leitwarte (Finale) | Netzstabilität, Speicher, Energiemix |
 
 Aufgabentypen: Multiple Choice, Mehrfachauswahl, einfache Rechenaufgaben mit Rechenhilfe und Reihenfolgen.
+
+## Neu: Grafik und Spielgefühl
+
+Die Lerninhalte der Stationen sind unverändert. Neu hinzugekommen ist:
+
+- **Lebendigere Welt:** weiche Übergänge zwischen Gras, Weg, Sand und Wasser, Ufer mit Schaum, verschiedene Bäume mit Schatten, Wolkenschatten, Schmetterlinge und Vögel, Gras und Blumen im Wind. Die Spielfigur hat eine Laufanimation in vier Richtungen, die Fachleute blinzeln und winken.
+- **Sichtbarer Fortschritt:** Von jeder Anlage führt eine Stromleitung über Masten zur Leitwarte. Offline ist sie grau. Nach der Freigabe fließen leuchtende Energie-Pünktchen zur Leitwarte.
+- **Erkundung:** Die Geothermie im Osten ist durch eine Schranke gesperrt und öffnet sich nach 2 Energiekernen. Den Weg zur Wärmepumpen-Siedlung im Südosten versperrt ein umgestürzter Baum, bis 4 Energiekerne gesammelt sind.
+- **Energiespar-Tipps:** Abseits der Wege liegen 8 leuchtende Glühbirnen. Jede bringt einen kurzen Tipp (zum Beispiel Stand-by vermeiden, Stoßlüften) und 20 Punkte. Das Logbuch zählt mit.
+- **Netz-Minispiel im Finale:** Vor den Fragen in der Leitwarte hält man die Netzfrequenz insgesamt 30 Sekunden bei 50 Hz, indem man Anlagen und Speicher zu- und abschaltet, während Wind, Sonne und Verbrauch schwanken. Scheitern kann man nicht, wer schneller ist, bekommt mehr Punkte (bis 100). In der Einsteiger-Stufe läuft es langsamer und der grüne Bereich ist breiter.
+
+Die Höchstpunktzahl steigt dadurch um 260 Punkte. Alte Spielstände bleiben gültig. Wer „Bewegung reduzieren“ im Gerät eingeschaltet hat, sieht die zusätzlichen Animationen nur in reduzierter Form.
 
 ## Zwei Schwierigkeitsstufen
 
@@ -70,6 +82,8 @@ Alle Texte stehen in `index.html` im Abschnitt `INHALTE`:
 - `KURZ` – die Zusammenfassungen der Einsteiger-Stufe
 - `INTRO`, `FINAL_INTRO`, `FINAL`, `ENDING` – Geschichte und Finale in der Leitwarte
 - `SIGNS` – die Wissenstafeln im Park
+
+Im Abschnitt `OBJEKTE` stehen außerdem `TIPS` (die acht Energiespar-Tipps mit Position und Text) und `GATES` (die beiden Sperren mit Hinweistext und nötiger Zahl an Energiekernen).
 
 Eine Aufgabe sieht zum Beispiel so aus:
 
