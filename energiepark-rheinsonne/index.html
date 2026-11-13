@@ -142,6 +142,13 @@ button:focus-visible, input:focus-visible{ outline:3px solid var(--amber); outli
 /* Title */
 #title .card{ text-align:center; max-width:520px; }
 #title .card{ position:relative; z-index:1; }
+#gcv{ display:block; margin:6px auto; image-rendering:pixelated; image-rendering:crisp-edges; border:3px solid var(--frame); border-radius:8px; max-width:100%; }
+#gstat{ font-size:16px; text-align:center; margin:4px 0 8px; font-weight:700; }
+#gbtns{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.gb{ border:3px solid var(--muted); border-radius:10px; background:transparent; color:var(--ink); padding:8px; font-size:16px; line-height:1.3; cursor:pointer; text-align:left; touch-action:manipulation; }
+.gb b{ display:block; font-size:14px; }
+.gb.on{ border-color:var(--ok); background:rgba(47,158,87,.2); }
+.gb.chg{ border-color:var(--sel); background:rgba(45,111,210,.18); }
 #tscene{ position:absolute; left:0; top:0; z-index:0; image-rendering:pixelated; image-rendering:crisp-edges; }
 .logo{ font-family:'Press Start 2P', 'Courier New', monospace; font-size:clamp(17px,5vw,26px); line-height:1.35; margin:6px 0 4px; color:var(--ink); text-shadow:3px 3px 0 var(--amber); }
 .sub{ font-family:'Press Start 2P', 'Courier New', monospace; font-size:11px; color:var(--amberD); margin-bottom:14px; }
@@ -219,6 +226,16 @@ button:focus-visible, input:focus-visible{ outline:3px solid var(--amber); outli
   </div>
 </div>
 
+<div class="ov" id="grid" hidden>
+  <div class="card" id="gcard">
+    <div class="ptop"><span>⚡ Netzfrequenz halten</span><button class="x" id="gclose" aria-label="Später weitermachen">✕</button></div>
+    <p class="pq" id="ginfo"></p>
+    <canvas id="gcv" width="240" height="72" role="img" aria-label="Frequenzanzeige"></canvas>
+    <div id="gstat"></div>
+    <div id="gbtns"></div>
+    <div class="pact"><button class="big" id="gstart">Start</button><button class="big" id="gnext" hidden>Weiter ▶</button></div>
+  </div>
+</div>
 <div class="ov" id="log" hidden>
   <div class="card">
     <div class="ptop"><h2 style="flex:1;margin:0">📖 Logbuch</h2><button class="x" data-close="log" aria-label="Schließen">✕</button></div>
@@ -549,7 +566,7 @@ const PLANT = {
 
 /* =================== SPIELSTAND =================== */
 const SKEY = 'energiepark-rheinsonne-v1';
-function fresh(){ return { name:'', score:0, done:{}, prog:{}, learned:{}, signs:{}, final:false, introSeen:false, music:true, level:'std' }; }
+function fresh(){ return { name:'', score:0, done:{}, prog:{}, learned:{}, signs:{}, final:false, introSeen:false, music:true, level:'std', tips:{}, grid:0 }; }
 function load(){ try{ const s = localStorage.getItem(SKEY); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
 let saved = load();
 let state = Object.assign(fresh(), saved || {});
@@ -557,7 +574,7 @@ function save(){ try{ state.px = player.x; state.py = player.y; localStorage.set
 const fmt = s => String(s).replace(/\{name\}/g, state.name || 'Praktikant:in');
 const countDone = () => ORDER.filter(k => state.done[k]).length;
 const isOn = k => !!state.done[k];
-const MAXSCORE = (ORDER.reduce((a,k)=>a+ST[k].puzzles.length,0) + FINAL.length) * 100;
+const MAXSCORE = (ORDER.reduce((a,k)=>a+ST[k].puzzles.length,0) + FINAL.length) * 100 + 260; /* + 8 Energiespar-Tipps (je 20) + Netz-Minispiel (100) */
 
 /* =================== KARTE =================== */
 const T = { GRASS:0, FLOW:1, PATH:2, WATER:3, TREE:4, SAND:5, FIELD:6, ROCK:7, HOT:8, STONE:9, FENCE:10 };
@@ -580,6 +597,8 @@ R(4,17,15,1,T.PATH); R(30,17,16,1,T.PATH);
 R(24,20,1,13,T.PATH); R(25,28,20,1,T.PATH);
 R(10,15,1,2,T.PATH); R(8,18,1,8,T.PATH); map[26][8]=T.PATH;
 R(35,27,1,1,T.PATH); R(41,27,1,1,T.PATH);
+/* Sperrgebiete: Geothermie (Osten) und Wärmepumpen-Siedlung (Südosten) sind nur durch je ein Tor erreichbar */
+R(33,12,12,1,T.ROCK); R(32,12,1,10,T.TREE); R(32,22,14,1,T.TREE); R(32,23,1,11,T.TREE); map[17][32]=T.PATH; map[28][32]=T.PATH;
 
 const tAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?T.TREE:map[y][x];
 const GRASSY={0:1,1:1,4:1,10:1};
@@ -686,6 +705,34 @@ E({ kind:'gplant', x:41, y:13, w:3, h:2, tall:20, act:()=>plantMsg('geo','plant'
 [[37,25],[43,25],[39,31]].forEach(p=>E({ kind:'hp', x:p[0], y:p[1], act:()=>plantMsg('luft','main') }));
 E({ kind:'leit', x:21, y:12, w:7, h:3, tall:12, act:()=>talkMentor() });
 
+/* Tore: öffnen sich nach 2 bzw. 4 Energiekernen */
+const GATES=[
+ { x:32, y:17, need:2, style:'bar', hint:'Halt – die Zufahrt zur Geothermie im Osten ist gesperrt! Solange das Netz so schwach ist, bleibt die Schranke unten. Bringe zuerst 2 Anlagen wieder ans Netz.', news:'Das Netz ist stabiler: Die Schranke zur Geothermie im Osten ist jetzt offen!' },
+ { x:32, y:28, need:4, style:'tree', hint:'Sturmtief „Zephyr“ hat hier einen Baum umgeworfen. Der Weg zur Wärmepumpen-Siedlung im Südosten ist versperrt. Der Räumtrupp kann erst anrücken, wenn 4 Anlagen wieder am Netz sind.', news:'Der Räumtrupp hat den umgestürzten Baum zersägt: Der Weg zur Wärmepumpen-Siedlung im Südosten ist frei!' }
+];
+GATES.forEach(g=>{ g.fn=()=>gateMsg(g); g.ent=E({ kind:'gate', x:g.x, y:g.y, g, tall:16, act:g.fn }); });
+function syncGates(){ const n=countDone(); for(const g of GATES){ const open=n>=g.need; g.ent.open=open; g.ent.solid=!open; g.ent.act=open?null:g.fn; } }
+function gateMsg(g){ const n=countDone(); say([{ who:g.style==='bar'?'Schranke':'Umgestürzter Baum', av:'🚧', text:g.hint+' (Energiekerne: '+n+' von '+g.need+')' }]); }
+function gateNews(n){ const out=[]; for(const g of GATES){ if(g.need===n){ out.push({ who:'Leitwarte-Funk', av:'📡', text:g.news }); burst(g.x*TS+8,g.y*TS+8,SPARK,14); } } syncGates(); return out; }
+/* Energiespar-Tipps: 8 versteckte Glühbirnen abseits der Wege */
+const TIPS=[
+ { x:16, y:3,  t:'Stand-by vermeiden', text:'Viele Geräte verbrauchen im Stand-by weiter Strom. Eine schaltbare Steckdosenleiste trennt sie vollständig vom Netz.' },
+ { x:2,  y:2,  t:'Stoßlüften', text:'Lieber mehrmals täglich für etwa 5 Minuten die Fenster weit öffnen als sie dauerhaft zu kippen. Dabei die Heizung herunterdrehen – so kühlen die Wände nicht aus.' },
+ { x:45, y:2,  t:'Raumtemperatur', text:'Jedes Grad weniger Raumtemperatur spart etwa 6 % Heizenergie. Rund 20 °C im Wohnraum reichen meist aus.' },
+ { x:16, y:15, t:'LED-Lampen', text:'LED-Lampen brauchen für dieselbe Helligkeit rund 80 % weniger Strom als alte Glühlampen – und halten viel länger.' },
+ { x:2,  y:33, t:'Kochen mit Deckel', text:'Ein Deckel auf dem Topf spart beim Kochen viel Energie. Im Wasserkocher nur so viel Wasser erhitzen, wie wirklich gebraucht wird.' },
+ { x:31, y:31, t:'Kurz duschen', text:'Warmes Wasser kostet viel Energie. Kurz duschen statt baden senkt den Verbrauch deutlich.' },
+ { x:45, y:21, t:'Waschen', text:'Meist reichen 30 bis 40 °C zum Waschen. Die Maschine voll beladen und die Wäsche an der Luft trocknen statt im Trockner.' },
+ { x:45, y:33, t:'Kühlschrank', text:'Im Kühlschrank genügen 7 °C. Die Tür nur kurz öffnen und keine warmen Speisen hineinstellen.' }
+];
+const bulbs=TIPS.map((tp,i)=>E({ kind:'bulb', x:tp.x, y:tp.y, solid:false, tip:i }));
+function collectTip(o){
+ const tp=TIPS[o.tip]; state.tips[o.tip]=1; state.score+=20; save(); updateHUD(); sfx('tip');
+ burst(o.x*TS+8,o.y*TS+6,['#fff8c4','#ffd54a','#ffffff'],12);
+ const n=TIPS.filter((_,i)=>state.tips[i]).length; toast('💡 Energiespar-Tipp '+n+' von '+TIPS.length+' · +20 Punkte');
+ say([{ who:'Energiespar-Tipp: '+tp.t, av:'💡', text:tp.text }]);
+}
+function checkTips(){ for(const o of bulbs){ if(state.tips[o.tip]) continue; if(Math.abs(player.x-o.x*TS)<10 && Math.abs(player.y+4-o.y*TS)<10){ collectTip(o); return; } } }
 /* Stromleitungen: Masten von jeder Anlage zur Leitwarte */
 const LINES={ wind:[[22,8],[23,11]], solar:[[43,9],[38,10],[33,10],[29,10]], wasser:[[9,15],[14,16],[18,16]], bio:[[14,21],[18,20],[18,16]], geo:[[41,16],[36,16],[31,16],[29,13]], luft:[[38,23],[33,23],[30,21],[30,18],[29,13]] };
 const mastSet={}, linePts={};
@@ -725,6 +772,9 @@ function findTarget(){
  return bd<5 ? best : null;
 }
 
+function lockedAt(px,py){ const tx=Math.floor((px+8)/TS), ty=Math.floor((py+12)/TS), n=countDone(); return tx>=32 && ((ty>=12&&ty<=21&&n<2) || (ty>=22&&n<4)); }
+function fixPos(){ if(lockedAt(player.x,player.y) || collides({ x:player.x+3, y:player.y+10, w:10, h:5 })){ player.x=24*TS; player.y=17*TS; player.dir='down'; } }
+syncGates(); fixPos();
 /* =================== AUDIO =================== */
 const AU = { ctx:null, step:0, next:0 };
 const mtof = m => 440*Math.pow(2,(m-69)/12);
@@ -770,6 +820,7 @@ function sfx(n){
  else if(n==='open'){ tone(660,t,0.05,'square',0.06,o); tone(990,t+0.05,0.06,'square',0.06,o); }
  else if(n==='ok') [72,76,79,84].forEach((m,i)=>tone(mtof(m),t+i*0.07,0.14,'square',0.11,o));
  else if(n==='bad'){ tone(220,t,0.14,'sawtooth',0.08,o); tone(160,t+0.12,0.22,'sawtooth',0.08,o); }
+ else if(n==='tip') [84,88,91].forEach((m,i)=>tone(mtof(m),t+i*0.05,0.1,'square',0.09,o));
  else if(n==='jingle'){ [67,72,76,79,84,88].forEach((m,i)=>tone(mtof(m),t+i*0.09,0.2,'square',0.11,o)); [60,64,67,72].forEach(m=>tone(mtof(m),t+0.56,0.8,'triangle',0.15,o)); }
 }
 function setMusicBtn(){ $('bMus').textContent = state.music ? '🎵' : '🔇'; }
@@ -806,7 +857,7 @@ function completeStation(k){
  toast(S.emoji+' Energiekern „'+S.name+'“ erhalten!');
  const n=countDone();
  say([{ who:S.npc.name, av:S.npc.av, text:S.win },
-      { who:'Leitwarte-Funk', av:'📡', text:S.name+' ist wieder am Netz! Energiekerne: '+n+' von 6.'+(n===6?' Alle Kerne gesammelt – komm zurück zur Leitwarte zu Herrn Meyer!':'') }]);
+      { who:'Leitwarte-Funk', av:'📡', text:S.name+' ist wieder am Netz! Energiekerne: '+n+' von 6.'+(n===6?' Alle Kerne gesammelt – komm zurück zur Leitwarte zu Herrn Meyer!':'') }].concat(gateNews(n)));
 }
 function talkMentor(){
  const sp=t=>({ who:MENTOR.name, av:MENTOR.av, text:t });
@@ -819,7 +870,8 @@ function talkMentor(){
   return;
  }
  const pages = (state.prog.final>0) ? [sp('Weiter geht’s mit der Netzsteuerung!')] : FINAL_INTRO.map(sp);
- say(pages, ()=>startPuzzles('final', plist('final'), '⚡ Netzsteuerung', finishGame));
+ const go=()=>startPuzzles('final', plist('final'), '⚡ Netzsteuerung', finishGame);
+ say(pages, ()=>{ if(state.grid || state.prog.final>0) go(); else openGrid(go); });
 }
 function finishGame(){ state.final=true; delete state.prog.final; save(); updateHUD(); sfx('jingle'); flash=1; say(ENDING, showCert); }
 function readSign(i){ const s=SIGNS[i]; if(!state.signs[i]){ state.signs[i]=1; save(); } say([{ who:s.t, av:'🪧', text:s.text }]); }
@@ -928,6 +980,47 @@ $('pnext').onclick=()=>{
 };
 $('pclose').onclick=()=>{ $('panel').hidden=true; pz=null; toast('Pausiert – sprich die Person erneut an, um weiterzumachen.'); };
 
+/* =================== NETZ-MINISPIEL =================== */
+/* 30 Sekunden (aufsummiert) die Frequenz im grünen Band halten; Erzeugung > Verbrauch -> Frequenz steigt */
+const GU=[ { k:'wind', n:'🌬️ Windpark' }, { k:'solar', n:'☀️ Solarpark' }, { k:'wasser', n:'💧 Wasserkraft', p:15 }, { k:'bio', n:'🌱 Biogas', p:10 }, { k:'geo', n:'🌋 Geothermie', p:10 }, { k:'sp', n:'🔋 Speicher' } ];
+let gr=null;
+function gPow(){ const g=gr, t=g.t*g.spd+g.ph;
+ g.w=Math.round(14+9*Math.sin(t*0.55)+2*Math.sin(t*1.7)); g.s=Math.round(12+7*Math.sin(t*0.38+2)); g.load=Math.round(36+9*Math.sin(t*0.3+4)+3*Math.sin(t*0.9+1));
+ g.gen=(g.on.wind?g.w:0)+(g.on.solar?g.s:0)+(g.on.wasser?15:0)+(g.on.bio?10:0)+(g.on.geo?10:0)+(g.sp>0?15:0); g.use=g.load+(g.sp<0?15:0); }
+function gLabels(){ const g=gr; for(const u of GU){ const b=g.btn[u.k]; let s, cls='gb';
+  if(u.k==='sp'){ const soc=Math.round(g.soc)+' % voll'; if(g.sp>0){ s='SPEIST EIN · +15 MW · '+soc; cls+=' on'; } else if(g.sp<0){ s='LÄDT · −15 MW · '+soc; cls+=' chg'; } else s='AUS · '+soc; }
+  else { const p=u.p||(u.k==='wind'?g.w:g.s); if(g.on[u.k]){ s='AN · '+p+' MW'; cls+=' on'; } else s='AUS · '+p+' MW möglich'; }
+  if(b.dataset.s!==s){ b.dataset.s=s; b.className=cls; b.textContent=u.n; b.appendChild(mk('b',null,s)); } } }
+function gStat(){ const g=gr; $('gstat').textContent=g.f.toFixed(2).replace('.',',')+' Hz · Erzeugung '+g.gen+' MW · Verbrauch '+g.use+' MW · stabil: '+Math.min(30,Math.floor(g.ok))+' von 30 s'; }
+function gDraw(){ const g=gr, c=$('gcv').getContext('2d'), X=f=>Math.round(8+(f-49)*112), inb=Math.abs(g.f-50)<=g.band; G=c;
+ P('#0d1229',0,0,240,72); P('#4a2230',8,6,224,22); P(inb?'#2f9e57':'#1f6b3d',X(50-g.band),6,X(50+g.band)-X(50-g.band),22);
+ for(const f of [49,49.5,50,50.5,51]) P('#aab0d6',X(f),28,1,f===50?6:3);
+ P('#1f2433',X(g.f)-2,4,5,26); P('#ffffff',X(g.f)-1,5,3,24);
+ P('#161d40',8,37,224,30); P('rgba(47,158,87,.35)',8,52-Math.round(g.band*14),224,Math.round(g.band*28));
+ g.hist.forEach((f,i)=>P(Math.abs(f-50)<=g.band?'#7dffa6':'#ff7a6b',8+i*4,51-Math.round(clamp((f-50)*14,-14,14)),3,2));
+ P('#39425a',8,69,224,3); P('#ffd54a',8,69,Math.round(224*Math.min(1,g.ok/30)),3); G=ctx; }
+function openGrid(cb){
+ const easy=state.level==='easy';
+ gr={ cb, run:false, t:0, ok:0, f:50, acc:0, on:{ wind:true, solar:true, wasser:true, bio:false, geo:false }, sp:0, soc:50, band:easy?0.3:0.2, spd:easy?0.55:1, hist:[], last:0, ph:Math.random()*6, btn:{} };
+ $('ginfo').textContent='Bevor es an die Fragen geht: Halte die Netzfrequenz insgesamt 30 Sekunden im grünen Bereich um 50 Hz. Wird mehr Strom erzeugt als verbraucht, steigt die Frequenz – wird zu wenig erzeugt, sinkt sie. Wind, Sonne und Verbrauch schwanken. Schalte Anlagen und Speicher durch Tippen zu oder ab.';
+ const box=$('gbtns'); box.innerHTML='';
+ for(const u of GU){ const b=mk('button','gb'); b.type='button'; b.onclick=()=>{ if(!gr||!gr.run) return; if(u.k==='sp') gr.sp=gr.sp===0?(gr.soc>0?1:-1):gr.sp===1?(gr.soc<100?-1:0):0; else gr.on[u.k]=!gr.on[u.k]; sfx('tick'); gPow(); gLabels(); gStat(); }; box.appendChild(b); gr.btn[u.k]=b; }
+ $('grid').hidden=false; $('gstart').hidden=false; $('gnext').hidden=true;
+ const cvs=$('gcv'), k=Math.max(1,Math.floor(($('gcard').clientWidth-44)/240)); cvs.style.width=(240*k)+'px'; cvs.style.height=(72*k)+'px';
+ gPow(); gLabels(); gStat(); gDraw(); $('gcard').scrollTop=0;
+}
+function gStep(now){ const g=gr; if(!g||!g.run) return; const dt=Math.min(0.1,(now-g.last)/1000); g.last=now; g.t+=dt;
+ if(g.sp>0){ g.soc-=dt*2.5; if(g.soc<=0){ g.soc=0; g.sp=0; } } else if(g.sp<0){ g.soc+=dt*2.5; if(g.soc>=100){ g.soc=100; g.sp=0; } }
+ gPow(); g.f=clamp(g.f+(50+(g.gen-g.use)*0.025-g.f)*Math.min(1,dt*2.5),48.9,51.1);
+ if(Math.abs(g.f-50)<=g.band) g.ok+=dt;
+ g.acc+=dt; if(g.acc>0.2){ g.acc=0; g.hist.push(g.f); if(g.hist.length>56) g.hist.shift(); gLabels(); gStat(); }
+ gDraw();
+ if(g.ok>=30){ g.run=false; const sec=Math.round(g.t), pts=sec<=40?100:sec<=55?60:30; state.score+=pts; state.grid=pts; save(); updateHUD(); sfx('ok'); gStat();
+  $('ginfo').textContent='✔ Geschafft! Das Netz lief 30 Sekunden stabil (benötigte Zeit: '+sec+' Sekunden). +'+pts+' Punkte. Jetzt folgen die Fragen zur Netzsteuerung.'; $('gnext').hidden=false; $('gcard').scrollTop=0; return; }
+ requestAnimationFrame(gStep); }
+$('gstart').onclick=()=>{ if(!gr) return; auInit(); $('gstart').hidden=true; $('ginfo').textContent='Halte die Frequenz im grünen Bereich um 50 Hz!'; $('gcard').scrollTop=0; gr.run=true; gr.last=performance.now(); requestAnimationFrame(gStep); };
+$('gnext').onclick=()=>{ if(!gr) return; const cb=gr.cb; gr=null; $('grid').hidden=true; cb(); };
+$('gclose').onclick=()=>{ gr=null; $('grid').hidden=true; toast('Pausiert – sprich Herrn Meyer erneut an, um weiterzumachen.'); };
 /* =================== HUD, LOGBUCH, KARTE, URKUNDE =================== */
 function updateHUD(){
  const c=$('cores'); c.innerHTML='';
@@ -949,6 +1042,9 @@ function openLog(){
  if(!found.length) sec.appendChild(mk('p','muted','Noch keine gefunden. Sie stehen überall im Park.'));
  found.forEach(s=>{ const p=mk('p'); p.appendChild(mk('strong',null,s.t+': ')); p.appendChild(document.createTextNode(s.text)); sec.appendChild(p); });
  b.appendChild(sec);
+ { const ids=TIPS.map((_,i)=>i).filter(i=>state.tips[i]), s2=mk('section','logsec'); s2.appendChild(mk('h3',null,'💡 Energiespar-Tipps ('+ids.length+' von '+TIPS.length+')'));
+   if(ids.length<TIPS.length) s2.appendChild(mk('p','muted','Leuchtende Glühbirnen liegen abseits der Wege versteckt. Jede bringt 20 Punkte.'));
+   ids.forEach(i=>{ const p=mk('p'); p.appendChild(mk('strong',null,TIPS[i].t+': ')); p.appendChild(document.createTextNode(TIPS[i].text)); s2.appendChild(p); }); b.appendChild(s2); }
  $('log').hidden=false;
 }
 function openMap(){
@@ -959,6 +1055,7 @@ function openMap(){
  const label=(x,y,em,txt,done)=>{ m.font='30px sans-serif'; m.textAlign='center'; m.fillText(em,x,y); m.font='bold 19px "Pixelify Sans", sans-serif'; m.lineWidth=5; m.strokeStyle='#fff'; m.strokeText(txt+(done?' ✔':''),x,y+24); m.fillStyle=done?'#1d7a3e':'#1c2247'; m.fillText(txt+(done?' ✔':''),x,y+24); m.fillStyle='rgba(40,40,60,.55)'; };
  for(const k of ORDER){ const n=ST[k].npc; label(n.x*TS+8,n.y*TS-4,ST[k].emoji,ST[k].name,state.done[k]); }
  label(24*TS+8,15*TS-4,'🏢','Leitwarte',state.final);
+ for(const g of GATES){ if(!g.ent.open){ m.font='26px sans-serif'; m.textAlign='center'; m.fillStyle='#1c2247'; m.fillText('🔒',g.x*TS+8,g.y*TS+17); } }
  const px=player.x+8, py=player.y+10; m.fillStyle='#fff'; m.beginPath(); m.arc(px,py,12,0,7); m.fill(); m.fillStyle='#e0262a'; m.beginPath(); m.arc(px,py,8,0,7); m.fill();
  $('mapov').hidden=false;
 }
@@ -972,7 +1069,7 @@ function showCert(){
 }
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{ $(b.dataset.close).hidden=true; });
 $('bLog').onclick=openLog; $('bMap').onclick=openMap;
-function newGame(name){ const lv=state.level||pickLvl||'std'; state=fresh(); state.name=name; state.level=lv; state.music=true; player.x=24*TS; player.y=17*TS; player.dir='down'; save(); drawWires(); updateHUD(); setMusicBtn(); }
+function newGame(name){ const lv=state.level||pickLvl||'std'; state=fresh(); state.name=name; state.level=lv; state.music=true; player.x=24*TS; player.y=17*TS; player.dir='down'; syncGates(); save(); drawWires(); updateHUD(); setMusicBtn(); }
 $('bReset').onclick=()=>{ if(!confirm('Spielstand wirklich löschen? Alle Energiekerne und Punkte gehen verloren.')) return; const n=state.name; newGame(n); $('log').hidden=true; setTimeout(talkMentor,200); };
 $('bAgain').onclick=()=>{ if(!confirm('Neues Spiel starten? Dein Spielstand wird zurückgesetzt.')) return; const n=state.name; newGame(n); $('cert').hidden=true; setTimeout(talkMentor,200); };
 
@@ -1030,7 +1127,7 @@ const unlock=()=>{ if(AU.ctx && AU.ctx.state!=='running'){ try{ AU.ctx.resume();
 document.addEventListener('contextmenu',e=>{ if(e.target.closest && e.target.closest('#game,#dpad,#abtn')) e.preventDefault(); });
 let walkTo=null;
 const keys={}; let touchDir={ x:0, y:0 };
-const anyOv=()=>['title','panel','log','mapov','cert'].some(id=>!$(id).hidden);
+const anyOv=()=>['title','panel','grid','log','mapov','cert'].some(id=>!$(id).hidden);
 function action(){ if(anyOv()) return; if(dlg.open){ advance(); return; } const o=findTarget(); if(o){ sfx('open'); o.act(); } }
 addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();
@@ -1134,6 +1231,17 @@ function drawEnt(o,sx,sy,t){
  const W=o.w*TS;
  switch(o.kind){
   case 'npc': drawNPC(sx,sy,o,t); break;
+  case 'gate': { const g=o.g;
+   if(g.style==='bar'){ P('rgba(0,0,0,.2)',sx+4,sy+15,9,2); P('#55596a',sx+5,sy-4,5,6); P('#3c4050',sx+5,sy+1,5,1);
+    if(o.open){ P('#f5f5f5',sx+6,sy-18,3,15); for(let i=0;i<3;i++) P('#d6382e',sx+6,sy-17+i*5,3,2); P('#4cff7a',sx+7,sy-3,1,1); }
+    else { P('rgba(0,0,0,.2)',sx+9,sy+2,2,14); P('#f5f5f5',sx+6,sy+1,3,15); for(let i=0;i<3;i++) P('#d6382e',sx+6,sy+3+i*5,3,2); P(Math.floor(t*2)%2?'#ff4a4a':'#7a2020',sx+7,sy-3,1,1); } }
+   else if(o.open){ P('rgba(0,0,0,.2)',sx+1,sy+1,14,2); P('#7a4a24',sx+1,sy-3,6,4); P('#d9b98a',sx+1,sy-2,1,2); P('#a8743f',sx+2,sy-3,5,1); P('#7a4a24',sx+9,sy-3,6,4); P('#d9b98a',sx+14,sy-2,1,2); P('#a8743f',sx+9,sy-3,5,1); P('#e8d6a8',sx+4,sy+5,1,1); P('#e8d6a8',sx+10,sy+8,1,1); P('#e8d6a8',sx+7,sy+3,1,1); }
+   else { P('rgba(0,0,0,.2)',sx-5,sy+11,25,3); P('#5f3819',sx-6,sy+3,3,10); P('#d9b98a',sx-6,sy+6,1,3); P('#7a4a24',sx-3,sy+5,14,6); P('#a8743f',sx-3,sy+5,14,1); P('#5f3819',sx-3,sy+10,14,1); P('#5f3819',sx+1,sy+7,2,1); P('#5f3819',sx+6,sy+8,2,1);
+    P('#2e7d3a',sx+9,sy-1,12,14); P('#2e7d3a',sx+8,sy+2,14,8); P('#24672f',sx+9,sy+11,12,2); P('#3f9a4a',sx+11,sy+1,6,5); P('#5cb862',sx+12,sy+2,2,2); P('#2e7d3a',sx+3,sy+13,2,1); P('#3f9a4a',sx+6,sy+2,2,1); }
+   break; }
+  case 'bulb': { if(state.tips[o.tip]) break; const tt=RM?0:t, by=sy+2+Math.round(Math.sin(tt*3+o.x));
+   P('rgba(0,0,0,.2)',sx+5,sy+13,6,2); G.globalAlpha=0.28+Math.sin(tt*4+o.y)*0.14; P('#ffe27a',sx+2,by-3,12,12); G.globalAlpha=1;
+   P('#ffd54a',sx+6,by,4,1); P('#ffd54a',sx+5,by+1,6,4); P('#ffd54a',sx+6,by+5,4,1); P('#fffbe0',sx+6,by+1,2,2); P('#8a8f9a',sx+7,by+6,2,2); break; }
   case 'mast': { const on=o.ks.some(isOn); P('rgba(0,0,0,.2)',sx+5,sy+13,8,2); P('#6e5a48',sx+7,sy-16,2,30); P('#57463a',sx+8,sy-16,1,30); P('#6e5a48',sx+3,sy-15,10,2); P('#cfd5df',sx+4,sy-17,2,2); P('#cfd5df',sx+10,sy-17,2,2); P(on?'#ffd54a':'#555b68',sx+7,sy-18,2,2); break; }
   case 'sign': P('rgba(0,0,0,.2)',sx+4,sy+14,8,2); P('#6e441f',sx+7,sy+8,2,7); P('#a8743f',sx+2,sy+2,12,7); P('#c48c52',sx+2,sy+2,12,1); P('#7a4f26',sx+4,sy+4,8,1); P('#7a4f26',sx+4,sy+6,6,1);
    { const i=SIGNS.findIndex(s=>s.x===o.x&&s.y===o.y); if(i>=0&&!state.signs[i]&&Math.floor(t*2)%2) P('#ffd54a',sx+13,sy,2,2); } break;
@@ -1230,6 +1338,7 @@ function update(dt){
   player.dir = Math.abs(ix)>Math.abs(iy) ? (ix<0?'left':'right') : (iy<0?'up':'down');
   const sp=74*dt, ox=player.x, oy=player.y; moveAxis(ix*sp,0); moveAxis(0,iy*sp); player.moving=true; player.anim+=dt;
   if(walking && walkTo){ if(Math.abs(player.x-ox)+Math.abs(player.y-oy)<sp*0.2){ walkTo.stuck+=dt; if(walkTo.stuck>0.35) walkTo=null; } else walkTo.stuck=0; }
+  checkTips();
   saveT+=dt; if(saveT>4){ saveT=0; save(); }
  } else player.moving=false;
  if(dlg.open && dlg.shown<dlg.full.length){
