@@ -16,7 +16,7 @@ Sturmtief „Zephyr“ hat alle Anlagen des Energieparks vom Netz getrennt. Als 
 | --- | --- |
 | Windpark | Energieumwandlung im Windrad, Leistung und Windgeschwindigkeit, Betz-Gesetz |
 | Solarfeld | Photovoltaik und Solarthermie, Wirkungsgrad, Wechselrichter |
-| Wasserkraft | Lageenergie, E = m · g · h, Pumpspeicherkraftwerk |
+| Wasserkraft | Lageenergie, Fallhöhe und Energie, Pumpspeicherkraftwerk |
 | Biohof | Biogas, Fermenter, Blockheizkraftwerk, CO₂-Kreislauf |
 | Geothermie | Temperaturanstieg mit der Tiefe, Grundlast, Oberrheingraben |
 | Wärmepumpen-Siedlung | Kreislauf der Luft-Wärmepumpe, Jahresarbeitszahl |
@@ -39,7 +39,9 @@ Die Höchstpunktzahl steigt dadurch um 260 Punkte. Alte Spielstände bleiben gü
 ## Zwei Schwierigkeitsstufen
 
 - **Einsteiger:** kürzere Texte, Zusammenfassung nach jeder Erklärung, Rechenhilfe immer sichtbar, Aufgaben mit drei Antwortmöglichkeiten. Passend für das Berufsreife-Niveau.
-- **Profi:** ausführlichere Erklärungen und anspruchsvollere Aufgaben. Die Rechenhilfe lässt sich bei Bedarf aufklappen.
+- **Profi:** ausführlichere Erklärungen und anspruchsvollere Aufgaben. Die Rechenhilfe lässt sich bei Bedarf aufklappen und erscheint nach dem ersten Fehlversuch von selbst.
+
+Alle Rechenaufgaben kommen in beiden Stufen mit einem einzigen Rechenschritt und glatten Zahlen aus (Niveau Realschule plus).
 
 Die Stufe wird im Startbildschirm gewählt und lässt sich jederzeit im Logbuch umschalten. Auf der Urkunde erscheint sie nicht.
 
@@ -88,10 +90,10 @@ Im Abschnitt `OBJEKTE` stehen außerdem `TIPS` (die acht Energiespar-Tipps mit P
 Eine Aufgabe sieht zum Beispiel so aus:
 
 ```js
-{ type:'num', q:'100 kg Wasser fallen 10 m tief …', answer:10000, unit:'J',
-  help:'Einsetzen: E = 100 · 10 · 10 = ? J',
-  hint:'Multipliziere die drei Zahlen.',
-  explain:'E = 100 kg · 10 N/kg · 10 m = 10 000 J.' }
+{ type:'num', q:'1000 Liter Wasser liefern bei 10 m Fallhöhe etwa 100 kJ. Wie viel bei 30 m …', answer:300, unit:'kJ',
+  help:'Rechne: 100 kJ · 3 = ? kJ',
+  hint:'Multipliziere 100 mit 3.',
+  explain:'100 kJ · 3 = 300 kJ.' }
 ```
 
 Mögliche Typen: `mc` (eine richtige Antwort), `multi` (mehrere richtige Antworten), `num` (Zahl eingeben), `order` (Reihenfolge).

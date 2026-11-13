@@ -306,11 +306,11 @@ const ST = {
      items:['Bewegungsenergie des Windes','Rotationsenergie des Rotors','Generator in der Gondel','Elektrische Energie im Netz'],
      hint:'Am Anfang steht der Wind selbst, am Ende der Strom im Netz.',
      explain:'Der Rotor nimmt Bewegungsenergie aus dem Wind auf, der Generator wandelt die Drehbewegung in elektrische Energie um.' },
-   { type:'mc', q:'Die Windgeschwindigkeit steigt von 5 m/s auf 10 m/s. Wie verändert sich die Leistung des Windrads? (P ~ v³)',
+   { type:'mc', q:'Der Wind weht doppelt so schnell wie vorher. Wie verändert sich die Leistung des Windrads?',
      options:['Sie verdoppelt sich','Sie vervierfacht sich','Sie wird 8-mal so groß','Sie bleibt gleich'], correct:2,
-     hint:'Die Geschwindigkeit verdoppelt sich. Rechne 2 hoch 3.',
-     explain:'2³ = 2 · 2 · 2 = 8. Deshalb baut man Windräder dort, wo der Wind kräftig weht – auf Höhenzügen und weit über dem Boden.' },
-   { type:'num', q:'Bei 5 m/s Wind liefert ein Windrad 100 kW. Bei 10 m/s liefert es 8-mal so viel. Wie viele kW sind das?', answer:800, unit:'kW',
+     hint:'Hannes hat es erklärt: Doppelte Windgeschwindigkeit bringt viel mehr als doppelte Leistung. Rechne 2 · 2 · 2.',
+     explain:'2 · 2 · 2 = 8. Deshalb baut man Windräder dort, wo der Wind kräftig weht – auf Höhenzügen und weit über dem Boden.' },
+   { type:'num', q:'Bei schwachem Wind liefert ein Windrad 100 kW. Bei doppelt so schnellem Wind liefert es 8-mal so viel. Wie viele kW sind das?', answer:800, unit:'kW',
      help:'Rechne: 100 kW · 8 = ? kW',
      hint:'Multipliziere 100 mit 8.',
      explain:'100 kW · 8 = 800 kW. Doppelte Windgeschwindigkeit bringt achtfache Leistung!' }
@@ -356,10 +356,10 @@ const ST = {
      options:['Lageenergie (potenzielle Energie)','Chemische Energie','Elektrische Energie','Kernenergie'], correct:0,
      hint:'Es kommt darauf an, WO sich das Wasser befindet.',
      explain:'Hoch gelegenes Wasser besitzt Lageenergie. Beim Herabfließen wird sie zu Bewegungsenergie, die Turbine macht daraus Rotationsenergie.' },
-   { type:'num', q:'100 kg Wasser fallen 10 m tief durch die Turbine. Berechne die Lageenergie: E = m · g · h (g = 10 N/kg).', answer:10000, accept:[9810], unit:'J',
-     help:'Einsetzen: E = 100 · 10 · 10 = ? J',
-     hint:'Multipliziere die drei Zahlen: 100 · 10 · 10.',
-     explain:'E = 100 kg · 10 N/kg · 10 m = 10 000 J = 10 kJ. Mehr Wasser oder mehr Höhe bedeutet mehr Energie.' },
+   { type:'num', q:'Je größer die Fallhöhe, desto mehr Energie. 1000 Liter Wasser liefern bei 10 m Fallhöhe etwa 100 kJ. Wie viel liefern sie bei 30 m, also bei 3-facher Höhe?', answer:300, unit:'kJ',
+     help:'Dreifache Höhe bedeutet dreifache Energie. Rechne: 100 kJ · 3 = ? kJ',
+     hint:'Die Höhe ist 3-mal so groß. Multipliziere 100 mit 3.',
+     explain:'100 kJ · 3 = 300 kJ. Das steckt in der Formel E = m · g · h: Mehr Wasser oder mehr Höhe bedeutet mehr Energie.' },
    { type:'mc', q:'Was macht ein Pumpspeicherkraftwerk, wenn gerade zu viel Strom im Netz ist?',
      options:['Es pumpt Wasser ins obere Becken und speichert so Energie','Es lässt Wasser ab und erzeugt noch mehr Strom','Es schaltet sich komplett ab','Es verwandelt das Wasser in Dampf'], correct:0,
      hint:'Denk an einen Akku: Wann wird er geladen?',
@@ -402,10 +402,10 @@ const ST = {
   win:'Die Pumpen fördern wieder! Ausgezeichnet, {name}. Hier ist dein Energiekern!',
   recap:'Die Erde liefert! Merke dir: etwa 3 °C mehr pro 100 m – und das rund um die Uhr.',
   puzzles:[
-   { type:'num', q:'An der Oberfläche hat der Boden 10 °C. Pro 100 m Tiefe wird es 3 °C wärmer. Wie warm ist es in 1000 m Tiefe?', answer:40, unit:'°C', tol:0.5,
-     help:'1000 m sind 10 · 100 m. Also: 10 · 3 °C = ? °C. Dann noch + 10 °C.',
-     hint:'Vergiss die 10 °C an der Oberfläche nicht.',
-     explain:'10 · 3 °C = 30 °C, plus 10 °C = 40 °C. In 3000 m Tiefe wären es schon etwa 100 °C!' },
+   { type:'num', q:'Pro 100 m Tiefe wird es etwa 3 °C wärmer. Um wie viel Grad wird es in 1000 m Tiefe wärmer?', answer:30, unit:'°C', tol:0.5,
+     help:'1000 m sind 10 · 100 m. Rechne: 10 · 3 °C = ? °C',
+     hint:'Wie oft passen 100 m in 1000 m? So oft wird es um 3 °C wärmer.',
+     explain:'10 · 3 °C = 30 °C. In 3000 m Tiefe sind es schon etwa 90 °C mehr als an der Oberfläche!' },
    { type:'mc', q:'Was bedeutet „grundlastfähig“?',
      options:['Die Anlage kann rund um die Uhr zuverlässig Strom liefern','Die Anlage steht auf festem Grund','Die Anlage liefert nur bei Sonnenschein','Die Anlage braucht keinen Generator'], correct:0,
      hint:'Dr. Erdmann hat es am Ende seiner Erklärung gesagt.',
@@ -431,10 +431,10 @@ const ST = {
      options:['Aus der Umgebungsluft','Aus dem Strom','Aus verbranntem Erdgas','Aus dem Kühlschrank der Nachbarn'], correct:0,
      hint:'Der Strom treibt nur den Verdichter an.',
      explain:'Der Strom treibt den Verdichter an, die meiste Wärme stammt aus der Luft. Darum ist eine Wärmepumpe so effizient.' },
-   { type:'num', q:'Eine Wärmepumpe macht aus 1 kWh Strom 4 kWh Wärme (JAZ 4). Sie verbraucht 100 kWh Strom. Wie viel Wärme liefert sie?', answer:400, unit:'kWh',
-     help:'Rechne: 100 kWh · 4 = ? kWh',
+   { type:'num', q:'Eine Wärmepumpe macht aus 1 kWh Strom 4 kWh Wärme (JAZ 4). Wie viel Wärme macht sie aus 10 kWh Strom?', answer:40, unit:'kWh',
+     help:'Rechne: 10 kWh · 4 = ? kWh',
      hint:'JAZ 4 heißt: Aus 1 kWh Strom werden 4 kWh Wärme.',
-     explain:'100 kWh · 4 = 400 kWh Wärme. 300 kWh davon holt die Pumpe kostenlos aus der Luft!' },
+     explain:'10 kWh · 4 = 40 kWh Wärme. 30 kWh davon holt die Pumpe kostenlos aus der Luft!' },
    { type:'order', q:'Bringe den Kreislauf in der Wärmepumpe in die richtige Reihenfolge.',
      items:['Kältemittel verdampft und nimmt Wärme aus der Luft auf','Verdichter presst das Gas zusammen – es wird heiß','Verflüssiger gibt die Wärme an die Heizung ab','Expansionsventil senkt den Druck – der Kreislauf beginnt neu'],
      hint:'Zuerst muss das Kältemittel Wärme aus der Luft aufnehmen.',
@@ -467,8 +467,8 @@ const EASY = {
  wasser:[
   { type:'mc', q:'Wo hat das Wasser mehr Lageenergie?', options:['Oben im Stausee','Unten im Fluss','Das ist überall gleich'], correct:0,
     hint:'Lageenergie hängt von der Höhe ab.', explain:'Je höher das Wasser liegt, desto mehr Lageenergie hat es.' },
-  { type:'num', q:'Im Stausee A fällt das Wasser 10 m tief, im Stausee B 30 m tief. Wie viel Mal so viel Energie liefert die gleiche Wassermenge in B?', answer:3, unit:'-mal',
-    help:'Rechne: 30 m : 10 m = ?', hint:'Wie oft passen 10 m in 30 m?', explain:'30 : 10 = 3. Dreifache Höhe bedeutet dreifache Energie.' },
+  { type:'num', q:'Stausee A liefert 5 kWh Energie. Stausee B liegt 3-mal so hoch und liefert deshalb 3-mal so viel. Wie viel kWh liefert Stausee B?', answer:15, unit:'kWh',
+    help:'Rechne: 5 kWh · 3 = ? kWh', hint:'Multipliziere 5 mit 3.', explain:'5 kWh · 3 = 15 kWh. Dreifache Höhe bedeutet dreifache Energie.' },
   { type:'mc', q:'Ein Pumpspeicherkraftwerk ist wie ein …', options:['riesiger Akku','großer Ventilator','Kühlschrank'], correct:0,
     hint:'Es speichert Energie und gibt sie später wieder ab.', explain:'Bei zu viel Strom wird Wasser hochgepumpt, bei Bedarf fließt es zurück durch die Turbine.' } ],
  bio:[
@@ -970,6 +970,7 @@ function solved(p){
 function miss(p,extra){
  pz.att++; const fb=$('pfb'); fb.className='fb bad'; fb.innerHTML='';
  fb.appendChild(mk('strong',null,'✘ Noch nicht ganz.')); fb.appendChild(mkR('p',null,(extra?extra+' ':'')+'Tipp: '+fmt(p.hint)));
+ { const ht=$('pbody').querySelector('.helpbox'); if(ht&&ht.hidden){ ht.hidden=false; if(ht.previousSibling) ht.previousSibling.hidden=true; } }
  sfx('bad'); const c=$('pcard'); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
 }
 $('pcheck').onclick=pzCheck;
