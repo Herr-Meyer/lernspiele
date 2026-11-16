@@ -1,0 +1,1432 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Plastik-Rummel · TuN 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16213a; --ink-2:#22304f;
+  --paper:#fbf6ea; --paper-ink:#2a2418;
+  --gold:#f4b53f;
+  --red:#d7263d;
+  --leaf:#53b86a; --sky:#7fc8f8;
+  --line:rgba(255,255,255,.14); --muted:#aab6d3;
+  --good:#3fbf7f; --bad:#ef5d6c;
+  --font-display:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible",Verdana,"Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ink);color:#fff;font-family:var(--font-body);font-size:17px;line-height:1.45;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+canvas#game{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none}
+.hidden{display:none!important}
+.btn{font:700 17px var(--font-body);background:var(--gold);color:#2a1d02;border:0;border-radius:14px;padding:12px 22px;cursor:pointer;box-shadow:0 4px 0 #a8741a;transition:transform .06s,box-shadow .06s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #a8741a}
+.btn.ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid var(--line);box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 4px 0 #8a1323}
+.btn.small{padding:8px 14px;font-size:15px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* Start */
+#start{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;
+  background:radial-gradient(ellipse at 50% 45%,rgba(22,33,58,.35) 0%,rgba(22,33,58,.82) 55%,rgba(8,12,26,.96) 100%)}
+.kopf{color:var(--gold);text-transform:uppercase;letter-spacing:.14em;font-weight:700;font-size:13px;margin-bottom:10px}
+.logo{font-family:var(--font-display);font-size:clamp(2.6rem,9vw,4.6rem);line-height:.95;text-shadow:0 4px 0 #0b1224;margin:0}
+.logo .g{color:var(--gold)}
+.logo small{display:block;font-size:.42em;color:#fff;margin-top:8px;letter-spacing:.02em}
+.sub{max-width:560px;margin:16px auto 22px;color:#dfe6f7}
+.startBtns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.ctrl{color:var(--muted);font-size:14px;margin-top:22px;max-width:620px}
+.blood{color:#ff8a8a}
+
+/* Editor */
+#editor{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,12,24,.78);backdrop-filter:blur(6px)}
+.edCard{background:linear-gradient(180deg,#1c2a4a,#131c33);border:1px solid var(--line);border-radius:22px;max-width:900px;width:100%;max-height:96vh;overflow:auto;display:grid;grid-template-columns:260px 1fr;gap:22px;padding:22px}
+.edCard h2{font-family:var(--font-display);font-weight:400;margin:0 0 6px;font-size:30px}
+.prev{aspect-ratio:3/4;border-radius:18px;background:radial-gradient(circle at 50% 40%,#3a5a92,#18233f 70%);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.prev canvas{width:100%;height:auto}
+.prevName{font-family:var(--font-display);font-size:24px;margin-top:-14px;margin-bottom:14px}
+.row{margin:10px 0}
+.row label{display:block;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid transparent;background:rgba(255,255,255,.08);color:#fff;border-radius:999px;padding:6px 12px;font:700 14px var(--font-body);cursor:pointer}
+.chip.sel{border-color:var(--gold);background:rgba(244,181,63,.15)}
+.dot{width:32px;height:32px;border-radius:50%;border:3px solid rgba(255,255,255,.15);cursor:pointer;padding:0}
+.dot.sel{border-color:var(--gold);box-shadow:0 0 0 2px #0b1224,0 0 0 4px var(--gold)}
+input[type=text]{font:700 18px var(--font-body);padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.08);color:#fff;width:100%}
+.note{font-size:13px;color:var(--muted)}
+@media (max-width:700px){.edCard{grid-template-columns:1fr}.prev{max-width:200px;margin:0 auto}}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:12px;gap:12px;pointer-events:none}
+.glass{background:rgba(16,24,44,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px}
+#quest{padding:10px 14px;max-width:min(420px,58vw);pointer-events:auto}
+#qEye{color:var(--gold);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+#qTitle{font-family:var(--font-display);font-size:22px;line-height:1.1;margin:2px 0}
+#qText{color:#c9d3ea;font-size:14px}
+#hudR{display:flex;gap:8px;align-items:center;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
+#badges{display:flex;gap:5px;padding:6px 8px}
+.bdg{width:30px;height:30px;border-radius:50%;background:#0d1426;border:2px solid #2c3a5c;display:flex;align-items:center;justify-content:center}
+.bdg svg{width:17px;height:17px;opacity:.25}
+.bdg.on{background:radial-gradient(circle at 35% 30%,#ffe7a3,#f4b53f 55%,#b07a14);border-color:#ffe2a0;box-shadow:0 0 12px rgba(244,181,63,.7)}
+.bdg.on svg{opacity:1}
+.hbtn{font:700 15px var(--font-body);color:#fff;padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:7px}
+.hbtn .gdot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+#pill{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);padding:8px 16px;font-size:15px;pointer-events:none;white-space:nowrap}
+kbd{background:var(--gold);color:#2a1d02;border-radius:6px;padding:1px 7px;font:700 13px var(--font-body);box-shadow:0 2px 0 #a8741a}
+#arrow{position:fixed;width:44px;height:44px;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+
+/* Touch */
+#joy{position:fixed;left:22px;bottom:22px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.25);touch-action:none}
+#joyK{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.85)}
+#talkBtn{position:fixed;right:22px;bottom:30px;width:84px;height:84px;border-radius:50%;background:var(--gold);color:#2a1d02;font:700 18px var(--font-body);border:0;box-shadow:0 5px 0 #a8741a}
+
+/* Dialog */
+#dialog{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(820px,calc(100vw - 24px));display:flex;gap:14px;padding:14px 16px;border-radius:20px;
+  background:linear-gradient(180deg,rgba(26,38,68,.96),rgba(16,24,44,.97));box-shadow:inset 0 0 0 2px rgba(244,181,63,.35),0 12px 40px rgba(0,0,0,.5);cursor:pointer}
+#portrait{width:92px;height:92px;border-radius:50%;flex:0 0 92px;background:radial-gradient(circle at 50% 35%,#3a5a92,#18233f 75%)}
+#dName{font-family:var(--font-display);color:var(--gold);font-size:21px}
+#dText{font-size:17px;min-height:48px}
+#dChoices{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+#dChoices button{font:700 15px var(--font-body);background:rgba(255,255,255,.06);color:#fff;border:2px solid var(--gold);border-radius:12px;padding:7px 12px;cursor:pointer}
+#dNext{color:var(--gold);font-size:14px;text-align:right;font-weight:700}
+
+/* Sheets */
+#sheetWrap{position:fixed;inset:0;background:rgba(8,12,24,.62);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:12px;z-index:20}
+.sheet{background:var(--paper);color:var(--paper-ink);border-radius:22px;width:min(760px,100%);max-height:calc(100vh - 24px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+.sHead{background:linear-gradient(180deg,#f3e9d2,#fbf6ea);border-bottom:2px dashed #e0d2b3;padding:14px 20px;display:flex;align-items:flex-start;gap:12px}
+.sHead .t{flex:1}
+.sEye{color:#a0661a;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+.sTitle{font-family:var(--font-display);color:#1d2a4a;font-size:27px;line-height:1.1}
+.sClose{background:#efe2c4;border:0;border-radius:10px;width:38px;height:38px;font-size:20px;cursor:pointer;color:#5a4520}
+.sBody{padding:16px 20px 20px;overflow:auto}
+.sheet.spooky{background:#141018;color:#e9e1f0}
+.sheet.spooky .sHead{background:linear-gradient(180deg,#2a1830,#141018);border-bottom-color:#4a2a52}
+.sheet.spooky .sTitle{color:#f2e6ff}
+.sheet.spooky .sEye{color:#c58cff}
+.sheet.spooky .sClose{background:#2a1c33;color:#e9e1f0}
+.qText{font-weight:700;font-size:19px;margin:6px 0 12px}
+.opts{display:grid;gap:9px}
+.opt{text-align:left;font:400 17px var(--font-body);background:#fff;color:var(--paper-ink);border:2px solid #e3d5b5;border-radius:14px;padding:11px 14px;cursor:pointer}
+.opt:hover{border-color:#d4b878}
+.opt.sel{background:#fff3d6;border-color:var(--gold)}
+.opt.ok{background:#e3f6ea;border-color:var(--good)}
+.opt.no{background:#fde8ea;border-color:var(--bad)}
+.opt.off{opacity:.35;text-decoration:line-through;pointer-events:none}
+.fb{border-radius:12px;padding:10px 14px;margin-top:12px;font-size:16px}
+.fb.ok{background:#e3f6ea;border:2px solid var(--good);color:#17402a}
+.fb.no{background:#fde8ea;border:2px solid var(--bad);color:#5c1520}
+.fb.info{background:#fff3d6;border:2px solid var(--gold);color:#4a3510}
+.spooky .opt{background:#221a2a;color:#eee;border-color:#3d2c48}
+.spooky .opt.ok{background:#173a28;border-color:var(--good)}
+.spooky .opt.no{background:#4a1820;border-color:var(--bad)}
+.tcard{background:#fff;border-left:5px solid var(--gold);border-radius:10px;padding:10px 14px;margin:8px 0}
+.dots{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.dots i{width:12px;height:12px;border-radius:50%;background:#d8ccb0}
+.dots i.now{background:var(--gold)}
+.dots i.done{background:var(--good)}
+.dots i.bad{background:var(--bad)}
+.timer{height:10px;border-radius:6px;background:#e9dfc8;overflow:hidden;margin:6px 0 10px}
+.timer i{display:block;height:100%;width:100%;background:var(--good);transition:background .3s}
+.starts{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.starts button{background:#f1e6cc;border:0;border-radius:999px;padding:5px 11px;font:400 14px var(--font-body);color:#4a3a1a;cursor:pointer}
+textarea{width:100%;min-height:130px;font:400 17px var(--font-body);border-radius:12px;border:2px solid #e3d5b5;padding:10px 12px;background:#fff;color:var(--paper-ink);resize:vertical}
+.cnt{font-size:13px;color:#7a6a48;text-align:right}
+.ws{background:#f6efdc;border:2px dashed #d9c79c;border-radius:12px;padding:8px 12px;margin:8px 0;font-size:15px}
+.ws b{color:#a0661a}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.gcv{width:100%;height:auto;display:block;border-radius:14px;background:#0f1424;touch-action:manipulation}
+.sortPool,.sortDone{display:flex;flex-wrap:wrap;gap:8px;min-height:46px;padding:8px;border-radius:12px}
+.sortDone{background:#f3ead4;border:2px dashed #dccaa0;margin-bottom:8px}
+.sortPool button,.sortDone span{font:700 15px var(--font-body);border-radius:10px;padding:8px 12px;border:2px solid #e3d5b5;background:#fff;color:var(--paper-ink);cursor:pointer}
+.sortDone span{background:#e3f6ea;border-color:var(--good)}
+.vbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.vbtns button{font:700 15px var(--font-body);border-radius:12px;padding:10px;border:2px solid #e3d5b5;background:#fff;color:var(--paper-ink);cursor:pointer;text-align:left}
+.vbtns button small{display:block;font-weight:400;font-size:12.5px;color:#6a5a3a}
+.score{font-family:var(--font-display);font-size:20px;color:#1d2a4a}
+.spooky .vbtns button{background:#221a2a;color:#eee;border-color:#3d2c48}
+.spooky .score{color:#f2e6ff}
+.big{font-size:42px;font-family:var(--font-display);text-align:center;margin:10px 0}
+
+/* Reward */
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--gold);color:#2a1d02;font-weight:700;border-radius:999px;padding:9px 18px;z-index:40;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:opacity .3s,transform .3s}
+#medal{position:fixed;left:50%;top:40%;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;z-index:41;background:radial-gradient(circle at 35% 30%,#fff1c2,#f4b53f 55%,#9c6a10);box-shadow:0 0 0 6px #fff,0 0 40px rgba(244,181,63,.8);display:flex;align-items:center;justify-content:center;pointer-events:none}
+#medal svg{width:56px;height:56px}
+#medal.pop{animation:pop 1.6s ease forwards}
+@keyframes pop{0%{transform:scale(0)}18%{transform:scale(1.25)}28%{transform:scale(1)}80%{transform:scale(1);opacity:1}100%{transform:scale(.6) translateY(-200px);opacity:0}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:39}
+#fade{position:fixed;inset:0;background:#0b1224;opacity:0;pointer-events:none;transition:opacity .28s;z-index:30}
+@media (prefers-reduced-motion:reduce){#medal.pop{animation:none;opacity:0}.btn,#fade{transition:none}}
+
+/* Logbuch */
+.lbCover{text-align:center;border-bottom:2px dashed #e0d2b3;padding-bottom:14px;margin-bottom:10px}
+.lbCover img{width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#3a5a92,#18233f 75%)}
+.lbName{font-family:var(--font-display);font-size:30px;color:#1d2a4a}
+.lbMeta{font-size:14px;color:#6a5a3a}
+.lbEntry{border-bottom:2px dashed #e0d2b3;padding:12px 0}
+.lbEntry h3{font-family:var(--font-display);font-weight:400;color:#1d2a4a;margin:0;font-size:22px}
+.lbEntry .m{font-size:13px;color:#7a6a48}
+.lbEntry.open{color:#9a8f7a;font-style:italic}
+.lbAns{background:#fff;border-left:5px solid var(--gold);border-radius:8px;padding:8px 12px;margin-top:6px;white-space:pre-wrap}
+.sign{display:flex;gap:30px;margin-top:40px}
+.sign div{flex:1;border-top:1.5px solid #2a2418;padding-top:4px;font-size:13px}
+.lbBadges{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.lbBadges .bdg{width:26px;height:26px}
+.diplom{border:4px double #a0661a;border-radius:14px;padding:16px;text-align:center;margin:14px 0;background:#fff8e6}
+.diplom h3{font-family:var(--font-display);font-weight:400;font-size:28px;margin:0;color:#8a1323}
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:16mm}
+  body{background:#fff;color:#000;overflow:visible}
+  body>*{display:none!important}
+  #printArea{display:block!important;color:#2a2418;font-size:12pt}
+  .lbAns{border:1px solid #ccc;border-left:4px solid #c9962e}
+  .bdg{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .lbEntry{break-inside:avoid}
+}
+@media (max-width:640px){#hud{flex-wrap:wrap;padding:8px}#quest{max-width:none;flex:1 1 100%;padding:8px 12px}#qTitle{font-size:18px}#qText{font-size:13px}#hudR{flex:1 1 100%;justify-content:flex-end;flex-wrap:nowrap}#pill{white-space:normal;max-width:calc(100vw - 260px);font-size:13px}.bdg{width:26px;height:26px}#badges{gap:3px;padding:5px 6px}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="start">
+  <div class="kopf">Boeselager Realschule plus Ahrweiler · TuN-Kurs Klasse 8</div>
+  <h1 class="logo">Plastik-<span class="g">Rummel</span><small>Die Nacht der Kunststoffe</small></h1>
+  <p class="sub">21:13 Uhr. Dein Handy liegt noch in der TuN-Werkstatt. Auf dem Schulhof hat jemand einen Rummel aufgebaut, der nach verbranntem Joghurtbecher riecht. Hol dir an sechs Ständen die Chips – und dein Handy von Direktor Polymerius zurück.</p>
+  <div class="startBtns">
+    <button class="btn" id="bNew">Neues Spiel</button>
+    <button class="btn ghost hidden" id="bCont">Weiterspielen</button>
+    <button class="btn red small hidden" id="bDel">Spielstand löschen</button>
+  </div>
+  <div class="ctrl">Laufen: Pfeiltasten, WASD oder irgendwo hintippen · Sprechen: Leertaste, E oder antippen</div>
+</div>
+
+<div id="editor" class="hidden">
+  <div class="edCard">
+    <div>
+      <div class="prev"><canvas id="prevCv" width="260" height="300"></canvas><div class="prevName" id="prevName">Du</div></div>
+    </div>
+    <div>
+      <h2>Wer bist du?</h2>
+      <div class="row"><label for="inName">Vorname</label><input type="text" id="inName" maxlength="20" placeholder="Dein Vorname" autocomplete="off"></div>
+      <div class="row"><label>Hautton</label><div class="chips" id="cSkin"></div></div>
+      <div class="row"><label>Frisur</label><div class="chips" id="cStyle"></div></div>
+      <div class="row"><label>Haarfarbe</label><div class="chips" id="cHair"></div></div>
+      <div class="row"><label>Pulli</label><div class="chips" id="cShirt"></div></div>
+      <div class="row"><label>Hose</label><div class="chips" id="cPants"></div></div>
+      <div class="row"><label>Extra</label><div class="chips" id="cExtra"></div></div>
+      <div class="row"><label>Niveau</label><div class="chips" id="cLevel"></div>
+        <div class="note" id="levelNote" style="margin-top:4px"></div></div>
+      <p class="note">Alles bleibt nur auf diesem Gerät gespeichert.</p>
+      <button class="btn" id="bGo">Los geht’s!</button>
+    </div>
+  </div>
+</div>
+
+<div id="hud" class="hidden">
+  <div id="quest" class="glass"><div id="qEye"></div><div id="qTitle"></div><div id="qText"></div></div>
+  <div id="hudR">
+    <div id="badges" class="glass"></div>
+    <button class="glass hbtn" id="bLog"><span class="gdot"></span>Logbuch</button>
+    <button class="glass hbtn" id="bSnd" aria-label="Ton an/aus">♪</button>
+  </div>
+</div>
+<div id="pill" class="glass hidden"></div>
+<svg id="arrow" class="hidden" viewBox="0 0 44 44"><path d="M22 3 L40 38 L22 30 L4 38 Z" fill="#f4b53f" stroke="#7a5208" stroke-width="2"/></svg>
+<div id="joy" class="hidden"><div id="joyK"></div></div>
+<button id="talkBtn" class="hidden">Reden</button>
+
+<div id="dialog" class="hidden">
+  <canvas id="portrait" width="184" height="184"></canvas>
+  <div style="flex:1;min-width:0">
+    <div id="dName"></div>
+    <div id="dText"></div>
+    <div id="dChoices"></div>
+    <div id="dNext">weiter ▸</div>
+  </div>
+</div>
+
+<div id="sheetWrap" class="hidden">
+  <div class="sheet" id="sheet">
+    <div class="sHead"><div class="t"><div class="sEye" id="sEye"></div><div class="sTitle" id="sTitle"></div></div><button class="sClose" id="sClose" aria-label="Schließen">✕</button></div>
+    <div class="sBody" id="sBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="hidden"></div>
+<div id="medal" class="hidden"></div>
+<canvas id="confetti"></canvas>
+<div id="fade"></div>
+<div id="printArea"></div>
+<script>
+"use strict";
+/* ================= Grundlagen ================= */
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SAVE_KEY = 'plastikrummel8_v1';
+const KLASSE = '8';
+function rng(seed){ let s = seed>>>0; return () => { s = (s*1664525+1013904223)>>>0; return s/4294967296; }; }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function today(){ return new Date().toLocaleDateString('de-DE'); }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+
+/* ================= Ton ================= */
+const Snd = { ctx:null, on:true,
+  init(){ if(!this.ctx){ try{ this.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(this.ctx && this.ctx.state==='suspended') this.ctx.resume(); },
+  tone(f,d=.12,type='square',v=.06,when=0){ if(!this.on||!this.ctx) return; const t=this.ctx.currentTime+when; const o=this.ctx.createOscillator(), g=this.ctx.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t+d+.02); },
+  blip(){ this.tone(660,.06,'square',.035); },
+  good(){ this.tone(660,.1,'triangle',.08); this.tone(990,.16,'triangle',.08,.09); },
+  bad(){ this.tone(220,.18,'sawtooth',.05); this.tone(160,.22,'sawtooth',.05,.12); },
+  fanfare(){ [523,659,784,1047].forEach((f,i)=>this.tone(f,i===3?.4:.14,'triangle',.09,i*.13)); },
+  door(){ this.tone(140,.15,'sine',.12); this.tone(90,.2,'sine',.1,.1); },
+  spook(){ this.tone(110,.6,'sine',.08); this.tone(116,.6,'sine',.06,.05); },
+  hit(){ this.tone(90,.12,'square',.1); },
+  bell(){ this.tone(1320,.6,'triangle',.1); this.tone(1980,.5,'sine',.05,.02); },
+  tick(){ this.tone(1200,.02,'square',.025); }
+};
+
+/* ================= Spielstand ================= */
+const DEF_LOOK = { skin:'#f1c7a5', style:'kurz', hair:'#5b3a24', shirt:'#3d8ee8', pants:'#2b3445', extra:'nichts' };
+let S = null;
+function newState(){ return { v:1, name:'', look:{...DEF_LOOK}, level:'std', metMeyer:false, chips:{}, log:{}, finale:false, started:today(), finished:null, scene:'campus', x:680, y:1190, dir:'up' }; }
+function save(){ if(!S) return; S.scene=world.scene; S.x=Math.round(P.x); S.y=Math.round(P.y); S.dir=P.dir; try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const j = JSON.parse(localStorage.getItem(SAVE_KEY)); if(j && j.v===1) return j; }catch(e){} return null; }
+const HILFEN = () => S && S.level==='hilfe';
+
+/* ================= Figuren ================= */
+const SKINS=['#fbe0c8','#f1c7a5','#e2a97e','#c68a5c','#9b6640','#6e4428'];
+const STYLES=[['kurz','Kurz'],['lang','Lang'],['zopf','Zopf'],['locken','Locken'],['dutt','Dutt'],['strubbel','Strubbel']];
+const HAIRS=['#2b1d16','#5b3a24','#8a5a2b','#d9a54c','#e8d38a','#b5452b','#3d3d4a','#7a4fd1'];
+const SHIRTS=['#e94f4f','#f4a93f','#4fb86a','#3d8ee8','#7a5ce0','#ec6fb0','#2ebfb3','#f2f2f2'];
+const PANTS=['#2b3445','#3f5f8f','#5b4632','#2f2f33','#6c7a3a'];
+const EXTRAS=[['nichts','Nichts'],['brille','Brille'],['cappy','Cappy'],['stirnband','Stirnband'],['kopfhoerer','Kopfhörer']];
+function shade(hex,amt){ let n=parseInt(hex.slice(1),16); let r=(n>>16)+amt,g=((n>>8)&255)+amt,b=(n&255)+amt; r=clamp(r,0,255);g=clamp(g,0,255);b=clamp(b,0,255); return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); }
+
+function drawChar(c,x,y,L,dir,t,moving,s=1){
+  c.save(); c.translate(x,y); c.scale(s,s);
+  const bob = moving ? Math.abs(Math.sin(t*12))*-2 : Math.sin(t*3)*.8;
+  const sw = moving ? Math.sin(t*12)*4 : 0;
+  // Schatten
+  c.fillStyle='rgba(10,15,25,.35)'; c.beginPath(); c.ellipse(0,0,14,5,0,0,7); c.fill();
+  if(L.ghost){ drawGhostBody(c,t); c.restore(); return; }
+  // Beine
+  c.fillStyle=L.pants;
+  if(dir==='left'||dir==='right'){ c.fillRect(-5+sw*.6,-13,6,12); c.fillRect(-1-sw*.6,-13,6,12); }
+  else { c.fillRect(-8,-13+(sw>0?-sw*.4:0),6,12+(sw>0?sw*.4:0)); c.fillRect(2,-13+(sw<0?sw*.4:0),6,12-(sw<0?sw*.4:0)); }
+  c.fillStyle='#1b1b22'; c.fillRect(-9,-2,7,3); c.fillRect(2,-2,7,3);
+  c.translate(0,bob);
+  // Körper
+  const coat = L.coat||L.shirt;
+  const g=c.createLinearGradient(0,-34,0,-10); g.addColorStop(0,shade(coat,25)); g.addColorStop(1,shade(coat,-30));
+  c.fillStyle=g; rr(c,-12,-34,24,24,8); c.fill();
+  if(L.coat && L.shirt!==L.coat){ c.fillStyle=L.shirt; c.fillRect(-4,-33,8,20); }
+  if(L.jersey){ c.fillStyle='#fff'; c.font='bold 8px sans-serif'; c.textAlign='center'; if(dir!=='up') c.fillText('FCK',0,-20); else c.fillText('1',0,-20); }
+  // Arme
+  c.fillStyle=shade(coat,-15);
+  const as = moving? Math.sin(t*12)*3:0;
+  if(dir==='left'||dir==='right'){ c.fillRect(-3,-31+as,6,14); }
+  else { c.fillRect(-16,-31+as,5,15); c.fillRect(11,-31-as,5,15); c.fillStyle=L.skin; c.fillRect(-16,-17+as,5,4); c.fillRect(11,-17-as,5,4); }
+  // Kopf
+  const hy=-46;
+  // Haare hinten
+  c.fillStyle=L.hair;
+  if(L.style==='lang'){ rr(c,-14,hy-6,28,26,9); c.fill(); }
+  if(L.style==='zopf' && dir!=='down'){ const zx = dir==='left'?10:dir==='right'?-10:0; c.beginPath(); c.ellipse(zx,hy+10,5,11,0,0,7); c.fill(); }
+  c.fillStyle=L.skin; c.beginPath(); c.arc(0,hy,13,0,7); c.fill();
+  // Gesicht
+  if(dir!=='up'){
+    const ex = dir==='left'?-5:dir==='right'?5:0;
+    c.fillStyle='#1d1d26';
+    if(dir==='down'){ c.fillRect(-6,hy-1,3,4); c.fillRect(3,hy-1,3,4); }
+    else { c.fillRect(ex-1,hy-1,3,4); }
+    c.fillStyle='rgba(230,110,110,.35)'; if(dir==='down'){ c.beginPath(); c.arc(-8,hy+5,2.5,0,7); c.arc(8,hy+5,2.5,0,7); c.fill(); }
+    if(L.beard){ c.fillStyle=L.hair; c.beginPath(); if(dir==='down'){ c.arc(0,hy+5,11,.1,Math.PI-.1); } else { c.arc(ex*.6,hy+5,10,.1,Math.PI-.1); } c.fill(); c.fillStyle='#7a3a2a'; if(dir==='down') c.fillRect(-3,hy+7,6,2); }
+    else { c.fillStyle='#7a3a2a'; if(dir==='down') c.fillRect(-3,hy+6,6,1.6); }
+    if(L.extra==='brille'||L.glasses){ c.strokeStyle='#222'; c.lineWidth=1.6; if(dir==='down'){ c.strokeRect(-9,hy-3,7,6); c.strokeRect(2,hy-3,7,6); c.beginPath(); c.moveTo(-2,hy);c.lineTo(2,hy);c.stroke(); } else { c.strokeRect(ex-4,hy-3,7,6); } }
+    if(L.monocle){ c.strokeStyle='#e8c060'; c.lineWidth=1.6; c.beginPath(); c.arc(dir==='down'?4.5:ex,hy+1,4.5,0,7); c.stroke(); }
+    if(L.mask){ c.fillStyle='rgba(20,20,20,.85)'; c.fillRect(-11,hy-4,22,6); c.fillStyle='#fff'; c.fillRect(-6,hy-2,3,2); c.fillRect(3,hy-2,3,2); }
+  }
+  // Haare vorne
+  c.fillStyle=L.hair;
+  const st=L.style;
+  if(st==='kurz'||st==='zopf'||st==='lang'){ c.beginPath(); c.arc(0,hy-2,13.5,Math.PI*1.02,Math.PI*1.98); c.fill(); if(dir==='up'){ c.beginPath(); c.arc(0,hy,13.5,0,7); c.fill(); } else c.fillRect(-13,hy-6,26,4); }
+  if(st==='locken'){ for(let i=0;i<9;i++){ const a=Math.PI+i/8*Math.PI; c.beginPath(); c.arc(Math.cos(a)*12,hy-2+Math.sin(a)*12,5.5,0,7); c.fill(); } if(dir==='up'){ c.beginPath(); c.arc(0,hy,14,0,7); c.fill(); } }
+  if(st==='dutt'){ c.beginPath(); c.arc(0,hy-2,13.5,Math.PI,0); c.fill(); c.beginPath(); c.arc(0,hy-15,6,0,7); c.fill(); if(dir==='up'){ c.beginPath(); c.arc(0,hy,13.5,0,7); c.fill(); } }
+  if(st==='strubbel'){ c.beginPath(); c.arc(0,hy-3,13,Math.PI,0); c.fill(); for(let i=-2;i<=2;i++){ c.beginPath(); c.moveTo(i*5-4,hy-10); c.lineTo(i*5,hy-21+Math.abs(i)*2); c.lineTo(i*5+4,hy-10); c.fill(); } if(dir==='up'){ c.beginPath(); c.arc(0,hy,13.5,0,7); c.fill(); } }
+  if(st==='glatze'){ /* nichts */ }
+  // Extras
+  const ex2 = L.extra;
+  if(ex2==='cappy'){ c.fillStyle='#d7263d'; c.beginPath(); c.arc(0,hy-4,13.5,Math.PI,0); c.fill(); c.fillRect(dir==='left'?-20:dir==='right'?4:-9,hy-6,dir==='up'?0:16,4); }
+  if(ex2==='stirnband'){ c.fillStyle='#f4b53f'; c.fillRect(-13.5,hy-7,27,4); }
+  if(ex2==='kopfhoerer'){ c.strokeStyle='#222'; c.lineWidth=3; c.beginPath(); c.arc(0,hy-2,15,Math.PI*1.05,Math.PI*1.95); c.stroke(); c.fillStyle='#e94f4f'; if(dir!=='left') c.fillRect(-17,hy-4,5,9); if(dir!=='right') c.fillRect(12,hy-4,5,9); }
+  if(L.flatcap){ c.fillStyle='#4a4038'; c.beginPath(); c.ellipse(0,hy-9,15,6,0,Math.PI,0); c.fill(); c.fillRect(-14,hy-10,28,4); if(dir!=='up'){ c.fillStyle='#3a322b'; c.beginPath(); c.ellipse(dir==='left'?-8:dir==='right'?8:0,hy-7,9,3,0,0,7); c.fill(); } }
+  if(L.tophat){ c.fillStyle='#14111a'; c.fillRect(-15,hy-13,30,4); c.fillRect(-9,hy-34,18,22); c.fillStyle='#8a1323'; c.fillRect(-9,hy-17,18,4); }
+  if(L.goggles){ c.fillStyle='rgba(140,200,255,.55)'; c.strokeStyle='#333'; c.lineWidth=1.4; if(dir!=='up'){ rr(c,-11,hy-11,22,6,3); c.fill(); c.stroke(); } }
+  if(L.scarf){ c.fillStyle=L.scarf; c.fillRect(-11,hy+10,22,5); }
+  c.restore();
+}
+function drawGhostBody(c,t){
+  const f = Math.sin(t*2)*4;
+  c.translate(0,-20+f);
+  c.globalAlpha=.85; c.fillStyle='#e8e2f0';
+  c.beginPath(); c.moveTo(-16,10); c.lineTo(-16,-14); c.arc(0,-14,16,Math.PI,0); c.lineTo(16,10);
+  for(let i=0;i<4;i++){ c.lineTo(16-i*8-4,5+(i%2)*4); c.lineTo(16-i*8-8,10); } c.fill();
+  c.globalAlpha=1; c.fillStyle='#1a1020'; c.beginPath(); c.ellipse(-6,-16,3,4.5,0,0,7); c.ellipse(6,-16,3,4.5,0,0,7); c.fill();
+  c.beginPath(); c.ellipse(0,-6,3,4,0,0,7); c.fill();
+}
+
+/* ================= Welt ================= */
+const world = { scene:'campus', t:0 };
+const scenes = {};
+const P = { x:680, y:1190, dir:'up', moving:false, tx:null, ty:null, talkOnArrive:null };
+const cam = { x:0, y:0, z:1 };
+let cv, ctx, W=0, H=0, DPR=1;
+
+function makeCanvas(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+function sign(c,txt,x,y,bg='#1d2a4a',fg='#fff',size=15){
+  c.save(); c.font=`700 ${size}px "Atkinson Hyperlegible",Verdana,sans-serif`; const w=c.measureText(txt).width+18, h=size+11;
+  c.fillStyle='rgba(0,0,0,.25)'; rr(c,x-w/2+2,y-h/2+3,w,h,8); c.fill();
+  c.fillStyle=bg; rr(c,x-w/2,y-h/2,w,h,8); c.fill(); c.fillStyle=fg; c.textAlign='center'; c.textBaseline='middle'; c.fillText(txt,x,y+1); c.restore();
+}
+function shadowRect(c,x,y,w,h){ c.fillStyle='rgba(20,30,40,.22)'; c.fillRect(x+14,y+24,w,h); }
+
+/* ---------- Campus-Hintergrund ---------- */
+function buildCampus(){
+  const Wd=1800, Hd=1300, g=makeCanvas(Wd,Hd).getContext('2d');
+  const R=rng(42);
+  let gr=g.createLinearGradient(0,0,0,Hd); gr.addColorStop(0,'#6fbf5e'); gr.addColorStop(1,'#58a653'); g.fillStyle=gr; g.fillRect(0,0,Wd,Hd);
+  for(let i=0;i<2600;i++){ g.fillStyle=R()<.5?'rgba(255,255,255,.07)':'rgba(0,40,0,.09)'; g.fillRect(R()*Wd,R()*Hd,2+R()*3,2+R()*3); }
+  // Straße
+  g.fillStyle='#d9d3c7'; g.fillRect(0,1212,1800,22);
+  g.fillStyle='#4a4f5a'; g.fillRect(0,1234,1800,66);
+  g.strokeStyle='#fff'; g.lineWidth=3; g.setLineDash([26,22]); g.beginPath(); g.moveTo(0,1267); g.lineTo(1800,1267); g.stroke(); g.setLineDash([]);
+  g.fillStyle='rgba(255,255,255,.75)'; g.font='700 16px "Atkinson Hyperlegible",sans-serif'; g.fillText('Schützenstraße',20,1290);
+  // Asphalt
+  g.fillStyle='#8d9096'; g.fillRect(200,330,40,890); g.fillRect(200,1000,1600,212);
+  // Parkplatz
+  g.fillStyle='#868990'; g.fillRect(214,1010,330,196);
+  g.strokeStyle='#fff'; g.lineWidth=2; for(let i=0;i<=6;i++){ g.beginPath(); g.moveTo(224+i*52,1014); g.lineTo(224+i*52,1080); g.stroke(); g.beginPath(); g.moveTo(224+i*52,1136); g.lineTo(224+i*52,1202); g.stroke(); }
+  sign(g,'P',520,1108,'#2a5bd7','#fff',18);
+  const cars=[[236,1022,'#f2f2f2'],[340,1022,'#c8102e'],[392,1148,'#1d2a5a'],[236,1148,'#9aa0a8']];
+  cars.forEach(([x,y,col])=>{ shadowRect(g,x,y,40,52); g.fillStyle=col; rr(g,x,y,40,52,8); g.fill(); g.fillStyle='rgba(120,170,210,.8)'; rr(g,x+5,y+8,30,11,3); g.fill(); rr(g,x+5,y+34,30,9,3); g.fill(); });
+  // Schulhof
+  const hofs=[[646,346,518,658],[646,316,540,34],[1164,330,356,100],[600,880,170,124]];
+  hofs.forEach(([x,y,w,h])=>{ g.fillStyle='#b4b8bd'; g.fillRect(x,y,w,h); g.strokeStyle='rgba(90,95,100,.25)'; g.lineWidth=1; for(let xx=x;xx<x+w;xx+=34){g.beginPath();g.moveTo(xx,y);g.lineTo(xx,y+h);g.stroke();} for(let yy=y;yy<y+h;yy+=34){g.beginPath();g.moveTo(x,yy);g.lineTo(x+w,yy);g.stroke();} });
+  // Weg Werkstatt
+  g.fillStyle='#b4b8bd'; g.fillRect(1080,1000,84,30);
+  // Schachbrett
+  for(let i=0;i<4;i++) for(let j=0;j<5;j++){ g.fillStyle=(i+j)%2?'#2f3440':'#e9e6dd'; g.fillRect(940+i*30,640+j*30,30,30); }
+  // Laufbahn
+  g.fillStyle='#b8432f'; g.fillRect(206,0,30,330); g.strokeStyle='rgba(255,255,255,.8)'; g.lineWidth=1.5; [216,226].forEach(x=>{g.beginPath();g.moveTo(x,0);g.lineTo(x,330);g.stroke();});
+  // Sporthalle
+  shadowRect(g,250,10,560,300);
+  g.fillStyle='#cfd3d8'; g.fillRect(250,10,560,230);
+  [[330,60],[500,60],[670,60]].forEach(([x,y])=>{ g.fillStyle='#4b5563'; g.fillRect(x,y,60,120); g.fillRect(x-30,y+45,120,30); });
+  g.fillStyle='#e4e6e9'; g.fillRect(250,240,560,70);
+  for(let i=0;i<12;i++){ g.fillStyle='#4f86c6'; g.fillRect(266+i*45,252,32,22); }
+  g.fillStyle='#2d5ea8'; g.fillRect(510,276,50,34);
+  sign(g,'Sporthalle',535,234);
+  // Hauptgebäude
+  shadowRect(g,240,380,400,520);
+  g.fillStyle='#8e939b'; g.fillRect(240,380,400,460);
+  g.strokeStyle='#c6cad0'; g.lineWidth=6; g.strokeRect(246,386,388,448);
+  g.fillStyle='#6fbf5e'; g.fillRect(330,480,220,240);
+  g.fillStyle='#3fb6b0'; g.beginPath(); g.ellipse(440,600,52,34,0,0,7); g.fill(); g.fillStyle='rgba(255,255,255,.25)'; g.beginPath(); g.ellipse(425,590,18,8,0,0,7); g.fill();
+  [[360,510],[520,510],[360,690],[520,690]].forEach(([x,y])=>{ g.fillStyle='#2f7a3a'; g.beginPath(); g.arc(x,y,20,0,7); g.fill(); g.fillStyle='#3f9a4a'; g.beginPath(); g.arc(x-5,y-5,13,0,7); g.fill(); });
+  g.fillStyle='#f4f4f2'; g.fillRect(240,840,400,60);
+  g.fillStyle='#b4502e'; g.fillRect(240,842,400,6);
+  for(let i=0;i<5;i++){ g.fillStyle='#2b3140'; g.fillRect(262+i*76,856,52,34); g.strokeStyle='rgba(255,255,255,.25)'; for(let k=0;k<6;k++){g.beginPath();g.moveTo(262+i*76,860+k*5);g.lineTo(314+i*76,860+k*5);g.stroke();} }
+  g.fillStyle='#6b4d2e'; g.fillRect(628,560,12,40);
+  sign(g,'Schulbücherei',590,540,'#2f6b3f');
+  // Eingang
+  g.fillStyle='#d8dbe0'; g.fillRect(646,836,110,46); g.fillStyle='#aab0b8'; g.fillRect(646,876,110,6);
+  sign(g,'Eingang',708,860);
+  // Überdachte Gänge
+  [[598,900,56,300],[694,900,56,300]].forEach(([x,y,w,h])=>{ g.fillStyle='rgba(20,30,40,.15)'; g.fillRect(x+8,y+10,w,h); g.fillStyle='#f6f6f4'; g.fillRect(x,y,w,h); g.strokeStyle='#d0d3d8'; g.lineWidth=2; for(let yy=y;yy<y+h;yy+=16){g.beginPath();g.moveTo(x,yy);g.lineTo(x+w,yy);g.stroke();} g.fillStyle='#9aa0a8'; g.fillRect(x,y,3,h); g.fillRect(x+w-3,y,3,h); });
+  // Container C1/C2
+  [[940,40,'C1'],[940,190,'C2']].forEach(([x,y,n])=>{ shadowRect(g,x,y,380,130); g.fillStyle='#d4d7db'; g.fillRect(x,y,380,92); for(let r=0;r<2;r++) for(let k=0;k<9;k++){ g.fillStyle='#24345c'; g.fillRect(x+12+k*40,y+10+r*38,34,30); g.strokeStyle='#5a6f9c'; g.lineWidth=1; g.strokeRect(x+12+k*40,y+10+r*38,34,30);} g.fillStyle='#2a2f38'; g.fillRect(x,y+92,380,38); for(let k=0;k<8;k++){ g.fillStyle='#fff'; g.fillRect(x+14+k*46,y+98,36,26); g.fillStyle='#9fd4f2'; g.fillRect(x+17+k*46,y+101,30,20);} sign(g,'Container '+n,x+330,y+118,'#1d2a4a','#fff',13); });
+  // C3/C4
+  shadowRect(g,1180,430,300,600);
+  g.fillStyle='#c9ccd1'; g.fillRect(1180,430,300,600);
+  for(let r=0;r<7;r++) for(let k=0;k<5;k++){ g.fillStyle='#1e2c52'; g.fillRect(1200+k*54,450+r*80,48,64); g.strokeStyle='#4d6496'; g.strokeRect(1200+k*54,450+r*80,48,64); }
+  g.fillStyle='#2a2f38'; g.fillRect(1180,430,20,600);
+  g.fillStyle='#4f86c6'; g.fillRect(1180,520,12,40); g.fillRect(1180,840,12,40);
+  sign(g,'C32 · Klasse 5c',1180+10,500,'#f4b53f','#2a1d02',13);
+  sign(g,'C4 · Verwaltung',1180+10,820,'#1d2a4a','#fff',13);
+  sign(g,'Container C4',1400,1016,'#1d2a4a','#fff',12);
+  // Bolzplatz
+  g.fillStyle='#2f7a3a'; g.fillRect(1520,400,260,330);
+  for(let i=0;i<6;i++){ g.fillStyle=i%2?'rgba(255,255,255,.04)':'rgba(0,0,0,.06)'; g.fillRect(1520,400+i*55,260,55); }
+  g.strokeStyle='#fff'; g.lineWidth=2; g.strokeRect(1534,414,232,302); g.beginPath(); g.moveTo(1534,565); g.lineTo(1766,565); g.stroke(); g.beginPath(); g.arc(1650,565,34,0,7); g.stroke();
+  g.fillStyle='#eee'; g.fillRect(1625,404,50,8); g.fillRect(1625,708,50,8);
+  g.strokeStyle='#8a9098'; g.lineWidth=3; g.strokeRect(1520,400,260,330);
+  g.fillStyle='rgba(255,255,255,.8)'; g.font='italic 700 14px sans-serif'; g.fillText('Betze',1730,395);
+  // Bushaltestelle
+  g.fillStyle='rgba(160,210,240,.6)'; g.fillRect(1005,1162,150,24); g.strokeStyle='#5d7f9c'; g.strokeRect(1005,1162,150,24);
+  g.fillStyle='#f2c200'; g.beginPath(); g.arc(1170,1170,11,0,7); g.fill(); g.fillStyle='#1a7a3a'; g.font='700 13px sans-serif'; g.textAlign='center'; g.fillText('H',1170,1175); g.textAlign='left';
+  // Fahrradbügel
+  for(let i=0;i<5;i++){ g.strokeStyle='#5a5f6a'; g.lineWidth=3; g.beginPath(); g.arc(564+i*14,1180,6,Math.PI,0); g.stroke(); }
+  // TuN-Werkstatt (ehemals Aula-Gebäude)
+  shadowRect(g,760,880,320,280);
+  g.fillStyle='#55585e'; g.fillRect(760,880,320,170);
+  g.strokeStyle='#6a6e75'; g.lineWidth=4; g.strokeRect(764,884,312,162);
+  g.fillStyle='#9fc3dc'; g.fillRect(870,930,100,70); g.strokeStyle='#5d7f9c'; g.lineWidth=2; g.beginPath(); g.moveTo(870,930); g.lineTo(970,1000); g.moveTo(970,930); g.lineTo(870,1000); g.stroke(); g.strokeRect(870,930,100,70);
+  g.fillStyle='#d2c4ad'; g.fillRect(760,1050,320,110);
+  g.strokeStyle='rgba(120,100,70,.35)'; g.lineWidth=1; for(let yy=1050;yy<1160;yy+=16){ g.beginPath(); g.moveTo(760,yy); g.lineTo(1080,yy); g.stroke(); const off=((yy-1050)/16)%2?11:0; for(let xx=760+off;xx<1080;xx+=22){ g.beginPath(); g.moveTo(xx,yy); g.lineTo(xx,yy+16); g.stroke(); } }
+  // Rotes X
+  g.save(); g.translate(860,1112);
+  g.fillStyle='rgba(0,0,0,.2)'; g.save(); g.translate(3,4); g.rotate(.75); g.fillRect(-29,-7,58,14); g.rotate(-1.5); g.fillRect(-29,-7,58,14); g.restore();
+  g.save(); g.rotate(.75); g.fillStyle='#e0552e'; g.fillRect(-29,-7,58,14); g.restore();
+  g.save(); g.rotate(-.75); g.fillStyle='#4a4f57'; g.fillRect(-29,-7,58,14); g.restore();
+  g.restore();
+  // Tür
+  g.fillStyle='#2d5ea8'; g.fillRect(970,1100,40,60); g.fillStyle='rgba(180,220,255,.6)'; g.fillRect(974,1104,15,52); g.fillRect(991,1104,15,52);
+  sign(g,'TuN-Werkstatt',990,1080,'#8a1323');
+  // Bänke
+  [[700,790],[880,830],[1060,830]].forEach(([x,y])=>{ g.fillStyle='rgba(20,30,40,.22)'; g.fillRect(x+6,y+8,60,14); g.fillStyle='#8a5a2b'; g.fillRect(x,y,60,6); g.fillRect(x,y+8,60,6); g.fillStyle='#444'; g.fillRect(x+4,y+14,4,6); g.fillRect(x+52,y+14,4,6); });
+  return g.canvas;
+}
+
+/* ---------- Werkstatt-Hintergrund ---------- */
+function buildWerkstatt(){
+  const Wd=1000,Hd=700,g=makeCanvas(Wd,Hd).getContext('2d'), R=rng(7);
+  let gr=g.createLinearGradient(0,110,0,Hd); gr.addColorStop(0,'#bdb6aa'); gr.addColorStop(1,'#a39c90'); g.fillStyle=gr; g.fillRect(0,0,Wd,Hd);
+  g.strokeStyle='rgba(80,70,60,.15)'; for(let x=0;x<Wd;x+=100){g.beginPath();g.moveTo(x,110);g.lineTo(x,Hd);g.stroke();} for(let y=110;y<Hd;y+=100){g.beginPath();g.moveTo(0,y);g.lineTo(Wd,y);g.stroke();}
+  for(let i=0;i<500;i++){ g.fillStyle=`rgba(${200+R()*40|0},${170+R()*30|0},110,.5)`; g.fillRect(R()*Wd,120+R()*560,2,1.5); }
+  gr=g.createLinearGradient(0,0,0,110); gr.addColorStop(0,'#c9ced2'); gr.addColorStop(1,'#dfe3e6'); g.fillStyle=gr; g.fillRect(0,0,Wd,110);
+  g.fillStyle='#3b3f46'; g.fillRect(0,100,Wd,12);
+  g.fillStyle='#8f949a'; g.fillRect(0,0,20,Hd); g.fillRect(Wd-20,0,20,Hd);
+  // Fenster (Nacht)
+  [[60,14],[800,14]].forEach(([x,y])=>{ g.fillStyle='#fff'; g.fillRect(x,y,140,70); g.fillStyle='#152040'; g.fillRect(x+5,y+5,62,60); g.fillRect(x+73,y+5,62,60); g.fillStyle='#e8e2c0'; g.beginPath(); g.arc(x+40,y+22,6,0,7); g.fill(); for(let i=0;i<6;i++){ g.fillStyle='#fff'; g.fillRect(x+10+R()*120,y+10+R()*50,1.5,1.5);} });
+  // Tafel
+  g.fillStyle='#6b4d2e'; g.fillRect(372,10,256,82); g.fillStyle='#24433a'; g.fillRect(378,16,244,70);
+  g.fillStyle='#f2f2e8'; g.font='700 17px "Atkinson Hyperlegible",sans-serif'; g.textAlign='center'; g.fillText('Kunststoffe',500,40); g.font='14px "Atkinson Hyperlegible",sans-serif'; g.fillText('Thermo · Duro · Elasto',500,62); g.fillText('Langsam bohren!',500,80); g.textAlign='left';
+  // Lochwand
+  g.fillStyle='#c79a5a'; g.fillRect(220,18,140,82); g.fillStyle='rgba(80,50,20,.4)'; for(let x=228;x<360;x+=10) for(let y=24;y<100;y+=10) g.fillRect(x,y,2,2);
+  const tools=[['säge',232],['hammer',268],['zange',296],['schrauber',318],['feile',340]];
+  tools.forEach(([n,x])=>{ g.strokeStyle='rgba(30,30,30,.5)'; g.lineWidth=1; g.strokeRect(x-2,28,18,62); g.fillStyle='#55595f'; if(n==='säge'){ g.fillRect(x,40,14,40); g.fillStyle='#b5452b'; g.fillRect(x,30,14,12);} else if(n==='hammer'){ g.fillStyle='#8a5a2b'; g.fillRect(x+5,40,4,46); g.fillStyle='#55595f'; g.fillRect(x,32,14,10);} else if(n==='zange'){ g.fillStyle='#d7263d'; g.fillRect(x+2,55,4,30); g.fillRect(x+8,55,4,30); g.fillStyle='#55595f'; g.fillRect(x+3,34,8,22);} else if(n==='schrauber'){ g.fillStyle='#f4b53f'; g.fillRect(x+3,34,8,22); g.fillStyle='#888'; g.fillRect(x+6,56,2,30);} else { g.fillStyle='#777'; g.fillRect(x+5,34,5,50); g.fillStyle='#8a5a2b'; g.fillRect(x+4,72,7,14);} });
+  // Warnschild
+  g.fillStyle='#f2c200'; g.fillRect(650,26,120,56); g.fillStyle='#111'; for(let i=0;i<8;i++){ g.fillRect(650+i*15,26,8,6); g.fillRect(650+i*15,76,8,6);} g.font='700 13px sans-serif'; g.textAlign='center'; g.fillText('Schutzbrille',710,50); g.fillText('auf!',710,66); g.textAlign='left';
+  // Erste Hilfe, Feuerlöscher
+  g.fillStyle='#fff'; g.fillRect(960,40,30,30); g.fillStyle='#1a8a3a'; g.fillRect(970,44,10,22); g.fillRect(964,50,22,10);
+  // Fußmatte / Ausgang
+  g.fillStyle='#4a3a2a'; g.fillRect(440,660,120,30); g.fillStyle='#6b5640'; g.fillRect(446,664,108,22);
+  g.fillStyle='#2b2f36'; g.fillRect(450,690,100,10);
+  return g.canvas;
+}
+
+/* ---------- Requisiten ---------- */
+function treeProp(x,y,r,col){ return { y, draw(c,t){ const s=RM?0:Math.sin(t*1.2+x)*1.5; c.fillStyle='rgba(20,30,40,.22)'; c.beginPath(); c.ellipse(x+14,y+6,r*.9,r*.45,0,0,7); c.fill(); c.fillStyle='#5b3a24'; c.fillRect(x-4,y-20,8,22); c.fillStyle=col; c.beginPath(); c.arc(x+s,y-30-r*.5,r,0,7); c.fill(); c.fillStyle='rgba(255,255,255,.12)'; c.beginPath(); c.arc(x+s-r*.3,y-36-r*.6,r*.5,0,7); c.fill(); } }; }
+function lampProp(x,y){ return { y, draw(c){ c.fillStyle='#2a2f38'; c.fillRect(x-2,y-60,4,60); c.fillRect(x-8,y-64,16,6); } , light:[x,y-60] }; }
+
+/* Stand-Zeichnung */
+function stripes(c,x,y,w,h,a,b,n){ const sw=w/n; for(let i=0;i<n;i++){ c.fillStyle=i%2?b:a; c.beginPath(); c.moveTo(x+i*sw,y); c.lineTo(x+(i+1)*sw,y); c.lineTo(x+(i+1)*sw,y+h); c.quadraticCurveTo(x+(i+.5)*sw,y+h+10,x+i*sw,y+h); c.fill(); } }
+function boothProp(st){
+  const {x,y,w,h} = st.fp;
+  return { y:y+h, stand:st, draw(c,t){
+    c.fillStyle='rgba(20,30,40,.25)'; c.fillRect(x+10,y+14,w,h);
+    // Rückwand
+    c.fillStyle=st.wall; c.fillRect(x+6,y-70,w-12,h+50);
+    st.inside && st.inside(c,t,x,y,w,h);
+    // Pfosten
+    c.fillStyle='#3a2a1e'; c.fillRect(x,y-80,6,h+80); c.fillRect(x+w-6,y-80,6,h+80);
+    // Betreiber
+    if(st.op) drawChar(c,x+w/2,y+h-18,st.op.look,'down',t,false,1);
+    // Theke
+    c.fillStyle=st.counter; c.fillRect(x,y+h-26,w,26); c.fillStyle='rgba(0,0,0,.25)'; c.fillRect(x,y+h-6,w,6);
+    c.fillStyle='rgba(255,255,255,.15)'; c.fillRect(x,y+h-26,w,3);
+    // Markise
+    stripes(c,x-6,y-98,w+12,24,st.a1,st.a2,8);
+    st.deco && st.deco(c,t,x,y,w,h);
+  }, emissive(c,t){
+    const on = (Math.floor(t*2+x)%7)!==0 || RM;
+    for(let i=0;i<=8;i++){ const bx=x-6+i*(w+12)/8; c.fillStyle= on||i%2 ? '#ffe9a8':'#7a6a40'; c.beginPath(); c.arc(bx,y-74,2.6,0,7); c.fill(); }
+    c.save(); c.shadowColor=st.neon; c.shadowBlur=14; sign(c,st.label,x+w/2,y-112,'#1a1024',st.neon,14); c.restore();
+    if(S && S.chips[st.id]){ c.fillStyle='#f4b53f'; c.beginPath(); c.arc(x+w-4,y-122,9,0,7); c.fill(); c.fillStyle='#2a1d02'; c.font='700 12px sans-serif'; c.textAlign='center'; c.fillText('✓',x+w-4,y-118); c.textAlign='left'; }
+  }};
+}
+
+/* Riesenrad */
+function wheelProp(){ const cx=1650, cy=520, R=110; return { y:660, draw(c,t){
+  c.fillStyle='rgba(20,30,40,.25)'; c.beginPath(); c.ellipse(cx+20,662,90,16,0,0,7); c.fill();
+  c.strokeStyle='#3a3f4a'; c.lineWidth=7; c.beginPath(); c.moveTo(cx-60,660); c.lineTo(cx,cy); c.lineTo(cx+60,660); c.stroke();
+  c.fillStyle='#2a2030'; c.fillRect(cx-70,650,140,14);
+  const rot = RM?0:t*.15;
+  c.strokeStyle='#5a5470'; c.lineWidth=4; c.beginPath(); c.arc(cx,cy,R,0,7); c.stroke(); c.lineWidth=2; c.beginPath(); c.arc(cx,cy,R*.55,0,7); c.stroke();
+  for(let i=0;i<10;i++){ const a=rot+i/10*Math.PI*2; c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R); c.stroke(); }
+  for(let i=0;i<10;i++){ const a=rot+i/10*Math.PI*2, gx=cx+Math.cos(a)*R, gy=cy+Math.sin(a)*R; c.strokeStyle='#888'; c.beginPath(); c.moveTo(gx,gy); c.lineTo(gx,gy+10); c.stroke(); c.fillStyle=['#8a1323','#2d5ea8','#f4b53f','#2ebfb3','#7a5ce0'][i%5]; rr(c,gx-10,gy+8,20,15,4); c.fill(); }
+  c.fillStyle='#d7263d'; c.beginPath(); c.arc(cx,cy,9,0,7); c.fill();
+}, emissive(c,t){ const rot=RM?0:t*.15; for(let i=0;i<20;i++){ const a=rot+i/20*Math.PI*2; const on = RM || ((i+Math.floor(t*4))%3!==0); c.fillStyle= on?(i%2?'#ff5a7a':'#ffe08a'):'#553040'; c.beginPath(); c.arc(cx+Math.cos(a)*R,cy+Math.sin(a)*R,3,0,7); c.fill(); }
+  c.save(); c.shadowColor='#ff5a7a'; c.shadowBlur=16; sign(c,'Riesenrad · Direktor Polymerius',cx,392,'#1a1024','#ff8aa0',14); c.restore(); } }; }
+
+/* Geisterbahn */
+function ghostTrainProp(st){ const {x,y,w,h}=st.fp; return { y:y+h, stand:st, draw(c,t){
+  c.fillStyle='rgba(20,30,40,.3)'; c.fillRect(x+14,y+20,w,h);
+  c.fillStyle='#231a2e'; c.fillRect(x,y-60,w,h+60);
+  // Zinnen
+  for(let i=0;i<8;i++){ c.fillRect(x+i*w/8,y-74,w/16,16); }
+  c.fillStyle='#120c18'; rr(c,x+w/2-34,y+h-74,68,74,30); c.fill();
+  // Gesicht über dem Tor
+  c.fillStyle='#e8e2f0'; c.beginPath(); c.arc(x+w/2,y-20,26,0,7); c.fill(); c.fillStyle='#120c18'; c.beginPath(); c.ellipse(x+w/2-9,y-24,5,8,0,0,7); c.ellipse(x+w/2+9,y-24,5,8,0,0,7); c.fill(); c.fillRect(x+w/2-10,y-8,20,5);
+  // Tüten-Geister an der Fassade
+  for(let i=0;i<2;i++){ const gx=x+30+i*(w-60), gy=y+20+Math.sin(t*2+i)*5; c.fillStyle='rgba(235,235,245,.85)'; c.beginPath(); c.moveTo(gx-12,gy+16); c.lineTo(gx-12,gy-6); c.lineTo(gx-6,gy-14); c.lineTo(gx-2,gy-6); c.lineTo(gx+2,gy-6); c.lineTo(gx+6,gy-14); c.lineTo(gx+12,gy-6); c.lineTo(gx+12,gy+16); c.closePath(); c.fill(); c.fillStyle='#120c18'; c.fillRect(gx-6,gy,3,4); c.fillRect(gx+3,gy,3,4); }
+  // Schienen
+  c.strokeStyle='#5a5f6a'; c.lineWidth=3; c.beginPath(); c.moveTo(x+w/2-20,y+h); c.lineTo(x+w/2-20,y+h+10); c.moveTo(x+w/2+20,y+h); c.lineTo(x+w/2+20,y+h+10); c.stroke();
+  if(st.op) drawChar(c,x+w-26,y+h+4,st.op.look,'down',t,false,1);
+}, emissive(c,t){ const fl = RM?1:(.6+.4*Math.abs(Math.sin(t*7)*Math.sin(t*2.3)));
+  c.save(); c.globalAlpha=fl; c.shadowColor='#b36bff'; c.shadowBlur=18; sign(c,'Geisterbahn der Ewigen Tüte',x+w/2,y-92,'#1a0f22','#d7a8ff',14); c.restore();
+  c.fillStyle=`rgba(180,255,120,${.6*fl})`; c.beginPath(); c.ellipse(x+w/2-9,y-24,3,5,0,0,7); c.ellipse(x+w/2+9,y-24,3,5,0,0,7); c.fill();
+  if(S && S.chips[st.id]){ c.fillStyle='#f4b53f'; c.beginPath(); c.arc(x+w-8,y-104,9,0,7); c.fill(); c.fillStyle='#2a1d02'; c.font='700 12px sans-serif'; c.textAlign='center'; c.fillText('✓',x+w-8,y-100); c.textAlign='left'; }
+} }; }
+
+/* Hau den Plexi */
+function hammerProp(st){ const {x,y,w,h}=st.fp; return { y:y+h, stand:st, draw(c,t){
+  c.fillStyle='rgba(20,30,40,.25)'; c.fillRect(x+10,y+14,w,h);
+  c.fillStyle='#2a2030'; c.fillRect(x,y+h-14,w,14);
+  c.fillStyle='#e4d9c4'; c.fillRect(x+w/2-8,y-150,16,150+h-14);
+  for(let i=0;i<8;i++){ c.fillStyle=`hsl(${120-i*16},70%,45%)`; c.fillRect(x+w/2-6,y+h-30-i*17,12,14); }
+  c.fillStyle='#b8b8c0'; c.beginPath(); c.arc(x+w/2,y-156,12,Math.PI,0); c.fill(); c.fillRect(x+w/2-12,y-157,24,4);
+  c.fillStyle='#333'; rr(c,x+w/2-14,y+h-20,28,10,3); c.fill();
+  if(st.op) drawChar(c,x-14,y+h+2,st.op.look,'right',t,false,1);
+}, emissive(c,t){ c.save(); c.shadowColor='#7fdcff'; c.shadowBlur=14; sign(c,'Hau den Plexi',x+w/2,y-180,'#101a24','#9fe6ff',14); c.restore();
+  if(S && S.chips[st.id]){ c.fillStyle='#f4b53f'; c.beginPath(); c.arc(x+w/2+30,y-180,9,0,7); c.fill(); c.fillStyle='#2a1d02'; c.font='700 12px sans-serif'; c.textAlign='center'; c.fillText('✓',x+w/2+30,y-176); c.textAlign='left'; } } }; }
+
+/* Zuckerwatte-Wagen */
+function cartProp(x,y){ return { y:y+30, draw(c,t){ c.fillStyle='rgba(20,30,40,.25)'; c.fillRect(x+8,y+14,70,26); c.fillStyle='#f1e6cc'; c.fillRect(x,y,70,30); c.fillStyle='#ec6fb0'; for(let i=0;i<5;i++) c.fillRect(x+i*14,y,7,30); c.fillStyle='#333'; c.beginPath(); c.arc(x+12,y+32,6,0,7); c.arc(x+58,y+32,6,0,7); c.fill(); c.fillStyle='#ffc0e0'; c.beginPath(); c.arc(x+35,y-10,13,0,7); c.fill(); } }; }
+
+/* ================= Szenen ================= */
+function setupScenes(){
+  // ---- Campus ----
+  const camp = { id:'campus', w:1800, h:1300, bg:buildCampus(), props:[], solids:[], doors:[], talk:[], npcs:[], lights:[], dark:true };
+  camp.solids.push([250,10,560,300],[240,380,400,520],[760,880,320,270],[940,40,380,130],[940,190,380,130],[1180,430,300,600],[0,1290,1800,10],[0,0,1800,4],[0,0,4,1300],[1796,0,4,1300]);
+  [[236,1022],[340,1022],[392,1148],[236,1148]].forEach(([x,y])=>camp.solids.push([x,y,40,52]));
+  [[700,790],[880,830],[1060,830]].forEach(([x,y])=>camp.solids.push([x,y,60,16]));
+  camp.solids.push([1005,1160,150,10]);
+  camp.doors.push({ r:[960,1146,60,22], to:'werkstatt', x:500, y:620, dir:'up', need:()=>true });
+  const trees=[[120,120,'#3f8f45'],[150,420,'#4f9a4a'],[110,640,'#d98a2b'],[150,860,'#3f8f45'],[120,1080,'#e2b33a'],[880,60? 0:0,'#3f8f45']];
+  [[120,120,'#3f8f45'],[150,420,'#4f9a4a'],[110,640,'#d98a2b'],[150,860,'#3f8f45'],[120,1080,'#e2b33a'],[1380,80,'#3f8f45'],[1480,140,'#d98a2b'],[1700,90,'#4f9a4a'],[1620,260,'#e2b33a'],[1760,300,'#3f8f45'],[1560,880,'#4f9a4a'],[1700,820,'#d98a2b'],[870,350? 0:0,'#3f8f45']].forEach(([x,y,col])=>{ if(!y) return; camp.props.push(treeProp(x,y,24,col)); camp.solids.push([x-6,y-6,12,8]); });
+  [[656,540],[1150,560],[1000,560],[1160,980],[540,960]].forEach(([x,y])=>{ const l=lampProp(x,y); camp.props.push(l); camp.lights.push({x,y:y-60,r:150,c:'255,220,150'}); camp.solids.push([x-4,y-4,8,6]); });
+  STANDS.forEach(st=>{
+    const p = st.kind==='ghost'?ghostTrainProp(st): st.kind==='hammer'?hammerProp(st): boothProp(st);
+    camp.props.push(p); camp.solids.push([st.fp.x,st.fp.y,st.fp.w,st.fp.h]);
+    camp.talk.push({ x:st.front[0], y:st.front[1], r:46, name:st.op.name, look:st.op.look, act:()=>talkStand(st) });
+    camp.lights.push({x:st.fp.x+st.fp.w/2,y:st.fp.y,r:190,c:st.glow});
+  });
+  const wp=wheelProp(); camp.props.push(wp); camp.solids.push([1580,640,140,26]);
+  camp.lights.push({x:1650,y:520,r:260,c:'255,90,130'});
+  camp.lights.push({x:990,y:1150,r:110,c:'255,230,170'});
+  camp.lights.push({x:1080,y:1210,r:120,c:'200,220,255'});
+  camp.props.push(cartProp(1010,520)); camp.solids.push([1010,520,70,32]);
+  // NPCs auf dem Campus
+  camp.npcs.push({ id:'dir', name:'Direktor Polymerius', x:1650, y:712, dir:'down', look:LOOKS.direktor, act:()=>talkDirector() });
+  camp.npcs.push({ id:'watte', name:'Zuckerwatten-Zoe', x:1045, y:580, dir:'down', look:LOOKS.watte, act:()=>talkWatte() });
+  camp.npcs.push({ id:'bus', name:'Typ aus der 10b', x:1190, y:1192, dir:'down', look:LOOKS.zehner, act:()=>talkBus() });
+  // Infoschilder
+  const info=(x,y,name,lines)=>camp.talk.push({x,y,r:40,name,sign:true,act:()=>say(lines.map(t=>[name,t,null]))});
+  info(708,900,'Schild „Eingang“',['Haupteingang. Um diese Uhrzeit abgeschlossen. Natürlich.']);
+  info(1080,1192,'Haltestelle',['Linie 841. Nächster Bus: morgen 6:52 Uhr. Das Wartehäuschen ist aus Polycarbonat. Bruchfest. Im Gegensatz zu deinen Nerven.']);
+  info(535,330,'Sporthalle',['Sporthalle. Drinnen liegen Turnmatten. Elastomere, übrigens. Sie gehen nach jedem Sprung in Form zurück. Du nach dem Sportunterricht eher nicht.']);
+  info(1170,860,'Verwaltung',['C4 · Verwaltung. Dunkel. Nur der Kopierer brummt. Sein Gehäuse: Kunststoff. Seine Laune: auch.']);
+  info(1510,560,'Bolzplatz',['Jemand hat mit Kreide „Betze“ an die Bande geschrieben. Herr Meyer bestreitet jede Beteiligung.','Heute steht ein Riesenrad drauf. Der Kunstrasen ist übrigens auch Kunststoff. Grätschen auf eigene Gefahr.']);
+  info(1040,1175,'TuN-Werkstatt',['Die TuN-Werkstatt. Hier wird gesägt, gebohrt, gefeilt und gebogen. Ohne Schutzbrille geht hier nichts. Drinnen brennt noch Licht.']);
+  // Lichterketten (Emissive)
+  camp.chains = [[[745,302],[925,302]],[[925,302],[1090,302]],[[745,512],[1000,500]],[[1000,500],[1150,500]]];
+  scenes.campus = camp;
+
+  // ---- Werkstatt ----
+  const ws = { id:'werkstatt', w:1000, h:700, bg:buildWerkstatt(), props:[], solids:[], doors:[], talk:[], npcs:[], lights:[], dark:false };
+  ws.solids.push([0,0,1000,118],[0,0,20,700],[980,0,20,700],[0,694,440,6],[560,694,440,6]);
+  ws.doors.push({ r:[440,684,120,16], to:'campus', x:990, y:1196, dir:'down', need:()=>true });
+  const bench=(x,y)=>{ ws.solids.push([x,y,180,60]); ws.props.push({ y:y+60, draw(c){ c.fillStyle='rgba(20,30,40,.22)'; c.fillRect(x+10,y+16,180,56); c.fillStyle='#b98a52'; c.fillRect(x,y,180,44); c.fillStyle='#a0733f'; for(let i=0;i<5;i++) c.fillRect(x,y+i*9,180,1.5); c.fillStyle='#7a5530'; c.fillRect(x,y+44,180,16); c.fillStyle='#5a5f6a'; c.fillRect(x+10,y-6,24,14); c.fillRect(x+146,y-6,24,14); c.fillStyle='#333'; c.fillRect(x+18,y-10,8,4); c.fillRect(x+154,y-10,8,4); c.fillStyle='rgba(220,240,255,.55)'; c.fillRect(x+60,y+10,46,26); c.strokeStyle='#9cc'; c.strokeRect(x+60,y+10,46,26); } }); };
+  bench(140,230); bench(680,230); bench(140,430); bench(680,430);
+  // Standbohrmaschine
+  ws.solids.push([880,130,70,60]); ws.props.push({ y:190, draw(c){ c.fillStyle='rgba(20,30,40,.22)'; c.fillRect(890,150,70,50); c.fillStyle='#3d6b4f'; c.fillRect(880,160,70,30); c.fillStyle='#4f8a65'; c.fillRect(905,90,18,80); c.fillRect(890,80,56,34); c.fillStyle='#ccc'; c.fillRect(912,114,4,22); c.fillStyle='#d7263d'; c.fillRect(944,92,14,6); } });
+  // Regal
+  ws.solids.push([880,300,90,170]); ws.props.push({ y:470, draw(c){ c.fillStyle='#6b4d2e'; c.fillRect(880,300,90,170); for(let i=0;i<4;i++){ c.fillStyle='#8a6a40'; c.fillRect(884,310+i*40,82,30); c.fillStyle=['#c99a5a','#b98a52','#8fa0b0','#d2c4ad'][i]; c.fillRect(888,316+i*40,60,20);} } });
+  // Schutzbrillen-Schrank
+  ws.solids.push([30,130,70,90]); ws.props.push({ y:220, draw(c){ c.fillStyle='#4a6a8a'; c.fillRect(30,120,70,100); c.fillStyle='#5d80a6'; c.fillRect(34,124,30,92); c.fillRect(66,124,30,92); c.fillStyle='rgba(160,220,255,.7)'; for(let i=0;i<3;i++){ rr(c,40,136+i*26,50,10,4); c.fill(); } } });
+  // Feuerlöscher, Mülleimer
+  ws.props.push({ y:150, draw(c){ c.fillStyle='#d7263d'; rr(c,962,100,16,40,5); c.fill(); c.fillStyle='#222'; c.fillRect(965,94,10,8); } }); ws.solids.push([958,110,22,40]);
+  ws.props.push({ y:640, draw(c){ c.fillStyle='#55595f'; rr(c,40,600,40,44,5); c.fill(); c.fillStyle='#e0c890'; c.fillRect(44,600,32,6); } }); ws.solids.push([40,610,40,34]);
+  ws.npcs.push({ id:'meyer', name:'Herr Meyer', x:500, y:340, dir:'down', look:LOOKS.meyer, act:()=>talkMeyer() });
+  const winfo=(x,y,name,lines)=>ws.talk.push({x,y,r:44,name,sign:true,act:()=>say(lines.map(t=>[name,t,null]))});
+  winfo(290,130,'Werkzeugwand',['Säge, Hammer, Zange, Schraubendreher, Feilen. Jedes Werkzeug hat seinen Umriss. Wer etwas nicht zurückhängt, wird von Herrn Meyer mit Blicken extrudiert.']);
+  winfo(915,210,'Standbohrmaschine',['Merke: Plexiglas bohrst du mit geringer Drehzahl und wenig Druck. Sonst schmilzt es und klebt am Bohrer wie Kaugummi unterm Tisch.']);
+  winfo(65,240,'Sicherheitsregeln',['1. Schutzbrille auf. 2. Lange Haare zusammen. 3. Werkstück einspannen, nie festhalten. 4. Wer rennt, fegt Späne.']);
+  scenes.werkstatt = ws;
+}
+
+/* ---------- Dunkelheit ---------- */
+function buildDark(sc){
+  const d = makeCanvas(sc.w,sc.h), g=d.getContext('2d');
+  g.fillStyle='rgba(6,8,26,.72)'; g.fillRect(0,0,sc.w,sc.h);
+  g.globalCompositeOperation='destination-out';
+  sc.lights.forEach(L=>{ const gr=g.createRadialGradient(L.x,L.y,0,L.x,L.y,L.r); gr.addColorStop(0,'rgba(0,0,0,.85)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(L.x-L.r,L.y-L.r,L.r*2,L.r*2); });
+  g.globalCompositeOperation='lighter';
+  sc.lights.forEach(L=>{ const gr=g.createRadialGradient(L.x,L.y,0,L.x,L.y,L.r*.8); gr.addColorStop(0,`rgba(${L.c},.16)`); gr.addColorStop(1,`rgba(${L.c},0)`); g.fillStyle=gr; g.fillRect(L.x-L.r,L.y-L.r,L.r*2,L.r*2); });
+  sc.darkCv = d;
+}
+
+/* ================= Figuren-Looks ================= */
+const LOOKS = {
+  meyer:{ skin:'#f1c7a5', style:'kurz', hair:'#5b3a24', shirt:'#c8102e', pants:'#2b3445', extra:'nichts', beard:true, glasses:true, flatcap:true, jersey:true, goggles:true },
+  direktor:{ skin:'#e9e0d8', style:'kurz', hair:'#1a1420', shirt:'#f2f2f2', coat:'#7a1020', pants:'#14111a', extra:'nichts', tophat:true, monocle:true },
+  dieter:{ skin:'#c68a5c', style:'kurz', hair:'#2b1d16', shirt:'#3a3f4a', pants:'#2f2f33', extra:'nichts', beard:true, scarf:'#d7263d' },
+  gabi:{ skin:'#fbe0c8', style:'dutt', hair:'#b5452b', shirt:'#7a5ce0', pants:'#2b3445', extra:'brille' },
+  norbert:{ skin:'#e2a97e', style:'strubbel', hair:'#3d3d4a', shirt:'#2f2f33', coat:'#5b4632', pants:'#2b3445', extra:'cappy' },
+  erna:{ skin:'#f1c7a5', style:'lang', hair:'#e8d38a', shirt:'#2ebfb3', pants:'#3f5f8f', extra:'kopfhoerer' },
+  ramona:{ skin:'#9b6640', style:'zopf', hair:'#2b1d16', shirt:'#f4a93f', pants:'#2f2f33', extra:'stirnband', goggles:true },
+  geist:{ ghost:true },
+  geistOp:{ skin:'#d8d4dc', style:'lang', hair:'#3d3d4a', shirt:'#1a1020', coat:'#1a1020', pants:'#1a1020', extra:'nichts', mask:true },
+  watte:{ skin:'#e2a97e', style:'locken', hair:'#ec6fb0', shirt:'#f2f2f2', pants:'#3f5f8f', extra:'nichts' },
+  zehner:{ skin:'#c68a5c', style:'kurz', hair:'#2b1d16', shirt:'#2f2f33', pants:'#2b3445', extra:'kopfhoerer' }
+};
+
+/* ================= Stände ================= */
+const ICONS = {
+  geister:'<path d="M5 20V10a7 7 0 0 1 14 0v10l-2.3-2-2.4 2-2.3-2-2.3 2-2.4-2z" fill="#2a1d02"/><circle cx="9.5" cy="10" r="1.4" fill="#f4b53f"/><circle cx="14.5" cy="10" r="1.4" fill="#f4b53f"/>',
+  pferd:'<path d="M6 21l1-6-3-2 4-6 3-2 1-3 2 3 4 2 2 3-2 1-3-1-1 3 2 8h-2l-2-6-3 1-1 5z" fill="#2a1d02"/>',
+  dosen:'<rect x="4" y="12" width="6" height="9" rx="1" fill="#2a1d02"/><rect x="14" y="12" width="6" height="9" rx="1" fill="#2a1d02"/><rect x="9" y="3" width="6" height="9" rx="1" fill="#2a1d02"/>',
+  glueck:'<circle cx="12" cy="12" r="9" fill="none" stroke="#2a1d02" stroke-width="2.4"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4" stroke="#2a1d02" stroke-width="1.6"/>',
+  enten:'<path d="M4 14c0 4 4 6 9 6s8-3 7-7l-4 1c-1-2-1-5-4-6-3 0-4 2-4 4l-3-1c-1 1-1 2 0 3z" fill="#2a1d02"/>',
+  plexi:'<rect x="10" y="9" width="4" height="13" fill="#2a1d02"/><rect x="4" y="3" width="16" height="7" rx="2" fill="#2a1d02"/>',
+  finale:'<path d="M12 2l3 6.5 7 .8-5.2 4.8 1.5 7L12 17.6 5.7 21.1l1.5-7L2 9.3l7-.8z" fill="#2a1d02"/>'
+};
+const STANDS = [
+  { id:'geister', kind:'ghost', label:'Geisterbahn', title:'Geisterbahn der Ewigen Tüte', topic:'Kunststoffe im Alltag: Vor- und Nachteile', fp:{x:1530,y:1050,w:200,h:100}, front:[1630,1172], glow:'180,110,255',
+    op:{ name:'Die Tüte', look:LOOKS.geistOp } },
+  { id:'pferd', kind:'booth', label:'Pferderennen', title:'Großes Polymer-Derby', topic:'Rohstoffe und Herstellung', fp:{x:670,y:610,w:150,h:64}, front:[745,700], glow:'255,200,120',
+    wall:'#3a2a22', counter:'#6b3a2a', a1:'#2d5ea8', a2:'#f2f2f2', neon:'#ffd27a', op:{ name:'Naphtha-Norbert', look:LOOKS.norbert },
+    inside(c,t,x,y,w){ for(let i=0;i<3;i++){ c.fillStyle=['#c8102e','#2d5ea8','#2ebfb3'][i]; const hx=x+24+i*40, hy=y-30+Math.sin(t*3+i)*3; c.fillRect(hx,hy,22,10); c.fillRect(hx+18,hy-8,6,10); c.fillRect(hx+2,hy+10,3,8); c.fillRect(hx+16,hy+10,3,8);} } },
+  { id:'dosen', kind:'booth', label:'Dosenwerfen', title:'Dosenwerfen bei Duro-Dieter', topic:'Thermoplaste, Duroplaste, Elastomere', fp:{x:860,y:400,w:130,h:60}, front:[925,484], glow:'255,120,90',
+    wall:'#2a2f3a', counter:'#8a1323', a1:'#d7263d', a2:'#f2f2f2', neon:'#ff8a6a', op:{ name:'Duro-Dieter', look:LOOKS.dieter },
+    inside(c,t,x,y){ const cols=['#c0c4cc','#d7263d','#c0c4cc','#f4b53f','#c0c4cc','#2d5ea8']; let k=0; [[0,0],[1,0],[2,0],[.5,1],[1.5,1],[1,2]].forEach(([i,j])=>{ c.fillStyle=cols[k++]; c.fillRect(x+30+i*24,y-20-j*22,18,20); }); } },
+  { id:'glueck', kind:'booth', label:'Glücksrad', title:'Glücksrad der Fachbegriffe', topic:'Monomer, Polymer, Cracken & Co.', fp:{x:680,y:400,w:130,h:60}, front:[745,484], glow:'255,210,90',
+    wall:'#2a2440', counter:'#4a2a6a', a1:'#7a5ce0', a2:'#f4b53f', neon:'#ffe27a', op:{ name:'Gabi Granulat', look:LOOKS.gabi },
+    inside(c,t,x,y,w){ const cx=x+w/2, cy=y-26, r=26, rot=RM?0:t*.6; for(let i=0;i<8;i++){ c.fillStyle=['#d7263d','#f4b53f','#3d8ee8','#4fb86a'][i%4]; c.beginPath(); c.moveTo(cx,cy); c.arc(cx,cy,r,rot+i*Math.PI/4,rot+(i+1)*Math.PI/4); c.fill(); } c.fillStyle='#fff'; c.beginPath(); c.arc(cx,cy,4,0,7); c.fill(); } },
+  { id:'enten', kind:'booth', label:'Entenangeln', title:'Entenangeln bei Extruder-Erna', topic:'Industrielle Verarbeitungsverfahren', fp:{x:1030,y:400,w:120,h:60}, front:[1090,484], glow:'120,220,255',
+    wall:'#1e3440', counter:'#2ebfb3', a1:'#2ebfb3', a2:'#f2f2f2', neon:'#8af0ff', op:{ name:'Extruder-Erna', look:LOOKS.erna },
+    inside(c,t,x,y,w){ c.fillStyle='#2d6ea8'; c.fillRect(x+10,y-14,w-20,14); for(let i=0;i<4;i++){ const dx=x+14+((t*20+i*26)%(w-30)); c.fillStyle='#f2c200'; c.beginPath(); c.ellipse(dx,y-16,7,5,0,0,7); c.fill(); c.beginPath(); c.arc(dx+5,y-21,3.5,0,7); c.fill(); } } },
+  { id:'plexi', kind:'hammer', label:'Hau den Plexi', title:'Hau den Plexi', topic:'Plexiglas bearbeiten in der Werkstatt', fp:{x:1090,y:660,w:56,h:36}, front:[1100,722], glow:'120,220,255',
+    op:{ name:'Ritz-Ramona', look:LOOKS.ramona } }
+];
+const FINALE = { id:'finale', title:'Riesenrad-Finale', topic:'Alles, was nach der Rallye sitzen muss' };
+const ORDER = ['geister','pferd','dosen','glueck','enten','plexi'];
+
+/* ================= Eingabe ================= */
+const keys = {};
+let joyV = {x:0,y:0}, isTouch = false;
+function uiOpen(){ return !$('dialog').classList.contains('hidden') || !$('sheetWrap').classList.contains('hidden') || !$('editor').classList.contains('hidden') || !$('start').classList.contains('hidden'); }
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  keys[e.key.toLowerCase()]=true;
+  if(e.key===' '||e.key.toLowerCase()==='e'||e.key==='Enter'){
+    if(!$('dialog').classList.contains('hidden')){ e.preventDefault(); dlgAdvance(); return; }
+    if(!uiOpen()){ e.preventDefault(); tryTalk(); }
+  }
+  if(e.key==='Escape' && !$('sheetWrap').classList.contains('hidden') && sheetCloseable) closeSheet();
+  if(e.key.startsWith('Arrow')&&!uiOpen()) e.preventDefault();
+});
+addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
+
+function screenToWorld(sx,sy){ return { x: cam.x + sx/cam.z, y: cam.y + sy/cam.z }; }
+function setupPointer(){
+  cv.addEventListener('pointerdown',e=>{
+    Snd.init();
+    if(uiOpen()) return;
+    if(e.pointerType==='touch'){ isTouch=true; showTouch(); }
+    const w = screenToWorld(e.clientX,e.clientY);
+    // NPC/Stand angetippt?
+    const all = interactables();
+    let hit=null, best=1e9;
+    all.forEach(o=>{ const dx=o.x-w.x, dy=(o.y-24)-w.y, d=Math.hypot(dx,dy); if(d<(o.sign?30:38) && d<best){best=d;hit=o;} });
+    if(hit){ P.tx=hit.x; P.ty=hit.y+ (hit.sign?0:10); P.talkOnArrive=hit; }
+    else { P.tx=w.x; P.ty=w.y; P.talkOnArrive=null; }
+  });
+  const joy=$('joy'), k=$('joyK'); let jid=null;
+  const jm=e=>{ const r=joy.getBoundingClientRect(); let dx=e.clientX-(r.left+60), dy=e.clientY-(r.top+60); const d=Math.hypot(dx,dy); if(d>45){dx*=45/d;dy*=45/d;} k.style.left=(35+dx)+'px'; k.style.top=(35+dy)+'px'; joyV={x:dx/45,y:dy/45}; };
+  joy.addEventListener('pointerdown',e=>{ jid=e.pointerId; joy.setPointerCapture(jid); P.tx=null; jm(e); });
+  joy.addEventListener('pointermove',e=>{ if(e.pointerId===jid) jm(e); });
+  const je=()=>{ jid=null; joyV={x:0,y:0}; k.style.left='35px'; k.style.top='35px'; };
+  joy.addEventListener('pointerup',je); joy.addEventListener('pointercancel',je);
+  $('talkBtn').addEventListener('click',()=>{ Snd.init(); if(!$('dialog').classList.contains('hidden')) dlgAdvance(); else tryTalk(); });
+}
+function showTouch(){ if(!gameRunning) return; $('joy').classList.remove('hidden'); $('talkBtn').classList.remove('hidden'); }
+
+/* ================= Bewegung & Kollision ================= */
+function sc(){ return scenes[world.scene]; }
+function blocked(x,y){
+  const s=sc(); if(x<10||y<14||x>s.w-10||y>s.h-4) return true;
+  const fx=x-8, fy=y-6, fw=16, fh=6;
+  for(const r of s.solids){ if(fx<r[0]+r[2] && fx+fw>r[0] && fy<r[1]+r[3] && fy+fh>r[1]) return true; }
+  for(const n of s.npcs){ if(Math.abs(n.x-x)<14 && Math.abs(n.y-y)<8) return true; }
+  return false;
+}
+function interactables(){ const s=sc(); return s.talk.concat(s.npcs); }
+function nearest(){ let best=null, bd=1e9; interactables().forEach(o=>{ const d=Math.hypot(o.x-P.x,o.y-P.y); const r=o.r||52; if(d<r && d<bd){bd=d;best=o;} }); return best; }
+function tryTalk(){ const n=nearest(); if(n){ Snd.blip(); if(n.dir!==undefined){ n.dir = faceTo(n,P); } n.act(); } }
+function faceTo(a,b){ const dx=b.x-a.x, dy=b.y-a.y; return Math.abs(dx)>Math.abs(dy) ? (dx<0?'left':'right') : (dy<0?'up':'down'); }
+
+let doorLock=0;
+function update(dt){
+  world.t+=dt;
+  if(!gameRunning){ // Startbildschirm: Kamera schwebt
+    const s=scenes.campus; const t=world.t*.05; cam.z=clamp(Math.min(W/880,H/600),.62,1.45);
+    cam.x = (s.w-W/cam.z)/2 + Math.sin(t)*350; cam.y = (s.h-H/cam.z)/2 + Math.cos(t*.7)*220; return;
+  }
+  let vx=0, vy=0;
+  if(!uiOpen()){
+    if(keys['arrowleft']||keys['a']) vx-=1; if(keys['arrowright']||keys['d']) vx+=1;
+    if(keys['arrowup']||keys['w']) vy-=1; if(keys['arrowdown']||keys['s']) vy+=1;
+    if(joyV.x||joyV.y){ vx=joyV.x; vy=joyV.y; }
+    if(vx||vy){ P.tx=null; P.talkOnArrive=null; }
+    else if(P.tx!==null){ const dx=P.tx-P.x, dy=P.ty-P.y, d=Math.hypot(dx,dy);
+      const goal = P.talkOnArrive ? 34 : 4;
+      if(d<goal){ P.tx=null; if(P.talkOnArrive){ const o=P.talkOnArrive; P.talkOnArrive=null; P.dir=faceTo(P,o); if(o.dir!==undefined) o.dir=faceTo(o,P); Snd.blip(); o.act(); } }
+      else { vx=dx/d; vy=dy/d; } }
+  }
+  const m=Math.hypot(vx,vy); P.moving=m>.1;
+  if(P.moving){ if(m>1){vx/=m;vy/=m;} const sp=170*dt; const ox=P.x, oy=P.y;
+    if(!blocked(P.x+vx*sp,P.y)) P.x+=vx*sp; if(!blocked(P.x,P.y+vy*sp)) P.y+=vy*sp;
+    if(Math.abs(vx)>Math.abs(vy)) P.dir=vx<0?'left':'right'; else P.dir=vy<0?'up':'down';
+    if(P.tx!==null && Math.hypot(P.x-ox,P.y-oy)<sp*.15){ P.stuck=(P.stuck||0)+dt; if(P.stuck>.35){ P.tx=null; P.stuck=0; if(P.talkOnArrive){ const o=P.talkOnArrive; P.talkOnArrive=null; if(Math.hypot(o.x-P.x,o.y-P.y)<80){ o.act(); } } } } else P.stuck=0;
+  }
+  // NPCs drehen sich zu dir
+  sc().npcs.forEach(n=>{ if(Math.hypot(n.x-P.x,n.y-P.y)<90) n.dir=faceTo(n,P); });
+  // Türen
+  doorLock-=dt;
+  if(doorLock<=0) for(const d of sc().doors){ const r=d.r; if(P.x>r[0]&&P.x<r[0]+r[2]&&P.y>r[1]&&P.y<r[1]+r[3]){ goScene(d.to,d.x,d.y,d.dir); break; } }
+  // Kamera
+  const s=sc(); cam.z=clamp(Math.min(W/880,H/600),.62,1.45);
+  const vw=W/cam.z, vh=H/cam.z;
+  let tx=P.x-vw/2, ty=P.y-vh/2-20;
+  tx = s.w<vw ? (s.w-vw)/2 : clamp(tx,0,s.w-vw); ty = s.h<vh ? (s.h-vh)/2 : clamp(ty,0,s.h-vh);
+  const k=Math.min(1,dt*6); cam.x+=(tx-cam.x)*k; cam.y+=(ty-cam.y)*k;
+  // Hinweis-Pille
+  const n=nearest();
+  if(n && !uiOpen()){ $('pill').innerHTML = isTouch? `Tippe <kbd>Reden</kbd>: ${esc(n.sign?'Lesen: '+n.name:'Sprechen mit '+n.name)}` : `<kbd>Leertaste</kbd>/<kbd>E</kbd>: ${esc(n.sign?'Lesen: '+n.name:'Sprechen mit '+n.name)}`; $('pill').classList.remove('hidden'); }
+  else $('pill').classList.add('hidden');
+  saveTimer-=dt; if(saveTimer<0){ saveTimer=3; save(); }
+}
+let saveTimer=3;
+function goScene(id,x,y,dir){
+  doorLock=.8; Snd.door(); const f=$('fade'); f.style.opacity=1;
+  setTimeout(()=>{ world.scene=id; P.x=x; P.y=y; P.dir=dir; P.tx=null; const s=sc(); const vw=W/cam.z, vh=H/cam.z; cam.x=clamp(P.x-vw/2,0,Math.max(0,s.w-vw)); cam.y=clamp(P.y-vh/2,0,Math.max(0,s.h-vh)); if(s.w<vw) cam.x=(s.w-vw)/2; if(s.h<vh) cam.y=(s.h-vh)/2; f.style.opacity=0; updateHUD(); save(); }, RM?10:280);
+}
+
+/* ================= Zeichnen ================= */
+function render(){
+  const s=gameRunning?sc():scenes.campus, t=world.t;
+  ctx.setTransform(DPR,0,0,DPR,0,0); ctx.fillStyle='#0b1224'; ctx.fillRect(0,0,W,H);
+  ctx.setTransform(DPR*cam.z,0,0,DPR*cam.z,-cam.x*cam.z*DPR,-cam.y*cam.z*DPR);
+  ctx.drawImage(s.bg,0,0);
+  const list = s.props.slice();
+  s.npcs.forEach(n=>list.push({y:n.y,draw:c=>drawChar(c,n.x,n.y,n.look,n.dir,t,false)}));
+  if(gameRunning) list.push({y:P.y,draw:c=>drawChar(c,P.x,P.y,S.look,P.dir,t,P.moving)});
+  list.sort((a,b)=>a.y-b.y).forEach(o=>o.draw(ctx,t));
+  if(s.dark){
+    ctx.drawImage(s.darkCv,0,0);
+    // Handy-Taschenlampe... ohne Handy: nur ein schwacher Schein
+    if(gameRunning){ const gr=ctx.createRadialGradient(P.x,P.y-20,0,P.x,P.y-20,90); gr.addColorStop(0,'rgba(255,240,210,.14)'); gr.addColorStop(1,'rgba(255,240,210,0)'); ctx.fillStyle=gr; ctx.fillRect(P.x-90,P.y-110,180,180); }
+    // Lichterketten
+    (s.chains||[]).forEach(([a,b],ci)=>{ ctx.strokeStyle='rgba(30,30,40,.8)'; ctx.lineWidth=1; ctx.beginPath(); const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2+26; ctx.moveTo(a[0],a[1]); ctx.quadraticCurveTo(mx,my,b[0],b[1]); ctx.stroke();
+      for(let i=0;i<=12;i++){ const u=i/12; const x=(1-u)*(1-u)*a[0]+2*(1-u)*u*mx+u*u*b[0], y=(1-u)*(1-u)*a[1]+2*(1-u)*u*my+u*u*b[1]; const on = RM || ((i+ci+Math.floor(t*3))%4!==0); ctx.fillStyle = on ? ['#ffd27a','#ff6a8a','#8af0ff','#b6ff8a'][(i+ci)%4] : '#333'; ctx.beginPath(); ctx.arc(x,y,2.4,0,7); ctx.fill(); } });
+    s.props.forEach(p=>p.emissive && p.emissive(ctx,t));
+    // Laternenköpfe
+    s.lights.forEach(L=>{ if(L.r===150){ ctx.fillStyle='#fff3c4'; ctx.beginPath(); ctx.arc(L.x,L.y,4,0,7); ctx.fill(); } });
+    // Fenster Werkstatt-Tür leuchtet
+  } else {
+    // Werkstatt: leichte Vignette
+    const g=ctx.createRadialGradient(500,380,200,500,380,700); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(10,12,30,.35)'); ctx.fillStyle=g; ctx.fillRect(0,0,s.w,s.h);
+    // Lichtstrahlen der Lampen
+    ctx.fillStyle='rgba(255,250,220,.05)'; ctx.beginPath(); ctx.moveTo(300,110); ctx.lineTo(380,110); ctx.lineTo(460,700); ctx.lineTo(200,700); ctx.fill(); ctx.beginPath(); ctx.moveTo(620,110); ctx.lineTo(700,110); ctx.lineTo(820,700); ctx.lineTo(560,700); ctx.fill();
+  }
+  // Mondlicht-Tönung oben (nur Campus)
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  if(gameRunning) drawArrow();
+}
+
+function goalPos(){
+  if(!S) return null;
+  if(world.scene==='werkstatt'){ if(!S.metMeyer) return {x:500,y:340}; return {x:500,y:690}; }
+  if(!S.metMeyer) return {x:990,y:1160};
+  if(S.finished) return null;
+  const nx = ORDER.find(id=>!S.chips[id]);
+  if(nx){ const st=STANDS.find(s=>s.id===nx); return {x:st.front[0],y:st.front[1]}; }
+  return {x:1650,y:712};
+}
+function drawArrow(){
+  const a=$('arrow'); const g=goalPos(); if(!g||uiOpen()){ a.classList.add('hidden'); return; }
+  const sx=(g.x-cam.x)*cam.z, sy=(g.y-30-cam.y)*cam.z, m=46;
+  if(sx>m&&sx<W-m&&sy>m+60&&sy<H-m){ // im Bild: kleiner Pfeil über dem Ziel
+    a.classList.remove('hidden'); const bob=RM?0:Math.sin(world.t*5)*5; a.style.left=(sx-22)+'px'; a.style.top=(sy-90+bob)+'px'; a.style.transform='rotate(180deg) scale(.7)'; return; }
+  a.classList.remove('hidden');
+  const cx=W/2, cy=H/2, ang=Math.atan2(sy-cy,sx-cx);
+  const ex=clamp(sx,m,W-m), ey=clamp(sy,m+70,H-m);
+  a.style.left=(ex-22)+'px'; a.style.top=(ey-22)+'px'; a.style.transform=`rotate(${ang+Math.PI/2}rad)`;
+}
+
+let last=0, gameRunning=false;
+function loop(ts){ const dt=Math.min(.05,(ts-last)/1000||0); last=ts; update(dt); render(); requestAnimationFrame(loop); }
+function resize(){ DPR=Math.min(2,devicePixelRatio||1); W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; }
+
+/* ================= Dialog ================= */
+let dlgQ=[], dlgDone=null, dlgTyping=null;
+function say(lines,done){ dlgQ=lines.slice(); dlgDone=done||null; $('dialog').classList.remove('hidden'); $('pill').classList.add('hidden'); dlgShow(); }
+function lookOf(name){ const map={'Herr Meyer':LOOKS.meyer,'Direktor Polymerius':LOOKS.direktor,'Duro-Dieter':LOOKS.dieter,'Gabi Granulat':LOOKS.gabi,'Naphtha-Norbert':LOOKS.norbert,'Extruder-Erna':LOOKS.erna,'Ritz-Ramona':LOOKS.ramona,'Die Tüte':LOOKS.geist,'Zuckerwatten-Zoe':LOOKS.watte,'Typ aus der 10b':LOOKS.zehner}; if(name==='Du'||name===(S&&S.name)) return S.look; return map[name]||null; }
+function dlgShow(){
+  const [who,text,choices] = dlgQ[0];
+  const name = who==='Du' ? (S.name||'Du') : who;
+  $('dName').textContent=name;
+  const pc=$('portrait'), p=pc.getContext('2d'); p.clearRect(0,0,184,184);
+  const L=lookOf(who); if(L){ drawChar(p,92,178,L,'down',world.t,false,2.9); } else { p.fillStyle='#f4b53f'; p.font='700 70px sans-serif'; p.textAlign='center'; p.fillText('ℹ',92,118); }
+  const dt=$('dText'); const full=text.replace(/\{name\}/g,S.name||'du');
+  clearInterval(dlgTyping); dt.textContent='';
+  if(RM){ dt.textContent=full; } else { let i=0; dlgTyping=setInterval(()=>{ i+=2; dt.textContent=full.slice(0,i); if(i>=full.length){ clearInterval(dlgTyping); dlgTyping=null; } },16); }
+  const ch=$('dChoices'); ch.innerHTML='';
+  if(choices){ $('dNext').classList.add('hidden'); choices.forEach(([lbl,fn])=>{ const b=document.createElement('button'); b.textContent=lbl; b.onclick=e=>{ e.stopPropagation(); Snd.blip(); closeDialog(); fn&&fn(); }; ch.appendChild(b); }); }
+  else $('dNext').classList.remove('hidden');
+}
+function dlgAdvance(){
+  if(dlgTyping){ clearInterval(dlgTyping); dlgTyping=null; $('dText').textContent=dlgQ[0][1].replace(/\{name\}/g,S.name||'du'); return; }
+  if(dlgQ[0] && dlgQ[0][2]) return;
+  dlgQ.shift(); Snd.blip();
+  if(dlgQ.length) dlgShow(); else { const d=dlgDone; closeDialog(); d&&d(); }
+}
+function closeDialog(){ $('dialog').classList.add('hidden'); clearInterval(dlgTyping); dlgTyping=null; dlgQ=[]; dlgDone=null; }
+
+/* ================= HUD ================= */
+function updateHUD(){
+  const done=ORDER.filter(id=>S.chips[id]).length;
+  let eye,title,text;
+  if(!S.metMeyer){ eye='Auftrag 1 · Ankommen'; title='Ab in die TuN-Werkstatt'; text='Dein Handy liegt dort. Hoffentlich. Geh durch die Tür rechts unten am Gebäude mit dem roten X.'; }
+  else if(done<6){ const nx=STANDS.find(s=>s.id===ORDER.find(id=>!S.chips[id])); eye=`Chips ${done}/6 · Stand ${ORDER.indexOf(nx.id)+1}`; title=nx.title; text=`Thema: ${nx.topic}. Du kannst die Stände in jeder Reihenfolge spielen.`; }
+  else if(!S.finished){ eye='Finale · Chips 6/6'; title='Ab zum Riesenrad'; text='Direktor Polymerius wartet auf dem Bolzplatz. Er hat dein Handy.'; }
+  else { eye='Geschafft'; title='Handy gerettet'; text='Speichere dein Logbuch als PDF und zeig es Herrn Meyer.'; }
+  $('qEye').textContent=eye; $('qTitle').textContent=title; $('qText').textContent=text;
+  $('badges').innerHTML = ORDER.concat(['finale']).map(id=>{ const on = id==='finale'?S.finished:S.chips[id]; const nm = id==='finale'?FINALE.title:STANDS.find(s=>s.id===id).label; return `<div class="bdg${on?' on':''}" title="${esc(nm)}"><svg viewBox="0 0 24 24">${ICONS[id]}</svg></div>`; }).join('');
+}
+
+/* ================= Sheets ================= */
+let sheetCloseable=true, sheetOnClose=null;
+function openSheet(eye,title,opts={}){
+  $('sEye').textContent=eye; $('sTitle').textContent=title; const b=$('sBody'); b.innerHTML=''; b.scrollTop=0;
+  $('sheet').classList.toggle('spooky',!!opts.spooky);
+  sheetCloseable = opts.closeable!==false; $('sClose').classList.toggle('hidden',!sheetCloseable);
+  sheetOnClose = opts.onClose||null;
+  $('sheetWrap').classList.remove('hidden'); $('pill').classList.add('hidden');
+  return b;
+}
+function closeSheet(){ $('sheetWrap').classList.add('hidden'); stopAnims(); const f=sheetOnClose; sheetOnClose=null; f&&f(); }
+let animIds=[]; function anim(fn){ let id; const step=ts=>{ if(fn(ts)!==false){ id=requestAnimationFrame(step); animIds.push(id);} }; id=requestAnimationFrame(step); animIds.push(id); }
+function stopAnims(){ animIds.forEach(cancelAnimationFrame); animIds=[]; timers.forEach(clearInterval); timers=[]; }
+let timers=[];
+function el(tag,attrs={},html=''){ const e=document.createElement(tag); for(const k in attrs){ if(k==='class') e.className=attrs[k]; else if(k.startsWith('on')) e[k]=attrs[k]; else e.setAttribute(k,attrs[k]); } if(html) e.innerHTML=html; return e; }
+
+/* ---------- Mehrfachauswahl ---------- */
+// q = {q, a:[richtig, falsch...], tip, why}  -> cb(firstTryCorrect)
+function mcQuestion(box,q,cb,opts={}){
+  box.innerHTML='';
+  if(opts.head) box.appendChild(opts.head);
+  box.appendChild(el('div',{class:'qText'},esc(q.q)));
+  const order = shuffle(q.a.map((t,i)=>({t,ok:i===0})));
+  const wrap=el('div',{class:'opts'}); box.appendChild(wrap);
+  const fb=el('div'); box.appendChild(fb);
+  let first=true, done=false;
+  const btns = order.map(o=>{ const b=el('button',{class:'opt'},esc(o.t)); b.onclick=()=>{
+    if(done) return;
+    if(o.ok){ done=true; b.classList.add('ok'); Snd.good(); fb.className='fb ok'; fb.innerHTML='<b>Richtig!</b> '+esc(q.why||'');
+      const nb=el('button',{class:'btn',style:'margin-top:12px'},opts.nextLabel||'Weiter ▸'); nb.onclick=()=>cb(first); const ac=el('div',{class:'actions'}); ac.appendChild(nb); box.appendChild(ac); nb.focus(); opts.onAnswer&&opts.onAnswer(first);
+    } else { b.classList.add('no'); b.disabled=true; Snd.bad(); fb.className='fb no'; fb.innerHTML='<b>Nicht ganz.</b> Tipp: '+esc(q.tip||'Lies die Antworten noch einmal genau.')+' Versuch’s nochmal.'; if(first){ first=false; opts.onWrong&&opts.onWrong(); } }
+  }; wrap.appendChild(b); return {b,o}; });
+  if(HILFEN() && q.a.length>2){ const wrong=btns.filter(x=>!x.o.ok); const w=wrong[Math.floor(Math.random()*wrong.length)]; w.b.classList.add('off'); }
+}
+
+/* ---------- Reihenfolge ---------- */
+function sortQuestion(box,q,cb,opts={}){
+  box.innerHTML=''; if(opts.head) box.appendChild(opts.head);
+  box.appendChild(el('div',{class:'qText'},esc(q.q)));
+  const done=el('div',{class:'sortDone'}), pool=el('div',{class:'sortPool'}), fb=el('div');
+  box.appendChild(done); box.appendChild(pool); box.appendChild(fb);
+  let idx=0, first=true;
+  if(HILFEN()){ done.appendChild(el('span',{},esc(q.items[0]))); idx=1; }
+  shuffle(q.items.slice(idx)).forEach(t=>{ const b=el('button',{},esc(t)); b.onclick=()=>{
+    if(t===q.items[idx]){ Snd.good(); b.remove(); done.appendChild(el('span',{},esc(t))); idx++; fb.className=''; fb.innerHTML='';
+      if(idx===q.items.length){ fb.className='fb ok'; fb.innerHTML='<b>Perfekte Reihenfolge!</b> '+esc(q.why||''); const nb=el('button',{class:'btn'},opts.nextLabel||'Weiter ▸'); nb.onclick=()=>cb(first); const ac=el('div',{class:'actions'}); ac.appendChild(nb); box.appendChild(ac); opts.onAnswer&&opts.onAnswer(first); }
+    } else { Snd.bad(); if(first){ first=false; opts.onWrong&&opts.onWrong(); } fb.className='fb no'; fb.innerHTML='<b>„'+esc(t)+'“ kommt noch nicht.</b> Tipp: '+esc(q.tip); }
+  }; pool.appendChild(b); });
+}
+
+/* ---------- Freitext ---------- */
+function freeText(box,task,cb){
+  box.innerHTML='';
+  const min = HILFEN()?40:80;
+  box.appendChild(el('div',{class:'sEye',style:'margin-bottom:4px'},'Schreibauftrag fürs Logbuch'));
+  box.appendChild(el('div',{class:'qText'},esc(task.q)));
+  const st=el('div',{class:'starts'}); task.starts.forEach(s=>{ const b=el('button',{},esc(s)); b.onclick=()=>{ ta.value += (ta.value && !/\s$/.test(ta.value)?' ':'') + s + ' '; ta.focus(); upd(); }; st.appendChild(b); });
+  box.appendChild(el('div',{class:'note',style:'color:#7a6a48;font-size:13px'},'Satzanfänge zum Antippen:')); box.appendChild(st);
+  if(HILFEN() && task.words){ box.appendChild(el('div',{class:'ws'},'<b>Wortspeicher:</b> '+task.words.map(esc).join(' · '))); }
+  const ta=el('textarea',{placeholder:'Schreib hier in ganzen Sätzen …',maxlength:'800'}); ta.value=task.prev||''; box.appendChild(ta);
+  const cnt=el('div',{class:'cnt'}); box.appendChild(cnt);
+  const ac=el('div',{class:'actions'}); const ok=el('button',{class:'btn'},'Ins Logbuch eintragen'); ac.appendChild(ok); box.appendChild(ac);
+  const upd=()=>{ const n=ta.value.trim().length; cnt.textContent=`${n} Zeichen · mindestens ${min}`; ok.disabled=n<min; };
+  ta.addEventListener('input',upd); upd();
+  ok.onclick=()=>{ Snd.good(); cb(ta.value.trim()); };
+}
+
+/* ---------- Ergebnis & Belohnung ---------- */
+function resultScreen(box,{score,max,pass,need,text,retry,next}){
+  box.innerHTML='';
+  box.appendChild(el('div',{class:'big'},`${score} / ${max}`));
+  box.appendChild(el('div',{class:'fb '+(pass?'ok':'no')},(pass?'<b>Bestanden!</b> ':'<b>Noch nicht.</b> ')+esc(text)+(pass?'':` Du brauchst mindestens ${need} von ${max}.`)));
+  const ac=el('div',{class:'actions'});
+  if(!pass){ const r=el('button',{class:'btn'},'Nochmal versuchen'); r.onclick=retry; ac.appendChild(r); const c=el('button',{class:'btn ghost',style:'color:#2a2418;border-color:#d9c79c'},'Später'); c.onclick=closeSheet; ac.appendChild(c); }
+  else { const n=el('button',{class:'btn'},'Weiter zum Schreibauftrag ▸'); n.onclick=next; ac.appendChild(n); }
+  box.appendChild(ac);
+}
+function reward(id,label){
+  Snd.fanfare(); const m=$('medal'); m.innerHTML=`<svg viewBox="0 0 24 24">${ICONS[id]}</svg>`; m.classList.remove('hidden','pop'); void m.offsetWidth; m.classList.add('pop'); setTimeout(()=>m.classList.add('hidden'),1700);
+  confetti(); toast(label);
+}
+function toast(t){ const e=$('toast'); e.textContent=t; e.classList.remove('hidden'); e.style.opacity=1; clearTimeout(e._t); e._t=setTimeout(()=>{ e.style.opacity=0; setTimeout(()=>e.classList.add('hidden'),300); },2600); }
+function confetti(){ if(RM) return; const c=$('confetti'), g=c.getContext('2d'); c.width=W; c.height=H; const ps=[]; for(let i=0;i<120;i++) ps.push({x:W/2,y:H*.4,vx:(Math.random()-.5)*12,vy:-Math.random()*12-3,c:['#f4b53f','#d7263d','#7fc8f8','#53b86a','#ec6fb0'][i%5],r:Math.random()*6,s:3+Math.random()*4}); let n=0;
+  const st=()=>{ g.clearRect(0,0,W,H); ps.forEach(p=>{ p.vy+=.35; p.x+=p.vx; p.y+=p.vy; p.r+=.1; g.save(); g.translate(p.x,p.y); g.rotate(p.r); g.fillStyle=p.c; g.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6); g.restore(); }); if(++n<110) requestAnimationFrame(st); else g.clearRect(0,0,W,H); }; st(); }
+
+function finishStation(id,score,max,text,label){
+  S.log[id] = { score, max, text, date:today() };
+  if(id==='finale'){ S.finished=today(); } else S.chips[id]=true;
+  save(); updateHUD(); closeSheet(); reward(id,label);
+}
+
+/* ================= Gespräche ================= */
+function talkMeyer(){
+  if(!S.metMeyer){
+    say([
+      ['Du','Herr Meyer?! Was machen Sie um diese Uhrzeit noch hier?'],
+      ['Herr Meyer','Schleifen. Seit 14 Uhr. Die Kante war noch nicht perfekt. Und du?'],
+      ['Du','Handy vergessen. Und draußen steht ein Rummel. Auf dem Schulhof. Ist das normal?'],
+      ['Herr Meyer','Normal ist hier gar nichts. Der Rummel gehört Direktor Polymerius. Tauchte um acht auf, mit Riesenrad und schlechter Laune. Er hat alles eingesammelt, was auf dem Gelände rumlag. Inklusive deinem Handy.'],
+      ['Herr Meyer','Er gibt es zurück. Aber nur an Leute, die Kunststoffe wirklich verstanden haben. Die anderen presst er angeblich zu Granulat. War bestimmt ein Witz. Bestimmt.'],
+      ['Herr Meyer','An sechs Ständen gibt es je einen Chip. Mit allen sechs lässt er dich zum Riesenrad. Der goldene Pfeil zeigt dir einen Weg, die Reihenfolge ist aber egal.'],
+      ['Herr Meyer','Und alles, was du schreibst, landet im Logbuch. Das will ich morgen sehen. Ja, ich weiß, wie spät es ist.'],
+      ['Du','Haben Sie eigentlich auch mal Feierabend?'],
+      ['Herr Meyer','Der FCK hat heute gewonnen. Ich bin so gut gelaunt, ich könnte bis morgen früh feilen. Ab mit dir. Schutzbrille brauchst du draußen übrigens nicht. Nur Hirn.']
+    ],()=>{ S.metMeyer=true; save(); updateHUD(); Snd.fanfare(); toast('Neuer Auftrag: Sechs Chips sammeln'); });
+    return;
+  }
+  const done=ORDER.filter(id=>S.chips[id]).length;
+  if(S.finished){ say([['Herr Meyer','Handy wieder da? Sehr gut. Speicher dein Logbuch als PDF und bring es morgen mit. Und jetzt ab nach Hause. Ich schleife noch kurz.'],['Herr Meyer','„Kurz“ im Sinne von: Der Hausmeister schließt mich gleich ein.']]); return; }
+  const tips=[
+    'Thermoplaste: warm, weich, wieder formbar. Duroplaste: einmal hart, für immer hart. Elastomere: geben nach und kommen zurück. Wie du nach einer Strafarbeit.',
+    'Erdöl, Destillation, Naphtha, Cracken, Polymerisation. Sag das fünfmal schnell hintereinander, dann sitzt es.',
+    'Monomer heißt „ein Teil“, Polymer heißt „viele Teile“. Eine Perle gegen eine ganze Perlenkette.',
+    'Plexiglas bohren: langsam, wenig Druck, gut einspannen. Wer drückt, bekommt Plexi-Kaugummi.',
+    'Spritzgießen: flüssiger Kunststoff wird in eine hohle Form gespritzt. Extrudieren: Masse wird durch eine Düse gepresst, wie Zahnpasta. Endlos.'
+  ];
+  say([['Herr Meyer',`Du hast ${done} von 6 Chips. ${done>=6?'Dann ab zum Riesenrad, der Direktor wartet.':'Weiter so.'}`],['Herr Meyer','Kleiner Tipp: '+tips[Math.floor(Math.random()*tips.length)]]]);
+}
+const INTRO = {
+  geister:[['Die Tüte','Willkommen in der Geisterbahn der Ewigen Tüte. Hier spuken Dinge, die jemand vor zwanzig Minuten weggeworfen hat. Und die noch Jahrhunderte bleiben.'],['Die Tüte','Drinnen fragen dich die Geister: Wahr oder Mythos? Antworte schnell. Geister haben zwar ewig Zeit, aber keine Geduld.']],
+  pferd:[['Naphtha-Norbert','Großes Polymer-Derby! Mein Pferd heißt Naphtha Express. Deins heißt {name}. Ich hab mir keine Mühe gegeben.'],['Naphtha-Norbert','Jede richtige Antwort bringt dein Pferd nach vorn. Falsche Antworten füttern die Konkurrenz. Die Pferde sind aus Polyester. Sie laufen nicht schnell, aber sie werden nie krank.']],
+  dosen:[['Duro-Dieter','Ich bin wie ein Duroplast: einmal in Form gebracht, nie wieder umzustimmen. Also keine Diskussion über die Regeln.'],['Duro-Dieter','Ich sag dir, welche Sorte du abräumen sollst: Thermoplast, Duroplast oder Elastomer. Triffst du die falsche Dose, lache ich. Innerlich. Äußerlich bin ich zu hart dafür.']],
+  glueck:[['Gabi Granulat','Dreh das Rad. Es landet auf einem Fachbegriff, und du sagst mir, was er bedeutet.'],['Gabi Granulat','Ich höre mir dieses Klacken seit dreißig Jahren an. Gefühle hab ich keine mehr. Nur noch Fachbegriffe.']],
+  enten:[['Extruder-Erna','Die Enten sind aus PVC. Älter als deine Eltern. Und sie sehen alles.'],['Extruder-Erna','Jede Ente trägt ein Produkt. Du angelst sie und sagst mir, mit welchem Verfahren das Ding hergestellt wird. Kalandrieren, Spritzgießen, Extrudieren, Blasformen, Schäumen. Klingt wie ein Fitnesskurs, ist aber Industrie.']],
+  plexi:[['Ritz-Ramona','Hau den Plexi! Kraft ist nichts ohne Technik. Wer Plexiglas mit Vollgas bohrt, hat danach Plexi-Kaugummi am Bohrer.'],['Ritz-Ramona','Erst kommt eine Werkstattfrage. Richtig beantwortet? Dann darfst du zuschlagen. Falsch? Dann rutscht dir der Hammer weg. Passiert Profis auch. Nur seltener.']]
+};
+const GAMES = { geister:()=>gameGeister(), pferd:()=>gamePferd(), dosen:()=>gameDosen(), glueck:()=>gameGlueck(), enten:()=>gameEnten(), plexi:()=>gamePlexi() };
+function talkStand(st){
+  const n=st.op.name;
+  if(!S.metMeyer){ say([[n,'Ohne Chipkarte von Herrn Meyer läuft hier gar nichts. Die TuN-Werkstatt, unten am Gebäude mit dem roten X. Er schleift da noch. Natürlich.']]); return; }
+  if(S.chips[st.id]){ say([[n,'Du hast meinen Chip schon. Willst du trotzdem nochmal? Zum Üben? Freiwillig? Respekt.',[['Nochmal spielen',GAMES[st.id]],['Nein danke',null]]]]); return; }
+  const lines=INTRO[st.id].slice(); const lastL=lines.pop();
+  say(lines.concat([[lastL[0],lastL[1],[['Los geht’s!',GAMES[st.id]],['Gleich, ich schau mich noch um',null]]]]));
+}
+function talkWatte(){ const L=[
+  [['Zuckerwatten-Zoe','Zuckerwatte? Zu null Prozent Kunststoff. Der Stiel schon. Und die Tüte. Und die Folie um die Tüte.']],
+  [['Zuckerwatten-Zoe','Weißt du, was mich von einem Duroplast unterscheidet? Ich lasse mich umstimmen. Für zwei Euro.']],
+  [['Zuckerwatten-Zoe','Der Direktor hat mir mein Handy auch abgenommen. Ich weiß seit drei Stunden nicht, was in der Welt passiert. Es ist wunderschön und furchtbar.']]];
+  say(L[Math.floor(Math.random()*L.length)]); }
+function talkBus(){ const L=[
+  [['Typ aus der 10b','Bus kommt erst morgen. Ich wohne jetzt hier.']],
+  [['Typ aus der 10b','Meine Jacke ist aus Polyester. Meine Schuhsohlen aus Gummi. Im Grunde bin ich ein Kunststoffprodukt mit Meinung.']],
+  [['Typ aus der 10b','Ich war letztes Jahr auch in der Geisterbahn. Seitdem trenne ich Müll. Freiwillig.']]];
+  say(L[Math.floor(Math.random()*L.length)]); }
+function talkDirector(){
+  const n='Direktor Polymerius';
+  if(!S.metMeyer){ say([[n,'Ein Besucher ohne Chipkarte. Wie niedlich. Geh zu deinem Lehrer in die Werkstatt, kleines Monomer.']]); return; }
+  if(S.finished){ say([[n,'Du schon wieder. Geh. Bevor ich dich zu einer Duschvorhangstange extrudiere.'],[n,'Oder willst du nochmal ins Riesenrad?',[['Finale nochmal spielen',()=>gameFinale()],['Lieber nicht',null]]]]); return; }
+  const done=ORDER.filter(id=>S.chips[id]).length;
+  if(done<6){ say([[n,`Ah. Ein einzelnes Monomer. Allein bist du nichts. Du hast ${done} von 6 Chips. Komm wieder, wenn du eine richtige Kette bist.`],[n,'Dein Handy liegt hier sicher. In einer Kiste. Aus Polypropen. Sehr robust. Sehr unerreichbar.']]); return; }
+  say([[n,'Sechs Chips. Hm. Du hast dich verbunden, kleines Monomer. Fast schon ein Polymer.'],[n,'Steig ein. Ganz oben im Riesenrad stelle ich dir die acht Fragen, die nach der Rallye wirklich sitzen müssen. Jede richtige Antwort bringt deine Gondel höher.'],[n,'Und ganz oben gibt es dein Handy. Oder den freien Fall. Kleiner Scherz. Die Gondeln sind aus Polycarbonat. Fast unzerbrechlich.',[['Einsteigen',()=>gameFinale()],['Noch nicht',null]]]]);
+}
+
+/* ================= Inhalte ================= */
+const FREI = {
+  geister:{ q:'Nenne einen Vorteil und einen Nachteil von Kunststoff an einem Gegenstand aus deinem Alltag.', starts:['Ein Vorteil von Kunststoff ist,','Zum Beispiel','Ein Nachteil ist,','Deshalb'], words:['leicht','isoliert','rostet nicht','formbar','nicht abbaubar','Meer','Nahrungskette','giftige Gase'] },
+  pferd:{ q:'Beschreibe in eigenen Worten den Weg vom Erdöl zum Kunststoff.', starts:['Zuerst wird das Erdöl','In der Raffinerie','Danach wird das Naphtha','Bei der Polymerisation','Am Ende'], words:['Erdöl','Destillation','Raffinerie','Naphtha','Cracken','Monomere','Polymerisation','lange Ketten','Granulat'] },
+  dosen:{ q:'Erkläre, warum sich ein Joghurtbecher (Thermoplast) durch Wärme verformen lässt, eine Steckdose (Duroplast) aber nicht.', starts:['Ein Thermoplast ist','Die Ketten','Ein Duroplast dagegen','Deshalb'], words:['unvernetzt','Ketten gleiten','weich bei Wärme','stark vernetzt','feste Verbindungen','nur einmal formbar','zersetzt sich'] },
+  glueck:{ q:'Erkläre den Unterschied zwischen Monomer und Polymer mit einem Vergleich aus dem Alltag.', starts:['Ein Monomer ist','Ein Polymer ist','Man kann sich das vorstellen wie','Aus vielen Monomeren'], words:['kleines Molekül','großes Molekül','Kette','Perlenkette','viele Teile','Polymerisation'] },
+  enten:{ q:'Wähle ein Verfahren (Kalandrieren, Spritzgießen, Extrudieren, Extrusionsblasformen oder Schäumen) und beschreibe, wie ein Gegenstand damit hergestellt wird.', starts:['Ich wähle das Verfahren','Dabei wird der Kunststoff','So entsteht zum Beispiel'], words:['Granulat','schmelzen','Düse','Form','Walzen','Luft','Schaum','Rohr','Flasche'] },
+  plexi:{ q:'Du sollst ein Loch in eine 6 mm dicke Plexiglasplatte bohren. Beschreibe Schritt für Schritt, worauf du achtest.', starts:['Zuerst markiere ich','Dann spanne ich','Beim Bohren','Weil die Platte 6 mm dick ist,','Zum Schluss'], words:['Körner','Vorstecher','Zulage','einspannen','geringe Drehzahl','wenig Druck','kühlen','Wasser','Bohröl','entgraten'] },
+  finale:{ q:'Stelle einen Beruf aus der Kunststoffindustrie vor. Was macht man dort, und was müsste man können?', starts:['Ich stelle den Beruf','In diesem Beruf','Man braucht','Mich interessiert daran'], words:['Verfahrensmechaniker/in für Kunststoff- und Kautschuktechnik','Maschinen einrichten','Spritzgießmaschine','Qualität prüfen','Ausbildung','Technik','Werkstoffe'] }
+};
+
+/* ---------- Geisterbahn ---------- */
+const GEISTER_Q = [
+  { s:'Kunststoffe leiten keinen Strom. Deshalb stecken sie in Kabelummantelungen.', w:true, why:'Kunststoffe sind Isolatoren.', boo:'Richtig. Ich bin übrigens auch nicht leitend. Nur nervig.' },
+  { s:'Eine Plastiktüte verrottet im Wald in ein paar Wochen.', w:false, why:'Kunststoffe sind in der Natur nicht abbaubar und bleiben sehr lange.', boo:'Wochen? Ich spuke hier seit 1998.' },
+  { s:'Kunststoffe haben eine geringe Dichte. Im Auto spart das Sprit.', w:true, why:'Leichtbau: Jedes Gramm weniger spart Kraftstoff.', boo:'Leicht wie ich. Nur weniger durchsichtig.' },
+  { s:'Kunststoffe rosten, wenn sie nass werden.', w:false, why:'Kunststoffe sind feuchtigkeitsresistent und korrodieren nicht.', boo:'Rosten? Ich treibe seit Jahren im Atlantik. Kein Rost. Nur Einsamkeit.' },
+  { s:'Beim Verbrennen von Kunststoff können giftige Gase entstehen.', w:true, why:'Deshalb gehört z. B. heiße Asche nicht in die Mülltonne.', boo:'Darum riecht es hier auch so. Sorry.' },
+  { s:'Heiße Asche kann ruhig in die Kunststoff-Mülltonne, die hält das aus.', w:false, why:'Viele Kunststoffe haben niedrige Schmelzpunkte. Die Tonne schmilzt oder brennt.', boo:'Die letzte Tonne, die das ausprobiert hat, spukt jetzt neben mir.' },
+  { s:'Kunststoffe lassen sich glasklar oder farbig herstellen.', w:true, why:'Zum Beispiel Plexiglas: glasklar oder bunt.', boo:'Ich war mal glasklar. Dann kam das Meer.' },
+  { s:'Jede Chemikalie lässt Kunststoff völlig kalt.', w:false, why:'Manche Lösungsmittel und Chemikalien greifen Kunststoff an. Dann nimmt man Glas.', boo:'Aceton und ich. Lange Geschichte. Keine schöne.' },
+  { s:'Kunststoffteilchen gelangen über das Meer in die Nahrungskette.', w:true, why:'Fische fressen Kunststoffteilchen, und die landen am Ende auf unseren Tellern.', boo:'Guten Appetit. Ich war in deinem Fischstäbchen.' },
+  { s:'Kunststoff kann man nur mit Spezialmaschinen bearbeiten, nie mit normalem Werkzeug.', w:false, why:'Mit Säge, Bohrer und Feile kann man viele Kunststoffe ähnlich wie Holz bearbeiten.', boo:'Herr Meyer bearbeitet Kunststoff mit einer Feile. Und mit Blicken.' }
+];
+function gameGeister(){
+  const qs=shuffle(GEISTER_Q).slice(0,8), need=HILFEN()?5:6, T=HILFEN()?25:15;
+  let i=0, score=0;
+  const box=openSheet('Stand 1 · Kunststoffe im Alltag','Geisterbahn der Ewigen Tüte',{spooky:true});
+  const intro=()=>{ box.innerHTML=''; box.appendChild(el('p',{},'Die Wagen rattern ins Dunkle. Aus jeder Ecke flüstert ein Geist eine Behauptung. <b>Wahr oder Mythos?</b> Du hast '+T+' Sekunden pro Geist.')); const ac=el('div',{class:'actions'}); const b=el('button',{class:'btn'},'Einsteigen'); b.onclick=()=>{ Snd.spook(); ask(); }; ac.appendChild(b); box.appendChild(ac); };
+  const ask=()=>{ stopAnims(); box.innerHTML='';
+    const q=qs[i]; const dots=el('div',{class:'dots'}); qs.forEach((_,k)=>dots.appendChild(el('i',{class:k<i?(qs[k].res?'done':'bad'):k===i?'now':''}))); box.appendChild(dots);
+    const cvx=el('canvas',{class:'gcv',width:'640',height:'150'}); box.appendChild(cvx); const g=cvx.getContext('2d');
+    const tm=el('div',{class:'timer'}); const bar=el('i'); tm.appendChild(bar); box.appendChild(tm);
+    box.appendChild(el('div',{class:'qText'},'„'+esc(q.s)+'“'));
+    const ac=el('div',{class:'vbtns'}); const bW=el('button',{},'Wahr'), bM=el('button',{},'Mythos'); ac.appendChild(bW); ac.appendChild(bM); box.appendChild(ac);
+    const fb=el('div'); box.appendChild(fb);
+    let left=T, done=false; const t0=performance.now();
+    anim(ts=>{ const tt=ts/1000; g.fillStyle='#0b0710'; g.fillRect(0,0,640,150); for(let k=0;k<5;k++){ g.fillStyle=`rgba(120,60,160,${.08+k*.02})`; g.fillRect(0,150-k*20,640,4);}
+      const gx=320+Math.sin(tt*1.3)*180, gy=70+Math.sin(tt*2.1)*14; g.save(); g.translate(gx,gy+30); g.scale(1.6,1.6); drawGhostBody(g,tt); g.restore();
+      g.fillStyle='rgba(180,255,120,.7)'; [[60,40],[72,40],[560,100],[572,100]].forEach(([ex,ey])=>{ g.beginPath(); g.arc(ex,ey,3,0,7); g.fill(); }); return !done; });
+    const tick=setInterval(()=>{ if(done) return; left=T-(performance.now()-t0)/1000; const f=Math.max(0,left/T); bar.style.width=(f*100)+'%'; bar.style.background=f>.5?'var(--good)':f>.25?'var(--gold)':'var(--bad)'; if(left<=0) answer(null); },100); timers.push(tick);
+    const answer=v=>{ if(done) return; done=true; clearInterval(tick); bW.disabled=bM.disabled=true; const ok = v===q.w; q.res=ok; if(ok){score++; Snd.good();} else Snd.bad();
+      (q.w?bW:bM).style.borderColor='var(--good)';
+      fb.className='fb '+(ok?'ok':'no'); fb.innerHTML=(v===null?'<b>Zu langsam!</b> ':ok?'<b>Richtig!</b> ':'<b>Falsch.</b> ')+'Das ist '+(q.w?'<b>wahr</b>':'ein <b>Mythos</b>')+'. '+esc(q.why)+'<br><i>Der Geist flüstert: „'+esc(q.boo)+'“</i>';
+      const a2=el('div',{class:'actions'}); const nb=el('button',{class:'btn'},i<qs.length-1?'Weiterfahren ▸':'Zum Ausgang ▸'); nb.onclick=()=>{ i++; if(i<qs.length) ask(); else end(); }; a2.appendChild(nb); box.appendChild(a2); nb.focus(); };
+    bW.onclick=()=>answer(true); bM.onclick=()=>answer(false);
+  };
+  const end=()=>{ stopAnims(); const pass=score>=need; if(pass) Snd.fanfare(); resultScreen(box,{score,max:qs.length,pass,need,text:pass?'Du hast die Geisterbahn überlebt. Die Tüte nickt anerkennend. Glaubst du jedenfalls, unter der Maske.':'Die Geister lachen dich aus. Leise. Es ist trotzdem unangenehm.',retry:()=>gameGeister(),next:()=>freeText(box,{...FREI.geister,prev:S.log.geister&&S.log.geister.text},txt=>finishStation('geister',score,qs.length,txt,'Chip erhalten: Geisterbahn'))}); };
+  intro();
+}
+
+/* ---------- Pferderennen ---------- */
+const PFERD_Q = [
+  { q:'Aus welchem Rohstoff werden die meisten Kunststoffe hergestellt?', a:['Erdöl','Holz','Quarzsand','Eisenerz'], tip:'Der Rohstoff kommt aus der Raffinerie.', why:'Erdöl ist der häufigste Rohstoff.' },
+  { q:'Welcher dieser Stoffe ist KEIN Rohstoff für Kunststoffe?', a:['Kalkstein','Kohle','Zellulose','Erdgas'], tip:'Die Rohstoffe sind Verbindungen aus Kohlenstoff und Wasserstoff: Erdöl, Erdgas, Kohle, Zellulose.', why:'Die vier Rohstoffe sind Erdöl, Erdgas, Kohle und Zellulose.' },
+  { q:'Was passiert bei der Destillation in der Raffinerie?', a:['Das Erdöl wird in Bestandteile wie Gas, Rohbenzin (Naphtha), Diesel und Heizöl getrennt.','Das Erdöl wird zu Granulat gepresst.','Das Erdöl wird eingefärbt.','Das Erdöl wird tiefgefroren.'], tip:'Destillieren heißt trennen durch Erhitzen.', why:'Durch Erhitzen wird das Erdöl in seine Bestandteile getrennt.' },
+  { q:'Welcher Bestandteil des Erdöls ist der Ausgangsstoff für Kunststoff?', a:['Naphtha (Rohbenzin)','Heizöl','Diesel','Gas'], tip:'Es ist das Rohbenzin.', why:'Aus Naphtha werden durch Cracken die Monomere gewonnen.' },
+  { q:'Was bedeutet Cracken?', a:['Große Kohlenstoffketten werden durch Hitze in kleine Moleküle gespalten.','Alter Kunststoff wird zerbrochen und recycelt.','Erdöl wird aus dem Boden gebohrt.','Kleine Moleküle werden zu langen Ketten verbunden.'], tip:'Thermische Spaltung: aus groß wird klein.', why:'Dabei entstehen z. B. Ethen, Propen und Buten.' },
+  { q:'Wie heißt der Schritt, bei dem viele Monomere zu langen Ketten verbunden werden?', a:['Polymerisation','Destillation','Cracken','Kalandrieren'], tip:'„Poly“ heißt viele.', why:'Neben der Polymerisation gibt es auch Polykondensation und Polyaddition.' },
+  { q:'Wie viel des Erdöls wird in Westeuropa zu Kunststoff verarbeitet?', a:['Nur etwa 4 bis 5 Prozent','Etwa 40 Prozent','Etwa 75 Prozent','Fast alles'], tip:'Der größte Teil geht in Transport und Heizung.', why:'Transport 43 %, Energie/Heizung 40 %, Kunststoffe nur ein kleiner Rest.' },
+  { q:'Was sind Additive?', a:['Zusatzstoffe, die die Eigenschaften des Kunststoffs anpassen, z. B. Weichmacher','Die Abfälle beim Cracken','Eine Sorte Erdöl','Maschinen in der Raffinerie'], tip:'Weichmacher und Stabilisatoren gehören dazu.', why:'Weichmacher erleichtern die Verarbeitung, Stabilisatoren verhindern zu starke Abnutzung.' },
+  { sort:true, q:'Bring die Schritte in die richtige Reihenfolge (antippen).', items:['Erdöl','Destillation','Naphtha','Cracken','Polymerisation','Kunststoff'], tip:'Erst trennen, dann spalten, dann verbinden.', why:'Erdöl → Destillation → Naphtha → Cracken → Polymerisation → Kunststoff.' }
+];
+function gamePferd(){
+  const need=6, base=HILFEN()?1/210:1/140;
+  const names=[S.name||'Du','Naphtha Express','Polly Ester','Monomer Max'], cols=['#f4b53f','#c8102e','#7a5ce0','#2ebfb3'];
+  const rivals=[0,0,0], spd=[base*1.05,base*.95,base*.9]; let me=0, correct=0, asked=0, running=false, over=false, last=null;
+  let pool=shuffle(PFERD_Q.filter(q=>!q.sort)); pool.splice(3,0,PFERD_Q.find(q=>q.sort));
+  const box=openSheet('Stand 2 · Rohstoffe und Herstellung','Großes Polymer-Derby',{onClose:()=>{over=true;}});
+  const cvx=el('canvas',{class:'gcv',width:'640',height:'210'}); const qbox=el('div');
+  const draw=(ts)=>{ const g=cvx.getContext('2d'), tt=ts/1000; if(running&&!over&&last!==null){ const dt=Math.min(.05,tt-last); for(let k=0;k<3;k++) rivals[k]=Math.min(1,rivals[k]+spd[k]*dt*(.7+.6*Math.abs(Math.sin(tt*.7+k)))); if(rivals.some(r=>r>=1)) lose(); } last=tt;
+    g.fillStyle='#2a1e18'; g.fillRect(0,0,640,210); for(let k=0;k<4;k++){ g.fillStyle=k%2?'#7a5a3a':'#86643f'; g.fillRect(0,8+k*48,640,46); }
+    g.fillStyle='#fff'; for(let y=8;y<200;y+=12){ g.fillRect(590,y,8,6); g.fillStyle=g.fillStyle==='#ffffff'?'#111':'#fff'; }
+    g.fillStyle='rgba(255,255,255,.5)'; g.fillRect(170,8,2,192);
+    g.fillStyle='rgba(0,0,0,.35)'; g.fillRect(0,8,128,192); [me,...rivals].forEach((p,k)=>{ const x=170+p*415, y=40+k*48, run=running&&!over, b=run?Math.sin(tt*14+k)*3:0; g.fillStyle=cols[k]; g.fillRect(x-30,y-12+b,34,14); g.fillRect(x,y-24+b,9,16); g.fillRect(x+4,y-26+b,12,8); g.fillStyle='#3a2a1e'; const l=run?Math.sin(tt*14+k)*5:0; g.fillRect(x-26+l,y+2,4,10); g.fillRect(x-4-l,y+2,4,10); g.fillStyle=k?'#fff':'#f4b53f'; g.font='700 13px sans-serif'; g.fillText(names[k],8,y+2,118); g.fillStyle='#f1c7a5'; g.beginPath(); g.arc(x-14,y-20+b,5,0,7); g.fill(); });
+    return !over || true; };
+  const lose=()=>{ if(over) return; over=true; running=false; Snd.bad(); qbox.innerHTML=''; resultScreen(qbox,{score:correct,max:need,pass:false,need,text:'Ein anderes Pferd war schneller. Naphtha-Norbert zählt sein Geld.',retry:()=>gamePferd()}); };
+  const win=()=>{ over=true; running=false; Snd.fanfare(); qbox.innerHTML=''; resultScreen(qbox,{score:correct,max:asked,pass:true,need:0,text:'Dein Pferd {name} gewinnt! Norbert ist sprachlos. Zum ersten Mal seit 1987.'.replace('{name}',S.name||'Du'),next:()=>{ stopAnims(); freeText(box,{...FREI.pferd,prev:S.log.pferd&&S.log.pferd.text},txt=>finishStation('pferd',correct,asked,txt,'Chip erhalten: Pferderennen')); }}); };
+  const next=()=>{ if(over) return; if(!pool.length) pool=shuffle(PFERD_Q); const q=pool.shift(); asked++; running=true;
+    const onA=first=>{ running=false; if(first){ correct++; me=correct/need; } };
+    const onW=()=>{ for(let k=0;k<3;k++) rivals[k]=Math.min(.97,rivals[k]+.05); };
+    const cb=first=>{ if(me>=1) win(); else next(); };
+    (q.sort?sortQuestion:mcQuestion)(qbox,q,cb,{onAnswer:onA,onWrong:onW}); };
+  box.appendChild(el('p',{},'Jede <b>richtige Antwort beim ersten Versuch</b> bringt dein Pferd ein Stück nach vorn. Die anderen laufen, solange eine Frage offen ist. Falsche Antworten geben ihnen Schwung.'));
+  const ac=el('div',{class:'actions'}); const go=el('button',{class:'btn'},'Startschuss!'); ac.appendChild(go); box.appendChild(cvx); box.appendChild(ac); box.appendChild(qbox);
+  go.onclick=()=>{ ac.remove(); Snd.fanfare(); next(); };
+  anim(ts=>{ draw(ts); return true; });
+}
+
+/* ---------- Dosenwerfen ---------- */
+const DOSEN = {
+  T:['Joghurtbecher','PET-Flasche','Eimer','Pylone','Wasserrohr','Plastikgeschirr','Folien­verpackung','Trinkbecher','Styropor'],
+  D:['Steckdose','Licht­schalter','Schutzhelm','Tablett','Rollerskate-Schale','Epoxidharz'],
+  E:['Gummiball','Dichtung','Turnmatte','Camping­matratze','Silikon','Gummiband']
+};
+const KL = { T:'Thermoplaste', D:'Duroplaste', E:'Elastomere' };
+const KLTIP = { T:'Thermoplaste werden bei Wärme weich und lassen sich immer wieder umformen: Becher, Flaschen, Eimer, Rohre.', D:'Duroplaste sind hart, spröde und nur einmal formbar: Steckdosen, Schalter, Helme, Tabletts.', E:'Elastomere sind gummielastisch und gehen in ihre Form zurück: Bälle, Dichtungen, Matten.' };
+function gameDosen(){
+  const rounds=shuffle(['T','D','E']); let r=0, miss=0, hits=0; const allowed=HILFEN()?5:3;
+  const box=openSheet('Stand 3 · Einteilung der Kunststoffe','Dosenwerfen bei Duro-Dieter');
+  const play=()=>{ stopAnims(); box.innerHTML='';
+    const cls=rounds[r]; const others=['T','D','E'].filter(k=>k!==cls);
+    const tg=shuffle(DOSEN[cls]).slice(0,3).map(t=>({t,cls})); const ot=shuffle(others.flatMap(k=>DOSEN[k].map(t=>({t,cls:k})))).slice(0,3);
+    const cans=shuffle(tg.concat(ot)).map((c,k)=>({...c, x:120+(k%3)*200, y:k<3?150:290, st:'up', vy:0, rot:0, wob:0}));
+    const dots=el('div',{class:'dots'}); for(let k=0;k<3;k++) dots.appendChild(el('i',{class:k<r?'done':k===r?'now':''})); box.appendChild(dots);
+    box.appendChild(el('div',{class:'qText'},`Runde ${r+1}: Räum alle <span style="color:#8a1323">${KL[cls].toUpperCase()}</span> ab!`.replace(/&lt;/g,'<')));
+    box.lastChild.innerHTML=`Runde ${r+1}: Räum alle <span style="color:#8a1323">${KL[cls].toUpperCase()}</span> ab!`;
+    const info=el('div',{class:'score'}); box.appendChild(info);
+    const cvx=el('canvas',{class:'gcv',width:'640',height:'340'}); box.appendChild(cvx); const fb=el('div'); box.appendChild(fb);
+    if(HILFEN()) box.appendChild(el('div',{class:'ws'},'<b>Hilfe:</b> '+esc(KLTIP[cls])));
+    const upd=()=>{ info.textContent=`Treffer: ${hits} · Fehlwürfe: ${miss} (erlaubt: ${allowed})`; }; upd();
+    let ball=null;
+    const g=cvx.getContext('2d');
+    anim(ts=>{ const tt=ts/1000; g.fillStyle='#1a1420'; g.fillRect(0,0,640,340); g.fillStyle='#3a2a22'; g.fillRect(0,0,640,30); for(let k=0;k<16;k++){ g.fillStyle=k%2?'#d7263d':'#f2f2f2'; g.fillRect(k*40,0,40,18);}
+      g.fillStyle='#6b3a2a'; g.fillRect(30,150,580,12); g.fillRect(30,290,580,12);
+      cans.forEach(c=>{ if(c.st==='gone') return; if(c.st==='fall'){ c.vy+=.8; c.y+=c.vy; c.rot+=.15; c.x+=c.dx; if(c.y>420) c.st='gone'; }
+        g.save(); g.translate(c.x,c.y-38); g.rotate(c.rot+(c.wob>0?Math.sin(c.wob*30)*.12:0)); if(c.wob>0) c.wob-=.016;
+        const gr=g.createLinearGradient(-40,0,40,0); gr.addColorStop(0,'#8a8e96'); gr.addColorStop(.4,'#e6e8ec'); gr.addColorStop(1,'#7a7e86'); g.fillStyle=gr; rr(g,-42,-38,84,76,8); g.fill();
+        g.fillStyle='#8a1323'; g.fillRect(-42,-24,84,6); g.fillRect(-42,18,84,6);
+        g.fillStyle='#1d2a4a'; g.font='700 13px "Atkinson Hyperlegible",sans-serif'; g.textAlign='center'; const parts=c.t.split('­'); if(parts.length>1){ g.fillText(parts[0]+'-',0,-2); g.fillText(parts[1],0,13);} else { const words=c.t.split(/[ -]/); if(c.t.length>12&&words.length>1){ g.fillText(words[0]+(c.t.includes('-')?'-':''),0,-2); g.fillText(words.slice(1).join(' '),0,13);} else g.fillText(c.t,0,6); }
+        g.restore(); });
+      if(ball){ const k=Math.min(1,(tt-ball.t0)/.32); const x=320+(ball.c.x-320)*k, y=330+(ball.c.y-38-330)*k-Math.sin(k*Math.PI)*60; g.fillStyle='#f4b53f'; g.beginPath(); g.arc(x,y,10-k*3,0,7); g.fill(); if(k>=1){ const c=ball.c; ball=null; resolve(c); } }
+      else { g.fillStyle='#f4b53f'; g.beginPath(); g.arc(320,330,10,0,7); g.fill(); }
+      return true; });
+    const resolve=c=>{ if(c.cls===cls){ Snd.hit(); Snd.good(); c.st='fall'; c.vy=-6; c.dx=(Math.random()-.5)*6; hits++; fb.className='fb ok'; fb.innerHTML=`<b>${esc(c.t.replace(/­/g,''))}</b> ist ein ${KL[cls].slice(0,-1)}. Treffer!`; if(cans.filter(x=>x.cls===cls&&x.st==='up').length===0){ setTimeout(()=>{ r++; if(r<3) play(); else end(); },900); } }
+      else { Snd.bad(); c.wob=.5; miss++; fb.className='fb no'; fb.innerHTML=`<b>${esc(c.t.replace(/­/g,''))}</b> ist ein <b>${KL[c.cls].slice(0,-1)}</b>. Dieter grinst. ${esc(KLTIP[c.cls])}`; }
+      upd(); };
+    cvx.onclick=e=>{ if(ball) return; const b=cvx.getBoundingClientRect(), x=(e.clientX-b.left)*640/b.width, y=(e.clientY-b.top)*340/b.height; const c=cans.find(c=>c.st==='up'&&Math.abs(c.x-x)<44&&y>c.y-80&&y<c.y+4); if(c){ Snd.blip(); ball={c,t0:performance.now()/1000}; } };
+  };
+  const end=()=>{ stopAnims(); const pass=miss<=allowed; resultScreen(box,{score:hits,max:hits+miss,pass,need:hits+miss-allowed,text:pass?`Nur ${miss} Fehlwürfe. Dieter verzieht keine Miene. Bei ihm ist das ein Lächeln.`:`${miss} Fehlwürfe sind zu viele. Erlaubt sind ${allowed}.`,retry:()=>gameDosen(),next:()=>freeText(box,{...FREI.dosen,prev:S.log.dosen&&S.log.dosen.text},txt=>finishStation('dosen',hits,hits+miss,txt,'Chip erhalten: Dosenwerfen'))});
+    if(!pass){ const f=box.querySelector('.fb'); if(f) f.innerHTML='<b>Noch nicht.</b> '+esc(`${miss} Fehlwürfe sind zu viele. Erlaubt sind ${allowed}.`); } };
+  box.appendChild(el('p',{},'Drei Runden, jedes Mal eine andere Sorte. Tippe auf eine Dose, um zu werfen. Triff nur die richtige Sorte. Erlaubte Fehlwürfe insgesamt: <b>'+allowed+'</b>.'));
+  const ac=el('div',{class:'actions'}); const b=el('button',{class:'btn'},'Bälle her!'); b.onclick=play; ac.appendChild(b); box.appendChild(ac);
+}
+
+/* ---------- Glücksrad ---------- */
+const BEGRIFFE = [
+  ['Monomer','kleines Molekül, Baustein für Kunststoffe'],
+  ['Polymer','großes ketten- oder netzförmiges Molekül aus vielen Monomeren'],
+  ['Naphtha','Rohbenzin aus der Destillation, Ausgangsstoff für Kunststoff'],
+  ['Cracken','große Kohlenstoffketten werden durch Hitze in kleine gespalten'],
+  ['Additive','Zusatzstoffe, die die Eigenschaften eines Kunststoffs anpassen'],
+  ['Weichmacher','Additiv, das die Schmelztemperatur senkt und die Verarbeitung erleichtert'],
+  ['Memory-Effekt','ein warm verformter Thermoplast nimmt beim Erhitzen seine Ausgangsform wieder an'],
+  ['Granulat','kleine Kunststoffkörner, aus denen Produkte hergestellt werden']
+];
+function gameGlueck(){
+  const spins=6, need=HILFEN()?4:5; let n=0, score=0, ang=0; const used=new Set();
+  const box=openSheet('Stand 4 · Fachbegriffe','Glücksrad der Fachbegriffe');
+  const cvx=el('canvas',{class:'gcv',width:'420',height:'300',style:'max-width:420px;margin:0 auto'}); const g=cvx.getContext('2d');
+  const dots=el('div',{class:'dots'}); const qbox=el('div'); const ac=el('div',{class:'actions',style:'justify-content:center'}); const spinB=el('button',{class:'btn'},'Drehen!'); ac.appendChild(spinB);
+  box.appendChild(el('p',{},`Sechs Drehungen. Das Rad landet auf einem Fachbegriff, du wählst die passende Erklärung. Mindestens <b>${need}</b> beim ersten Versuch richtig.`));
+  box.appendChild(dots); box.appendChild(cvx); box.appendChild(ac); box.appendChild(qbox);
+  const res=[]; const updD=()=>{ dots.innerHTML=''; for(let k=0;k<spins;k++) dots.appendChild(el('i',{class:k<n?(res[k]?'done':'bad'):k===n?'now':''})); }; updD();
+  const cols=['#d7263d','#f4b53f','#3d8ee8','#4fb86a','#7a5ce0','#ec6fb0','#2ebfb3','#f4a93f'];
+  const draw=()=>{ g.fillStyle='#1a1420'; g.fillRect(0,0,420,300); const cx=210, cy=155, R=130; const seg=Math.PI*2/8;
+    for(let k=0;k<8;k++){ g.fillStyle=cols[k]; g.beginPath(); g.moveTo(cx,cy); g.arc(cx,cy,R,ang+k*seg,ang+(k+1)*seg); g.fill(); g.save(); g.translate(cx,cy); g.rotate(ang+(k+.5)*seg); g.fillStyle=used.has(k)?'rgba(255,255,255,.35)':'#fff'; g.font='700 14px "Atkinson Hyperlegible",sans-serif'; g.textAlign='right'; g.fillText(BEGRIFFE[k][0],R-10,5); g.restore(); }
+    g.strokeStyle='#fff'; g.lineWidth=4; g.beginPath(); g.arc(cx,cy,R,0,7); g.stroke(); g.fillStyle='#1a1420'; g.beginPath(); g.arc(cx,cy,16,0,7); g.fill();
+    g.fillStyle='#f4b53f'; g.beginPath(); g.moveTo(cx-12,cy-R-18); g.lineTo(cx+12,cy-R-18); g.lineTo(cx,cy-R+8); g.fill(); };
+  draw();
+  spinB.onclick=()=>{ spinB.disabled=true; qbox.innerHTML=''; const free=[...Array(8).keys()].filter(k=>!used.has(k)); const k=free[Math.floor(Math.random()*free.length)]; used.add(k);
+    const seg=Math.PI*2/8; const target=-Math.PI/2-(k+.5)*seg; let end=target; while(end<ang+Math.PI*6) end+=Math.PI*2; const a0=ang, t0=performance.now(), D=RM?10:2600; let lastSeg=-1;
+    anim(ts=>{ const u=Math.min(1,(ts-t0)/D), e=1-Math.pow(1-u,3); ang=a0+(end-a0)*e; const sgi=Math.floor(ang/seg); if(sgi!==lastSeg){ lastSeg=sgi; Snd.tick(); } draw(); if(u>=1){ ask(k); return false; } return true; }); };
+  const ask=k=>{ const [term,def]=BEGRIFFE[k]; const wrong=shuffle(BEGRIFFE.filter((_,j)=>j!==k)).slice(0,3).map(x=>x[1]);
+    mcQuestion(qbox,{q:`Was bedeutet „${term}“?`,a:[def,...wrong],tip:'Denk an die Wortbedeutung oder an die Reihenfolge Erdöl → Kunststoff.',why:`${term}: ${def}.`},first=>{ res[n]=first; if(first) score++; n++; updD(); qbox.innerHTML=''; if(n<spins){ spinB.disabled=false; spinB.focus(); } else { ac.remove(); const pass=score>=need; resultScreen(qbox,{score,max:spins,pass,need,text:pass?'Gabi nickt. Einmal. Das ist bei ihr ein Freudenfest.':'Gabi seufzt. Seit dreißig Jahren dasselbe Seufzen.',retry:()=>gameGlueck(),next:()=>freeText(box,{...FREI.glueck,prev:S.log.glueck&&S.log.glueck.text},txt=>finishStation('glueck',score,spins,txt,'Chip erhalten: Glücksrad'))}); } }); };
+}
+
+/* ---------- Entenangeln ---------- */
+const VERF = [
+  ['Kalandrieren','Masse wird zwischen beheizten Walzen zu Folien und Platten gewalzt'],
+  ['Spritzgießen','flüssiger Kunststoff wird unter Druck in eine hohle Form gespritzt'],
+  ['Extrudieren','Masse wird ständig durch eine Düse gepresst, endlose Stränge'],
+  ['Extrusionsblasformen','ein Schlauch wird in einer Form mit Luft aufgeblasen'],
+  ['Schäumen','Gas bläht den Kunststoff zu Schaum auf']
+];
+const ENTEN = [
+  ['Frischhaltefolie','Kalandrieren'],['PVC-Bodenbelag','Kalandrieren'],['Kunststoffplatte','Kalandrieren'],
+  ['Handyschale','Spritzgießen'],['Flaschendeckel','Spritzgießen'],['Spielzeugfigur','Spritzgießen'],
+  ['Wasserrohr','Extrudieren'],['Textilfaser','Extrudieren'],['Gartenschlauch','Extrudieren'],
+  ['Shampooflasche','Extrusionsblasformen'],['Kanister','Extrusionsblasformen'],
+  ['Styroporverpackung','Schäumen'],['Schaumstoffmatratze','Schäumen'],['Schwamm','Schäumen']
+];
+function gameEnten(){
+  const N=8, need=HILFEN()?5:6; let score=0, fished=0, sel=null;
+  const pick=shuffle(ENTEN).slice(0,N); const ducks=pick.map((d,k)=>({t:d[0],v:d[1],lane:k%2,off:Math.floor(k/2)*250 + (k%2)*90,gone:false}));
+  const box=openSheet('Stand 5 · Verarbeitungsverfahren','Entenangeln bei Extruder-Erna');
+  box.appendChild(el('p',{},`Tippe auf eine Ente, um sie zu angeln. Dann wählst du das Verfahren, mit dem das Produkt hergestellt wird. Acht Enten, mindestens <b>${need}</b> richtig.`));
+  const info=el('div',{class:'score'}); box.appendChild(info);
+  const cvx=el('canvas',{class:'gcv',width:'640',height:'230'}); box.appendChild(cvx); const g=cvx.getContext('2d');
+  const qb=el('div'); box.appendChild(qb);
+  const upd=()=>{ info.textContent=`Geangelt: ${fished}/${N} · Richtig: ${score}`; }; upd();
+  const pos=(d,tt)=>{ const L=1000; const x=((tt*75*(d.lane?1:-1)+d.off)%L+L)%L-240; return {x: d.lane? x : 640-x, y: d.lane?170:85}; };
+  anim(ts=>{ const tt=ts/1000; g.fillStyle='#10202a'; g.fillRect(0,0,640,230); [[50,70],[135,70]].forEach(([y,h])=>{ const gr=g.createLinearGradient(0,y,0,y+h); gr.addColorStop(0,'#1d5f8a'); gr.addColorStop(1,'#123d5c'); g.fillStyle=gr; g.fillRect(0,y,640,h); for(let k=0;k<12;k++){ g.strokeStyle='rgba(255,255,255,.15)'; g.beginPath(); const wx=(k*60+tt*30*(y>100?1:-1))%700-30; g.arc(wx,y+h/2+Math.sin(tt*2+k)*6,8,Math.PI*1.1,Math.PI*1.9); g.stroke(); } });
+    ducks.forEach(d=>{ if(d.gone) return; const p=pos(d,tt); d.px=p.x; d.py=p.y; const bob=RM?0:Math.sin(tt*3+d.off)*2; const fl = d.lane?1:-1;
+      g.save(); g.translate(p.x,p.y+bob); if(d===sel){ g.strokeStyle='#f4b53f'; g.lineWidth=3; g.beginPath(); g.ellipse(0,0,46,26,0,0,7); g.stroke(); }
+      g.fillStyle='#f2c200'; g.beginPath(); g.ellipse(0,0,24,14,0,0,7); g.fill(); g.beginPath(); g.arc(14*fl,-12,10,0,7); g.fill(); g.fillStyle='#e0552e'; g.beginPath(); g.moveTo(22*fl,-12); g.lineTo(30*fl,-9); g.lineTo(22*fl,-7); g.fill(); g.fillStyle='#111'; g.beginPath(); g.arc(17*fl,-14,1.8,0,7); g.fill();
+      g.font='700 12px "Atkinson Hyperlegible",sans-serif'; const w=g.measureText(d.t).width+10; g.fillStyle='rgba(255,255,255,.92)'; rr(g,-w/2,8,w,17,5); g.fill(); g.fillStyle='#1d2a4a'; g.textAlign='center'; g.fillText(d.t,0,21); g.restore(); });
+    return true; });
+  const vb=()=>{ qb.innerHTML=''; if(!sel){ qb.appendChild(el('div',{class:'fb info'},'Tippe auf eine Ente.')); return; }
+    qb.appendChild(el('div',{class:'qText'},`Geangelt: <b>${esc(sel.t)}</b>. Welches Verfahren?`));
+    qb.lastChild.innerHTML=`Geangelt: ${esc(sel.t)}. Welches Verfahren?`;
+    const grid=el('div',{class:'vbtns'}); VERF.forEach(([n,dsc])=>{ const b=el('button',{},esc(n)+(HILFEN()?'<small>'+esc(dsc)+'</small>':'')); b.onclick=()=>{ const d=sel; sel=null; d.gone=true; fished++; const ok=n===d.v; if(ok){score++;Snd.good();} else Snd.bad(); upd();
+      qb.innerHTML=''; const ex=VERF.find(v=>v[0]===d.v)[1]; qb.appendChild(el('div',{class:'fb '+(ok?'ok':'no')},(ok?'<b>Richtig!</b> ':'<b>Leider nein.</b> ')+`${esc(d.t)}: <b>${esc(d.v)}</b>, ${esc(ex)}.`));
+      if(fished>=N){ setTimeout(()=>{ stopAnims(); const pass=score>=need; box.innerHTML=''; resultScreen(box,{score,max:N,pass,need,text:pass?'Erna nimmt die Kopfhörer kurz ab. Das hat sie seit 2009 nicht gemacht.':'Die Enten starren dich an. Alle. Gleichzeitig.',retry:()=>gameEnten(),next:()=>freeText(box,{...FREI.enten,prev:S.log.enten&&S.log.enten.text},txt=>finishStation('enten',score,N,txt,'Chip erhalten: Entenangeln'))}); },1300); }
+    }; grid.appendChild(b); }); qb.appendChild(grid); };
+  vb();
+  cvx.onclick=e=>{ if(fished>=N) return; const b=cvx.getBoundingClientRect(), x=(e.clientX-b.left)*640/b.width, y=(e.clientY-b.top)*230/b.height; let best=null,bd=60; ducks.forEach(d=>{ if(d.gone||d.px===undefined) return; const dd=Math.hypot(d.px-x,d.py-y); if(dd<bd){bd=dd;best=d;} }); if(best){ sel=best; Snd.blip(); vb(); } };
+}
+
+/* ---------- Hau den Plexi ---------- */
+const PLEXI_Q = [
+  { q:'Du willst auf einer Plexiglasplatte eine Linie anreißen. Womit?', a:['Mit weichem Blei- oder Filzstift auf der Schutzfolie','Mit der Reißnadel tief in den Werkstoff ritzen','Mit dem Kugelschreiber, die Schutzfolie vorher abziehen','Gar nicht, Augenmaß reicht'], tip:'Die Schutzfolie bleibt möglichst lange drauf.', why:'Die Schutzfolie schützt vor Kratzern, darauf wird angerissen.' },
+  { q:'Eine 2 mm dünne Platte soll gerade geteilt werden. Was ist am geschicktesten?', a:['Ritzbrechen: am Stahlmaßstab einritzen und über eine Kante brechen','Mit dem Hammer durchschlagen','Mit der Haushaltsschere schneiden','Mit dem Feuerzeug anschmelzen'], tip:'Bis etwa 3 mm Dicke geht das ohne Säge.', why:'Ritzbrechen klappt bis ca. 3 mm Dicke.' },
+  { q:'Du sägst wie ein Weltmeister. Plötzlich klemmt die Säge. Warum?', a:['Zu schnell gesägt: Der Kunststoff wird warm und die Zähne verkleben','Die Säge ist zu kalt','Plexiglas ist zu hart für jede Säge','Die Schutzfolie ist schuld'], tip:'Reibung erzeugt Wärme.', why:'Hastiges Sägen erwärmt den Kunststoff, er verklebt die Sägezähne.' },
+  { q:'Mit welcher Einstellung bohrst du Plexiglas?', a:['Geringe Drehzahl, wenig Druck, Werkstück eingespannt','Höchste Drehzahl, viel Druck','Freihand ohne Einspannen, dann geht’s schneller','Mit Schlagbohrfunktion'], tip:'Sonst schmilzt der Kunststoff.', why:'Langsam und mit wenig Druck, sonst schmilzt oder reißt das Plexiglas.' },
+  { q:'Ab welcher Materialstärke solltest du beim Bohren kühlen?', a:['Ab etwa 5 mm, mit Wasser oder Bohröl','Nie, Plexiglas wird nicht warm','Schon ab 0,5 mm, mit Cola','Immer, mit Eiswürfeln im Bohrfutter'], tip:'Die Zahl steht in der Werkstoffkunde: einstellig, ungerade.', why:'Ab 5 mm mit Wasser oder Bohröl kühlen.' },
+  { q:'Welche Feile nimmst du für eine Innenrundung?', a:['Halbrundfeile','Flachstumpffeile','Dreikantfeile','Gar keine, Innenrundungen kann man nicht feilen'], tip:'Die Feile muss selbst eine Rundung haben.', why:'Halbrundfeile für Innenrundungen, Flachstumpffeile für gerade Kanten und Außenrundungen.' },
+  { q:'Du spannst Plexiglas in den Schraubstock. Was legst du dazwischen?', a:['Filz oder Pappe','Nichts, hält besser','Schleifpapier','Metallplättchen'], tip:'Es soll keine Kratzer geben.', why:'Filz oder Pappe schützt die Oberfläche.' },
+  { q:'Ein Streifen soll gebogen werden. Was ist die richtige Reihenfolge?', a:['Erst bohren, feilen, säubern, dann Biegezone gleichmäßig erwärmen, biegen und fixieren bis zum Erkalten','Erst biegen, danach bohren','Kalt mit viel Kraft biegen','Direkt über die Flamme halten, bis es Blasen wirft'], tip:'Nach dem Biegen lässt sich schlecht bohren.', why:'Erst bearbeiten, dann gleichmäßig erwärmen, zügig biegen, fixieren bis es erkaltet ist.' },
+  { q:'Warum soll man Plexiglaskleber, der anlöst, in der Schule nicht benutzen?', a:['Er ist für Schüler nicht geeignet, die Dämpfe sind gefährlich','Er klebt zu schwach','Er ist zu teuer','Er färbt das Plexiglas rot'], tip:'Denk an „Raum lüften“.', why:'Anlösender Kleber ist nicht für Schüler geeignet.' }
+];
+function gamePlexi(){
+  const qs=shuffle(PLEXI_Q).slice(0,6), need=HILFEN()?4:5; let i=0, score=0, power=0;
+  const box=openSheet('Stand 6 · Plexiglas in der Werkstatt','Hau den Plexi');
+  const ask=()=>{ stopAnims(); const head=el('div',{class:'dots'}); qs.forEach((q,k)=>head.appendChild(el('i',{class:k<i?(q.res?'done':'bad'):k===i?'now':''})));
+    mcQuestion(box,qs[i],first=>{ qs[i].res=first; if(first) score++; swing(first); },{head}); };
+  const swing=first=>{ box.innerHTML=''; box.appendChild(el('div',{class:'qText'},first?'Richtig! Jetzt zuschlagen. Drück im richtigen Moment!':'Im zweiten Anlauf richtig. Der Hammer ist dir etwas weggerutscht, weniger Wucht.'));
+    const cvx=el('canvas',{class:'gcv',width:'360',height:'330',style:'max-width:360px;margin:0 auto'}); box.appendChild(cvx); const g=cvx.getContext('2d');
+    const ac=el('div',{class:'actions',style:'justify-content:center'}); const hb=el('button',{class:'btn red'},'Zuschlagen!'); ac.appendChild(hb); box.appendChild(ac);
+    let phase='meter', m=0, puck=0, target=0, t0=performance.now(), rang=false;
+    anim(ts=>{ const tt=(ts-t0)/1000; if(phase==='meter') m=RM?.5+.5*Math.sin(tt*2):Math.abs(Math.sin(tt*2.6)); if(phase==='fly'){ puck+=(target-puck)*.12; if(target>.92&&puck>.9&&!rang){ rang=true; Snd.bell(); } }
+      g.fillStyle='#14111a'; g.fillRect(0,0,360,330); g.fillStyle='#e4d9c4'; g.fillRect(170,30,20,270);
+      for(let k=0;k<10;k++){ g.fillStyle=`hsl(${120-k*13},65%,${puck*10>k?55:28}%)`; g.fillRect(172,276-k*25,16,22); }
+      g.fillStyle=rang?'#ffe27a':'#b8b8c0'; g.beginPath(); g.arc(180,26,18,Math.PI,0); g.fill(); g.fillRect(162,24,36,5);
+      g.fillStyle='#d7263d'; g.beginPath(); g.arc(180,290-puck*260,9,0,7); g.fill();
+      g.fillStyle='#333'; g.fillRect(150,298,60,14);
+      // Messbalken
+      g.fillStyle='#2a2430'; g.fillRect(30,40,24,250); const gr=g.createLinearGradient(0,290,0,40); gr.addColorStop(0,'#3fbf7f'); gr.addColorStop(.7,'#f4b53f'); gr.addColorStop(1,'#d7263d'); g.fillStyle=gr; g.fillRect(32,290-m*248,20,m*248);
+      g.fillStyle='#fff'; g.font='700 12px sans-serif'; g.fillText('Kraft',22,32);
+      if(rang){ g.fillStyle='#ffe27a'; g.font='700 22px "Lilita One",sans-serif'; g.fillText('DING!',220,40); }
+      return phase!=='done'; });
+    hb.onclick=()=>{ if(phase!=='meter') return; phase='fly'; Snd.hit(); target=Math.min(1,m*(first?1:.6)); power+=Math.round(target*100); hb.disabled=true;
+      setTimeout(()=>{ phase='done'; const nb=el('button',{class:'btn'},i<qs.length-1?'Nächste Frage ▸':'Auswertung ▸'); nb.onclick=()=>{ i++; if(i<qs.length) ask(); else end(); }; ac.appendChild(nb); nb.focus(); },1300); };
+  };
+  const end=()=>{ stopAnims(); const pass=score>=need; resultScreen(box,{score,max:qs.length,pass,need,text:(pass?'Ramona ist beeindruckt. ':'Ramona schüttelt den Kopf. ')+`Kraftpunkte zum Angeben: ${power}. Zählt aber nur zum Angeben.`,retry:()=>gamePlexi(),next:()=>freeText(box,{...FREI.plexi,prev:S.log.plexi&&S.log.plexi.text},txt=>finishStation('plexi',score,qs.length,txt,'Chip erhalten: Hau den Plexi'))}); };
+  box.appendChild(el('p',{},`Sechs Werkstattfragen. Nur wer richtig antwortet, darf mit voller Wucht zuschlagen. Für den Chip brauchst du mindestens <b>${need}</b> beim ersten Versuch richtig.`));
+  const ac=el('div',{class:'actions'}); const b=el('button',{class:'btn'},'Hammer nehmen'); b.onclick=ask; ac.appendChild(b); box.appendChild(ac);
+}
+
+/* ---------- Finale ---------- */
+const FINAL_Q = [
+  { q:'Welche vier Rohmaterialien gibt es für Kunststoffe?', a:['Erdöl, Erdgas, Kohle, Zellulose','Erdöl, Sand, Eisen, Holz','Wasser, Luft, Erdöl, Salz','Kohle, Kupfer, Erdgas, Kalk'], tip:'Alle sind Verbindungen aus Kohlenstoff und Wasserstoff.', why:'Erdöl, Erdgas, Kohle und Zellulose.' },
+  { sort:true, q:'Vom Erdöl zum Kunststoff: Bring die Schritte in die richtige Reihenfolge.', items:['Erdöl','Destillation','Naphtha','Cracken','Polymerisation','Kunststoff'], tip:'Trennen, spalten, verbinden.', why:'Destillation in der Raffinerie, Cracken des Naphthas zu Monomeren, Polymerisation zu langen Ketten.' },
+  { q:'Was unterscheidet Thermoplaste von Duroplasten?', a:['Thermoplaste lassen sich durch Wärme immer wieder umformen, Duroplaste sind nur einmal formbar','Duroplaste schmelzen schneller als Thermoplaste','Thermoplaste sind immer härter','Es gibt keinen Unterschied, nur andere Namen'], tip:'thermos = warm, duro = hart.', why:'Duroplaste zersetzen sich bei hoher Hitze statt weich zu werden.' },
+  { q:'Welche drei Gegenstände sind Thermoplaste?', a:['Joghurtbecher, PET-Flasche, Eimer','Steckdose, Schutzhelm, Tablett','Gummiball, Dichtung, Turnmatte','Steckdose, Gummiball, Eimer'], tip:'Was wird bei Wärme weich?', why:'Becher, Flaschen und Eimer sind typische Thermoplaste.' },
+  { q:'Welche drei Gegenstände sind Duroplaste?', a:['Steckdose, Lichtschalter, Schutzhelm','PET-Flasche, Joghurtbecher, Pylone','Dichtung, Gummiband, Campingmatratze','Eimer, Steckdose, Gummiball'], tip:'Was muss hart bleiben, auch wenn es warm wird?', why:'Schalter, Steckdosen und Helme sind aus Duroplast.' },
+  { q:'Was stimmt über Elastomere?', a:['Sie lassen sich zusammendrücken und gehen von allein in die Ausgangsform zurück; bei Kälte werden sie spröde','Sie sind nur einmal formbar und danach steinhart','Sie schmelzen schon bei Zimmertemperatur','Sie sind immer durchsichtig'], tip:'elastos = dehnbar.', why:'Gummielastisch, bei starker Hitze zerstört, bei extremer Kälte spröde.' },
+  { q:'Was passiert beim Extrudieren?', a:['Eine dickflüssige Masse wird ständig durch eine Düse gepresst, z. B. für Rohre','Flüssiger Kunststoff wird in eine hohle Form gespritzt','Ein Schlauch wird mit Luft zu einer Flasche aufgeblasen','Die Masse wird zwischen Walzen zu Folie gewalzt'], tip:'Wie Zahnpasta aus der Tube.', why:'So entstehen Rohre und Textilfasern.' },
+  { q:'Was passiert beim Spritzgießen?', a:['Verflüssigter Kunststoff wird unter Druck in eine hohle Form gespritzt, z. B. eine Handyschale','Kunststoff wird durch eine Düse zu einem endlosen Strang gepresst','Kunststoff wird mit Gas aufgeschäumt','Kunststoff wird zwischen Walzen gepresst'], tip:'Das Werkzeug heißt Spritzgießwerkzeug.', why:'So entstehen Formteile wie Handyschalen oder Deckel.' }
+];
+function gameFinale(){
+  const need=HILFEN()?5:6; let i=0, score=0; const qs=FINAL_Q.map(q=>({...q}));
+  const box=openSheet('Finale · Eigen-Kontrolle','Riesenrad-Finale');
+  const gondel=()=>{ const c=el('canvas',{class:'gcv',width:'640',height:'120'}); const g=c.getContext('2d'); g.fillStyle='#120c18'; g.fillRect(0,0,640,120); g.strokeStyle='#5a5470'; g.lineWidth=3; g.beginPath(); g.arc(320,190,170,Math.PI,0); g.stroke();
+    for(let k=0;k<=8;k++){ const a=Math.PI+k/8*Math.PI; g.fillStyle=k<=score?'#ffe08a':'#553040'; g.beginPath(); g.arc(320+Math.cos(a)*170,190+Math.sin(a)*170,4,0,7); g.fill(); }
+    const a=Math.PI+score/8*Math.PI; const x=320+Math.cos(a)*170, y=190+Math.sin(a)*170; g.fillStyle='#f4b53f'; rr(g,x-14,y-4,28,20,5); g.fill(); g.fillStyle='#fff'; g.font='700 12px sans-serif'; g.fillText('Höhe: '+score+'/8',10,18); return c; };
+  const ask=()=>{ const head=el('div'); head.appendChild(gondel()); const dots=el('div',{class:'dots',style:'margin-top:8px'}); qs.forEach((q,k)=>dots.appendChild(el('i',{class:k<i?(q.res?'done':'bad'):k===i?'now':''}))); head.appendChild(dots);
+    (qs[i].sort?sortQuestion:mcQuestion)(box,qs[i],first=>{ qs[i].res=first; if(first) score++; i++; if(i<qs.length) ask(); else end(); },{head}); };
+  const end=()=>{ const pass=score>=need; box.innerHTML=''; box.appendChild(gondel());
+    const r=el('div'); box.appendChild(r);
+    resultScreen(r,{score,max:qs.length,pass,need,text:pass?'Ganz oben. Der Direktor reicht dir eine Kiste aus Polypropen. Darin: dein Handy.':'Die Gondel bleibt auf halber Höhe stehen. Der Direktor gähnt.',retry:()=>gameFinale(),next:()=>freeText(box,{...FREI.finale,prev:S.log.finale&&S.log.finale.text},txt=>{ const first=!S.finished; finishStation('finale',score,qs.length,txt,'Handy zurück! Kunststoff-Diplom erhalten'); if(first) setTimeout(()=>say([
+      ['Direktor Polymerius','Hier. Dein Handy. Die Hülle ist übrigens aus Kunststoff. Thermoplast. Du weißt jetzt, was das heißt.'],
+      ['Direktor Polymerius','Merk dir eins, kleines Polymer: Kunststoff ist nicht böse. Böse ist nur, wer ihn ins Meer wirft.'],
+      ['Du','Und was machen Sie jetzt mit dem Rummel?'],
+      ['Direktor Polymerius','Wir ziehen weiter. Nächste Woche: eine Schule in Bad Neuenahr. Die haben noch nie von Polyaddition gehört. Ein Festmahl.'],
+      ['Du','… okay. Gute Nacht?'],
+      ['Direktor Polymerius','Gute Nacht. Und grüß deinen Lehrer. Der schleift da drin seit Stunden an derselben Kante.']
+    ],()=>{ updateHUD(); toast('Logbuch fertig: als PDF speichern!'); }),1900); })}); };
+  box.appendChild(el('p',{},`Acht Fragen, genau wie bei der Eigen-Kontrolle nach der Rallye. Jede richtige Antwort beim ersten Versuch bringt dich höher. Für dein Handy brauchst du mindestens <b>${need}</b>.`));
+  const ac=el('div',{class:'actions'}); const b=el('button',{class:'btn'},'Gondel startet'); b.onclick=()=>{ Snd.fanfare(); ask(); }; ac.appendChild(b); box.appendChild(ac);
+}
+
+/* ================= Logbuch ================= */
+function portraitURL(){ const c=makeCanvas(220,220), g=c.getContext('2d'); const gr=g.createRadialGradient(110,80,10,110,110,150); gr.addColorStop(0,'#3a5a92'); gr.addColorStop(1,'#18233f'); g.fillStyle=gr; g.fillRect(0,0,220,220); drawChar(g,110,212,S.look,'down',0,false,3.4); return c.toDataURL(); }
+function logbookHTML(){
+  const items=STANDS.map(s=>({id:s.id,title:`Stand: ${s.label}`,topic:s.topic})).concat([{id:'finale',title:'Finale: Riesenrad',topic:FINALE.topic}]);
+  const bd = ORDER.concat(['finale']).map(id=>{ const on = id==='finale'?S.finished:S.chips[id]; return `<div class="bdg${on?' on':''}"><svg viewBox="0 0 24 24">${ICONS[id]}</svg></div>`; }).join('');
+  let h=`<div class="lbCover"><img src="${portraitURL()}" alt=""><div class="lbName">${esc(S.name||'Ohne Namen')}</div>
+    <div class="lbMeta">TuN-Kurs Klasse ${KLASSE} · Herr Meyer · Einheit Kunststoffe</div>
+    <div class="lbMeta">Philipp Freiherr von Boeselager Realschule plus Ahrweiler</div>
+    <div class="lbMeta">Begonnen am ${esc(S.started)} · ${S.finished?'Abgeschlossen am '+esc(S.finished):'noch nicht abgeschlossen'} · Niveau: ${S.level==='hilfe'?'Mit Hilfen':'Standard'}</div>
+    <div class="lbBadges">${bd}</div></div>`;
+  items.forEach((it,k)=>{ const L=S.log[it.id];
+    if(L) h+=`<div class="lbEntry"><h3>${k+1}. ${esc(it.title)}</h3><div class="m">${esc(it.topic)} · erledigt am ${esc(L.date)} · ${L.score} von ${L.max} Punkten</div><div class="m" style="margin-top:6px"><b>Aufgabe:</b> ${esc(FREI[it.id].q)}</div><div class="lbAns">${esc(L.text)}</div></div>`;
+    else h+=`<div class="lbEntry open"><h3>${k+1}. ${esc(it.title)}</h3><div class="m">${esc(it.topic)} · noch nicht erledigt</div></div>`; });
+  if(S.finished) h+=`<div class="diplom"><h3>Kunststoff-Diplom</h3><div>${esc(S.name)} hat die Nacht der Kunststoffe überstanden, alle sechs Stände gemeistert und das Riesenrad-Finale bestanden.</div><div class="lbMeta" style="margin-top:6px">Ahrweiler, ${esc(S.finished)}</div></div>`;
+  h+=`<div class="sign"><div>Unterschrift Schüler/in</div><div>Unterschrift Herr Meyer</div></div>`;
+  return h;
+}
+function openLog(){
+  const b=openSheet('Dein Protokoll der Nacht','Rummel-Logbuch');
+  b.innerHTML=logbookHTML();
+  const ac=el('div',{class:'actions'}); const p=el('button',{class:'btn'},'Als PDF speichern'); p.onclick=()=>{ $('printArea').innerHTML=logbookHTML(); setTimeout(()=>window.print(),120); }; ac.appendChild(p); b.appendChild(ac);
+}
+
+/* ================= Editor & Start ================= */
+let edLook=null;
+function buildEditor(){
+  edLook = {...(S.look||DEF_LOOK)};
+  const mk=(id,arr,key,dot)=>{ const box=$(id); box.innerHTML=''; arr.forEach(v=>{ const val=Array.isArray(v)?v[0]:v, lbl=Array.isArray(v)?v[1]:v; const b=document.createElement('button'); b.type='button'; if(dot){ b.className='dot'; b.style.background=val; b.setAttribute('aria-label',lbl);} else { b.className='chip'; b.textContent=lbl; } if(edLook[key]===val) b.classList.add('sel'); b.onclick=()=>{ Snd.blip(); edLook[key]=val; [...box.children].forEach(c=>c.classList.remove('sel')); b.classList.add('sel'); }; box.appendChild(b); }); };
+  mk('cSkin',SKINS,'skin',true); mk('cStyle',STYLES,'style'); mk('cHair',HAIRS,'hair',true); mk('cShirt',SHIRTS,'shirt',true); mk('cPants',PANTS,'pants',true); mk('cExtra',EXTRAS,'extra');
+  const lv=$('cLevel'); lv.innerHTML=''; const notes={std:'Standard: offene Schreibaufträge (mind. 80 Zeichen), normale Zeit.',hilfe:'Mit Hilfen: eine falsche Antwort ist schon durchgestrichen, Wortspeicher beim Schreiben (mind. 40 Zeichen), mehr Zeit, niedrigere Hürden.'};
+  [['std','Standard'],['hilfe','Mit Hilfen']].forEach(([v,l])=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'+(S.level===v?' sel':''); b.textContent=l; b.onclick=()=>{ S.level=v; [...lv.children].forEach(c=>c.classList.remove('sel')); b.classList.add('sel'); $('levelNote').textContent=notes[v]; }; lv.appendChild(b); });
+  $('levelNote').textContent=notes[S.level];
+  $('inName').value=S.name||'';
+}
+function editorLoop(){ if($('editor').classList.contains('hidden')) return; const c=$('prevCv').getContext('2d'); c.clearRect(0,0,260,300); const dirs=['down','left','up','right']; const d=dirs[Math.floor(world.t/1.4)%4]; drawChar(c,130,262,edLook,d,world.t,false,4.2); $('prevName').textContent=$('inName').value.trim()||'Du'; requestAnimationFrame(editorLoop); }
+
+function startGame(){
+  $('start').classList.add('hidden'); $('editor').classList.add('hidden');
+  ['hud'].forEach(id=>$(id).classList.remove('hidden'));
+  gameRunning=true; world.scene=S.scene||'campus'; P.x=S.x; P.y=S.y; P.dir=S.dir||'up';
+  const s=sc(); cam.z=clamp(Math.min(W/880,H/600),.62,1.45); cam.x=clamp(P.x-W/cam.z/2,0,Math.max(0,s.w-W/cam.z)); cam.y=clamp(P.y-H/cam.z/2,0,Math.max(0,s.h-H/cam.z));
+  if(isTouch) showTouch();
+  updateHUD(); save();
+  if(!S.metMeyer && world.scene==='campus' && P.y>1150) setTimeout(()=>say([['Du','21:13 Uhr. Mein Handy liegt noch in der TuN-Werkstatt. Ohne Handy bin ich sozial tot.'],['Du','Moment. Seit wann steht auf dem Schulhof ein Riesenrad? Und warum riecht es hier nach verbranntem Joghurtbecher?'],['Du','Egal. Erst mal in die Werkstatt. Rechts am Gebäude mit dem roten X vorbei, Tür auf der Südseite.']]),400);
+}
+function initStart(){
+  const sv=load();
+  if(sv){ $('bCont').classList.remove('hidden'); $('bDel').classList.remove('hidden'); $('bNew').classList.add('ghost'); $('bCont').classList.remove('ghost'); }
+  $('bNew').onclick=()=>{ Snd.init(); const old=load(); S=newState(); if(old&&old.look){ S.look=old.look; S.name=old.name; S.level=old.level; } $('start').classList.add('hidden'); $('editor').classList.remove('hidden'); buildEditor(); editorLoop(); $('inName').focus(); };
+  $('bCont').onclick=()=>{ Snd.init(); S=load(); if(!S){ return; } startGame(); };
+  let delArm=false; $('bDel').onclick=()=>{ if(!delArm){ delArm=true; $('bDel').textContent='Wirklich löschen? Nochmal tippen'; setTimeout(()=>{ delArm=false; $('bDel').textContent='Spielstand löschen'; },4000); return; } try{ localStorage.removeItem(SAVE_KEY); }catch(e){} $('bDel').classList.add('hidden'); $('bCont').classList.add('hidden'); $('bNew').classList.remove('ghost'); toast('Spielstand gelöscht'); };
+  $('bGo').onclick=()=>{ const n=$('inName').value.trim(); if(!n){ $('inName').focus(); $('inName').placeholder='Bitte Vornamen eintragen'; return; } S.name=n.slice(0,20); S.look={...edLook}; S.x=680; S.y=1190; S.dir='up'; S.scene='campus'; Snd.fanfare(); startGame(); };
+  $('inName').addEventListener('keydown',e=>{ if(e.key==='Enter') $('bGo').click(); });
+}
+
+/* ================= Init ================= */
+function init(){
+  cv=$('game'); ctx=cv.getContext('2d'); resize(); addEventListener('resize',resize);
+  setupScenes(); Object.values(scenes).forEach(s=>{ if(s.dark) buildDark(s); });
+  setupPointer();
+  $('dialog').addEventListener('click',()=>dlgAdvance());
+  $('sClose').onclick=()=>closeSheet();
+  $('sheetWrap').addEventListener('click',e=>{ if(e.target.id==='sheetWrap' && sheetCloseable) closeSheet(); });
+  $('bLog').onclick=()=>{ Snd.blip(); openLog(); };
+  $('bSnd').onclick=()=>{ Snd.on=!Snd.on; $('bSnd').style.opacity=Snd.on?1:.45; Snd.init(); Snd.blip(); };
+  addEventListener('beforeunload',save);
+  addEventListener('visibilitychange',()=>{ if(document.hidden) save(); });
+  if('ontouchstart' in window) isTouch=true;
+  initStart();
+  requestAnimationFrame(loop);
+}
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(()=>{}).catch(()=>{}).finally ? null : null;
+let _inited=false; const _go=()=>{ if(_inited) return; _inited=true; init(); };
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(_go); setTimeout(_go,2500); } else _go();
+
+</script>
+</body>
+</html>
