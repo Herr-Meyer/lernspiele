@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lernspiele von Herrn Meyer</title>
+<meta name="description" content="Alle Lernspiele von Herrn Meyer (Boeselager Realschule plus Ahrweiler) auf einen Blick.">
+<meta name="theme-color" content="#1f3a5f">
+<style>
+  :root {
+    --bg: #f4efe6; --karte: #fffdf8; --text: #1d2733; --leise: #5b6673;
+    --rand: #e2d9c8; --akzent: #1f3a5f; --akzent-text: #ffffff; --schatten: 0 2px 10px rgba(40, 30, 10, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12171e; --karte: #1b222c; --text: #edf0f4; --leise: #a3adba;
+      --rand: #2c3644; --akzent: #8fb8ee; --akzent-text: #0e1722; --schatten: 0 2px 10px rgba(0, 0, 0, .35);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.45;
+  }
+  .seite { max-width: 1080px; margin: 0 auto; padding: 28px 16px 40px; }
+  header h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.4rem); letter-spacing: -.01em; }
+  header p { margin: 6px 0 0; color: var(--leise); }
+
+  .filter { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 18px; }
+  .filter button {
+    font: inherit; font-size: .95rem; cursor: pointer; padding: 8px 14px; min-height: 40px;
+    border-radius: 999px; border: 1px solid var(--rand); background: var(--karte); color: var(--text);
+  }
+  .filter button[aria-pressed="true"] { background: var(--akzent); border-color: var(--akzent); color: var(--akzent-text); font-weight: 600; }
+
+  .regal { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); padding: 0; margin: 0; list-style: none; }
+  .spiel {
+    display: flex; flex-direction: column; height: 100%; overflow: hidden; text-decoration: none; color: inherit;
+    background: var(--karte); border: 1px solid var(--rand); border-radius: 14px; box-shadow: var(--schatten);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .spiel:hover, .spiel:focus-visible { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(0, 0, 0, .18); }
+  .spiel:focus-visible, .filter button:focus-visible { outline: 3px solid var(--akzent); outline-offset: 2px; }
+  .bild { aspect-ratio: 16 / 10; width: 100%; display: flex; align-items: center; justify-content: center; font-size: 4.2rem; }
+  img.bild { height: auto; object-fit: cover; display: block; background: var(--rand); }
+  .inhalt { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .inhalt h2 { margin: 0; font-size: 1.2rem; line-height: 1.25; }
+  .marken { display: flex; flex-wrap: wrap; gap: 6px; }
+  .marke { font-size: .8rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--rand); color: var(--leise); }
+  .inhalt p { margin: 0; color: var(--leise); font-size: .95rem; flex: 1; }
+  .los { font-weight: 700; color: var(--akzent); }
+  .leer { color: var(--leise); padding: 20px 0; }
+  footer { margin-top: 34px; color: var(--leise); font-size: .88rem; }
+  @media (prefers-reduced-motion: reduce) { .spiel { transition: none; } .spiel:hover { transform: none; } }
+</style>
+</head>
+<body>
+<div class="seite">
+  <header>
+    <h1>📚 Lernspiele von Herrn Meyer</h1>
+    <p>Boeselager Realschule plus Ahrweiler · Spiel antippen und loslegen.</p>
+  </header>
+
+  <nav class="filter" id="filter" aria-label="Spiele filtern"></nav>
+  <ul class="regal" id="regal"></ul>
+  <p class="leer" id="leer" hidden>Zu dieser Auswahl gibt es noch kein Spiel.</p>
+  <noscript><p>Für diese Seite und die Spiele muss JavaScript eingeschaltet sein.</p></noscript>
+
+  <footer>Alle Spiele laufen direkt im Browser. Spielstände bleiben nur auf dem eigenen Gerät gespeichert.</footer>
+</div>
+
+<script>
+/* =====================================================================
+   SPIELELISTE – hier ein neues Spiel eintragen.
+   Einfach einen Block kopieren, anpassen und speichern:
+
+     ordner : Name des Spielordners im Repository (genau so geschrieben)
+     titel  : Name des Spiels
+     fach   : z. B. "TuN" oder "Deutsch"
+     klasse : Klassenstufe als Zahl (ohne Klasse: null)
+     text   : ein bis zwei Sätze, worum es geht
+     symbol : Emoji für die Kachel
+     farbe  : Hintergrundfarbe der Kachel (nur ohne Bild sichtbar)
+     bild   : optional, Vorschaubild, z. B. "vorschau/mein-spiel.jpg"
+   ===================================================================== */
+const SPIELE = [
+  {
+    ordner: "LeseHelden", titel: "Lesehelden der 5c", fach: "Deutsch", klasse: 5,
+    text: "Dein erstes Abenteuer an der neuen Schule: Erkunde den Schulhof und werde zur Leseheldin oder zum Lesehelden.",
+    symbol: "📖", farbe: "#f3c969"
+  },
+  {
+    ordner: "holzcraft", titel: "Holzcraft – Das Geheimnis des Waldes", fach: "TuN", klasse: 6,
+    text: "Erkunde den Wald, löse die Rätsel der Waldbewohner und sammle vier Wissensblöcke.",
+    symbol: "🌲", farbe: "#8fbf7f"
+  },
+  {
+    ordner: "plastik-rummel", titel: "Plastik-Rummel – Die Nacht der Kunststoffe", fach: "TuN", klasse: 8,
+    text: "Nachts steht ein Rummel auf dem Schulhof: An sechs Ständen wiederholst du alles rund um Kunststoffe.",
+    symbol: "🎡", farbe: "#c58ad6", bild: "vorschau/plastik-rummel.jpg"
+  },
+  {
+    ordner: "energiepark-rheinsonne", titel: "Energiepark Rheinsonne – Die Netz-Rettung", fach: "TuN", klasse: 9,
+    text: "Nach einem Sturm sind alle Anlagen vom Netz. Bringe Wind, Sonne, Wasser und Co. wieder zum Laufen.",
+    symbol: "⚡", farbe: "#7fb6e6", bild: "vorschau/energiepark-rheinsonne.jpg"
+  },
+  {
+    ordner: "bta6", titel: "BTA6 – Boeselager Technik Autoprojekt 6", fach: "TuN", klasse: 10,
+    text: "Verkehr der Zukunft in 3D: Programmiere Assistenzsysteme mit SPIKE-Wortblöcken und rette Neustadt 2035.",
+    symbol: "🚗", farbe: "#e58f7a", bild: "vorschau/bta6.jpg"
+  }
+];
+/* ===================== Ende der Spieleliste ===================== */
+
+(function () {
+  var regal = document.getElementById("regal");
+  var filterLeiste = document.getElementById("filter");
+  var leer = document.getElementById("leer");
+  var aktiv = "alle";
+
+  function el(tag, klasse, text) {
+    var e = document.createElement(tag);
+    if (klasse) e.className = klasse;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  var spiele = SPIELE.slice().sort(function (a, b) {
+    return (a.klasse || 99) - (b.klasse || 99) || a.titel.localeCompare(b.titel, "de");
+  });
+
+  // Filter ergeben sich automatisch aus der Liste: erst Fächer, dann Klassen.
+  var faecher = [], klassen = [];
+  spiele.forEach(function (s) {
+    if (s.fach && faecher.indexOf(s.fach) < 0) faecher.push(s.fach);
+    if (s.klasse && klassen.indexOf(s.klasse) < 0) klassen.push(s.klasse);
+  });
+  var filter = [{ id: "alle", name: "Alle Spiele" }]
+    .concat(faecher.sort().map(function (f) { return { id: "fach:" + f, name: f }; }))
+    .concat(klassen.sort(function (a, b) { return a - b; }).map(function (k) { return { id: "klasse:" + k, name: "Klasse " + k }; }));
+
+  function passt(s) {
+    return aktiv === "alle" || aktiv === "fach:" + s.fach || aktiv === "klasse:" + s.klasse;
+  }
+
+  function zeichneFilter() {
+    filterLeiste.textContent = "";
+    filter.forEach(function (f) {
+      var b = el("button", null, f.name);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(f.id === aktiv));
+      b.addEventListener("click", function () { aktiv = f.id; zeichneFilter(); zeichneRegal(); });
+      filterLeiste.appendChild(b);
+    });
+  }
+
+  function zeichneRegal() {
+    regal.textContent = "";
+    var treffer = spiele.filter(passt);
+    leer.hidden = treffer.length > 0;
+    treffer.forEach(function (s) {
+      var li = el("li");
+      var a = el("a", "spiel");
+      a.href = encodeURIComponent(s.ordner) + "/";
+
+      var kachel;
+      function symbolKachel() {
+        var d = el("div", "bild", s.symbol || "🎮");
+        d.style.background = s.farbe || "#cfd8e3";
+        d.setAttribute("aria-hidden", "true");
+        return d;
+      }
+      if (s.bild) {
+        kachel = el("img", "bild");
+        kachel.src = s.bild; kachel.alt = ""; kachel.loading = "lazy";
+        kachel.width = 640; kachel.height = 400;
+        kachel.addEventListener("error", function () { a.replaceChild(symbolKachel(), kachel); });
+      } else {
+        kachel = symbolKachel();
+      }
+      a.appendChild(kachel);
+
+      var inhalt = el("div", "inhalt");
+      var marken = el("div", "marken");
+      if (s.fach) marken.appendChild(el("span", "marke", s.fach));
+      if (s.klasse) marken.appendChild(el("span", "marke", "Klasse " + s.klasse));
+      inhalt.appendChild(marken);
+      inhalt.appendChild(el("h2", null, s.titel));
+      inhalt.appendChild(el("p", null, s.text || ""));
+      inhalt.appendChild(el("span", "los", "Spielen ▸"));
+      a.appendChild(inhalt);
+
+      li.appendChild(a);
+      regal.appendChild(li);
+    });
+  }
+
+  zeichneFilter();
+  zeichneRegal();
+})();
+</script>
+</body>
+</html>

@@ -1,6 +1,10 @@
 # lernspiele
 html Lernspiele von Herrn Meyer
 
+**Spiele-Menü (alle Spiele auf einen Blick):** https://herr-meyer.github.io/lernspiele/
+
+Neues Spiel ins Menü aufnehmen: in [index.html](index.html) oben im Abschnitt `SPIELELISTE` einen Block kopieren und anpassen. Ein Vorschaubild (640 × 400) kann optional im Ordner `vorschau/` liegen.
+
 ## Spiele
 
 | Spiel | Ordner | Thema |
