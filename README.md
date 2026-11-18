@@ -10,6 +10,7 @@ Neues Spiel ins Menü aufnehmen: in [index.html](index.html) oben im Abschnitt `
 | Spiel | Ordner | Thema |
 | --- | --- | --- |
 | Holzcraft | [holzcraft](holzcraft/) | |
+| Die Prüfungen von Holzhausen | [holzhausen](holzhausen/) | Holzbearbeitung, TuN Klasse 7 |
 | LeseHelden | [LeseHelden](LeseHelden/) | |
 | Energiepark Rheinsonne | [energiepark-rheinsonne](energiepark-rheinsonne/) | Erneuerbare Energien, TuN Klasse 9 |
 | BTA6 – Boeselager Technik Autoprojekt 6 | [bta6](bta6/) | Verkehr der Zukunft, SPIKE-Programmierung, TuN Klasse 10 |
