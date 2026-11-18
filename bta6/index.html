@@ -226,7 +226,7 @@ const sWin = () => [523, 659, 784, 1047, 1319].forEach((f, i) => beep(f, 0.18, "
 const SAVE_KEY = "bta6_v2", OLD_KEY = "neustadt2035_3d_v1";
 function fresh() {
   return { v: 2, name: "", team: "", money: 60, done: {}, tries: {}, prog: {}, recall: [], bricks: [], calls: {}, gp: null, finale: false, visited: {},
-    up: { shoes: 0, board: false }, look: { skin: 1, hair: "kurz", hairCol: 1, top: 0, pants: 0, g: {} }, owned: {}, pos: null, intro: 0, gfx: "hoch", made: false, ts: 0 };
+    up: { shoes: 0, board: false }, look: { skin: 1, hair: "kurz", hairCol: 1, top: 0, pants: 0, g: {} }, owned: {}, tomatini: 0, tomT: 0, pos: null, intro: 0, gfx: "hoch", made: false, ts: 0 };
 }
 let S = fresh();
 function adopt(o) {
@@ -1164,7 +1164,7 @@ let PL = makeChar(LOOKS.player); scene.add(PL);
 const pos = new THREE.Vector3(SPAWN[0], 0, SPAWN[1]);
 const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 80, 14, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false, toneMapped: false, fog: false })); beam.visible = false; scene.add(beam);
 // Sammelsteine mit Fun Facts
-const BRICK_POS = [[-40, 44], [60, 20], [-120, -90], [12, -2], [165, 44], [120, 48], [-66, 60], [184, -20], [60, -92], [-180, -90], [40, 90], [-150, 46]];
+const BRICK_POS = [[-40, 44], [60, 20], [-120, -90], [2, 1], [165, 44], [120, 48], [-66, 60], [184, -20], [60, -92], [-180, -90], [40, 90], [-150, 46]];
 const BRICK_MESH = BRICK_POS.map(([x, z]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.45), new THREE.MeshStandardMaterial({ color: C(0xffd400), roughness: 0.35, emissive: C(0x664400) })); for (const sx of [-0.22, 0.22]) { const s = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.12, 10), m.material); s.position.set(sx, 0.3, 0); m.add(s); } m.position.set(x, 1.4, z); scene.add(m); return m; });
 
 // ---------- Fragen rendern: liefert Anteil 0..1
@@ -1429,8 +1429,13 @@ function openEditor(sc) {
 function contains(list, target) { if (list === target) return true; for (const n of list) { if (n.body && contains(n.body, target)) return true; if (n.els && contains(n.els, target)) return true; } return false; }
 function renderList(list) { let h = ""; list.forEach((n, i) => { h += slotH(list, i); h += nodeH(n, list, i); }); return h + slotH(list, list.length); }
 function slotH(list, i) { const id = SLOTS.push({ list, i }) - 1; const on = ED.sel.list === list && ED.sel.i === i; return `<div class="slot${on ? " on" : ""}" data-s="${id}">${on ? "▸ hier wird eingefügt" : ""}</div>`; }
+function cardCond() { // passender Sensor zur Projektkarte als Voreinstellung
+  const k = ED && ED.sc ? ED.sc.card : 0;
+  return k === 2 ? { s: "D", v: 15, col: "rot" } : k === 3 ? { s: "D", v: 15, col: "schwarz" } : k === 5 ? { s: "E", v: 15, col: "rot" } : { s: "C", v: 15, col: "rot" };
+}
+const SENS_N = { C: "Abstandssensor C", D: "Farbsensor D", E: "Kraftsensor E" };
 function condH(n) {
-  const c = n.c; let h = `<b class="tok sens" data-n="${n.id}" data-f="c.s">${c.s}</b> `;
+  const c = n.c; let h = `<b class="tok sens" data-n="${n.id}" data-f="c.s" title="Sensor wechseln">${SENS_N[c.s]} ▾</b> `;
   if (c.s === "C") h += `ist näher als <b class="tok" data-n="${n.id}" data-f="c.v">${c.v}</b> cm`; else if (c.s === "D") h += `ist Farbe <b class="tok" data-n="${n.id}" data-f="c.col">${c.col}</b>`; else h += "ist gedrückt";
   return h;
 }
@@ -1455,16 +1460,16 @@ function renderEd(msg = "") {
   SLOTS = []; NODES = {};
   const sc = ED.sc, card = CARDS[sc.card];
   const keep = ov.classList.contains("show") && pn.classList.contains("wide") ? $("tree") && $("tree").scrollTop : 0;
-  const pal = PALETTE.map((k) => `<button class="pb" data-pk="${k}" style="--c:${CATC[BK[k].cat]}"><i>${BK[k].cat}</i><span>${esc(nodeText({ k, ...JSON.parse(JSON.stringify(BK[k].d || {})) }))}</span></button>`).join("");
+  const pal = PALETTE.map((k) => `<button class="pb" data-pk="${k}" style="--c:${CATC[BK[k].cat]}"><i>${BK[k].cat}</i><span>${esc(nodeText(Object.assign({ k }, JSON.parse(JSON.stringify(BK[k].d || {})), BK[k].d && BK[k].d.c ? { c: cardCond() } : {})))}</span></button>`).join("");
   openPanel(`<div class="kick">Projektkarte ${sc.card + 1} · ${esc(card.n)} · Stufe ${sc.lvl}${sc.bug ? " · Bug-Hunt" : ""}</div><h2 style="font-size:18px">${esc(sc.task)}</h2>
-  <p class="keys">Am Auto: ${esc(card.sensor)}, Motoren A+B. Tippe einen Block in der Liste an: Er landet an der Stelle mit ▸. Gelb umrandete Werte kannst du antippen und ändern.</p>
+  <p class="keys">Am Auto: ${esc(card.sensor)}, Motoren A+B. Tippe einen Block in der Liste an: Er landet an der Stelle mit ▸. Gelb umrandete Werte kannst du antippen und ändern. Auch den Sensor: Tippe auf „Sensor ▾“, um zwischen Abstandssensor C, Farbsensor D und Kraftsensor E zu wechseln.</p>
   <div class="ed"><div class="pal">${pal}</div><div class="progwrap"><div class="ptitle">Programm im Hub</div><div class="tree" id="tree"><div class="nb start" style="--c:#ffd400"><i>START</i><span class="tx">wenn Programm startet</span></div>${renderList(ED.prog)}</div></div></div>
   <div id="fb">${msg}</div>
   <div class="row"><button class="btn sm" id="eHelp">💡 Tipp</button>${ED.fails >= 3 ? '<button class="btn sm" id="eSol">Lösung zeigen</button>' : ""}<button class="btn sm" id="eClr">Leeren</button><button class="btn sm" id="eBack">Zurück</button><button class="btn pri" id="eRun">▶ Testen</button></div>`);
   pn.classList.add("wide");
   if (keep) $("tree").scrollTop = keep;
   pn.querySelectorAll("[data-pk]").forEach((b) => (b.onclick = () => {
-    const k = b.dataset.pk, node = mk(k); ED.sel.list.splice(ED.sel.i, 0, node);
+    const k = b.dataset.pk, node = mk(k); if (node.c) node.c = cardCond(); ED.sel.list.splice(ED.sel.i, 0, node);
     if (BK[k].body) ED.sel = { list: node.body, i: 0 }; else ED.sel.i++;
     beep(600, .03); renderEd();
   }));
@@ -1868,6 +1873,47 @@ finale = async function () {
 };
 
 // =====================================================================
+//  KIOSK UNTER DER PAUSENHALLE (Bennet steht an und verschenkt Tomatinis)
+// =====================================================================
+let TOM_UNTIL = 0;
+(function kiosk() {
+  const x0 = 10.6, x1 = 14.6, z0 = -7.7, z1 = -6.2, M = (c, r = 0.7) => new THREE.MeshStandardMaterial({ color: C(c), roughness: r });
+  const box = (a, b, c, d, e, f, mat) => { const m = new THREE.Mesh(new THREE.BoxGeometry(d - a, e - b, f - c), mat); m.position.set((a + d) / 2, (b + e) / 2, (c + f) / 2); m.castShadow = m.receiveShadow = true; scene.add(m); return m; };
+  box(x0, 0, z0, x1, 1.05, z1, M(0xe9e6df));                     // Theke
+  box(x0 - 0.05, 1.05, z1 - 0.1, x1 + 0.05, 1.12, z1 + 0.25, M(0x8a5a36, 0.5)); // Holzablage
+  box(x0, 1.12, z0, x0 + 0.12, 2.6, z1, M(0xe9e6df)); box(x1 - 0.12, 1.12, z0, x1, 2.6, z1, M(0xe9e6df));
+  box(x0, 1.12, z0, x1, 2.6, z0 + 0.12, M(0xd6d2c8));             // Rückwand
+  box(x0 - 0.1, 2.6, z0 - 0.1, x1 + 0.1, 2.85, z1 + 0.5, M(0xc8102e, 0.5)); // rotes Dach
+  for (let i = 0; i < 4; i++) { const t = box(x0 + 0.5 + i * 0.85, 1.12, z1 - 0.45, x0 + 0.95 + i * 0.85, 1.32, z1 - 0.15, M(0xd9a35a, 0.6)); const s = box(x0 + 0.55 + i * 0.85, 1.32, z1 - 0.42, x0 + 0.9 + i * 0.85, 1.36, z1 - 0.18, M(0xc8371e, 0.5)); }
+  sign("KIOSK · TOMATINI", (x0 + x1) / 2, 2.25, z1 + 0.02, 3.4, 0.55, 0, { fg: "#16101f", bg: "#ffd400" });
+  solid(x0, z0, x1, z1, 2.9);
+})();
+NAMES.bennet = "Bennet · steht am Kiosk an";
+LOOKS.bennet = { skin: 0xf0c8a8, top: 0x2b3442, pants: 0x3a4a6a, hair: 0x8a6438 };
+(function bennet() {
+  const p = { x: 12.6, z: -4.9 }, col = "#ff6a2b", g = makeChar(LOOKS.bennet); g.position.set(p.x, 0.05, p.z); g.rotation.y = Math.PI; scene.add(g);
+  const dia = new THREE.Mesh(new THREE.OctahedronGeometry(0.24), new THREE.MeshBasicMaterial({ color: col, toneMapped: false })); dia.position.set(p.x, 2.5, p.z); scene.add(dia);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.8, 36), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.6, toneMapped: false, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, 0.09, p.z); scene.add(ring);
+  NPCS.bennet = { at: p, name: "Bennet · Kiosk", color: col, g, dia, ring }; solid(p.x - 0.3, p.z - 0.3, p.x + 0.3, p.z + 0.3, 2);
+  SVG.bennet = portrait(LOOKS.bennet);
+})();
+const TOMATINI_SVG = `<svg viewBox="0 0 120 80" width="150" height="100" style="display:block;margin:6px auto" aria-label="Tomatini"><ellipse cx="60" cy="52" rx="48" ry="20" fill="#c98a45" stroke="#16101f" stroke-width="3"/><ellipse cx="60" cy="44" rx="44" ry="16" fill="#c8371e" stroke="#16101f" stroke-width="3"/><path d="M22 42 q10 12 18 2 q8 14 18 0 q10 13 18 0 q8 12 18 1 q6 8 10 -2" fill="#ffd400" stroke="#16101f" stroke-width="2.5"/><circle cx="44" cy="36" r="2.5" fill="#fff8"/><circle cx="72" cy="34" r="2" fill="#fff8"/></svg>`;
+const BENNET_LINES = [
+  "Ey, du siehst hungrig aus. Hier, nimm ein Tomatini! Brötchen, Käse, Tomatensauce. Mehr braucht man nicht für die Pause.",
+  "Programmieren macht hungrig. Ich hab eins zu viel gekauft. Hier, für dich!",
+  "Herr Meyer sagt, mit einem Tomatini im Bauch läuft auch das SPIKE-Auto besser. Glaub ich ihm.",
+  "Ich stehe hier seit der zweiten Pause an. Lohnt sich aber. Nimm eins mit!",
+];
+ACTIONS.bennet = async () => {
+  const wait = Math.ceil((S.tomT || 0) + 120000 - Date.now()) / 1000;
+  if (wait > 0) { await talk("bennet", `Langsam! Du hattest gerade erst eins. Komm in ${Math.ceil(wait / 60)} Minute${wait > 60 ? "n" : ""} wieder, dann ist die nächste Ladung fertig.`); closePanel(); return; }
+  await talk("bennet", pick(BENNET_LINES), "Danke, Bennet!");
+  S.tomatini = (S.tomatini || 0) + 1; S.tomT = Date.now(); save(); TOM_UNTIL = Date.now() + 60000; sCoin();
+  openPanel(`<div class="kick">Geschenkt</div><h2>Ein Tomatini!</h2>${TOMATINI_SVG}<p style="text-align:center">Brötchen mit Käse und Tomatensauce, noch warm.<br><b>Tomatini-Power:</b> 1 Minute lang läufst du schneller.</p><p style="text-align:center"><small>Gegessene Tomatinis: ${S.tomatini}</small></p><div class="row"><button class="btn pri" id="go">Lecker</button></div>`);
+  $("go").onclick = closePanel; flash("Tomatini-Power!", "#ff6a2b");
+};
+
+// =====================================================================
 //  STEUERUNG, KAMERA, SCHLEIFE
 // =====================================================================
 let facing = Math.PI, yaw = 0, pitch = 0.2, camDist = 7.5, clock = 0, near = null, started = false, lastDrag = -9, radioT = 25;
@@ -1899,7 +1945,7 @@ function updPlayer(dt) {
   const mag = Math.min(1, Math.hypot(f, r)); let sp = 0;
   if (mag > 0.08) {
     let dx = -Math.sin(yaw) * f + Math.cos(yaw) * r, dz = -Math.cos(yaw) * f - Math.sin(yaw) * r; const l = Math.hypot(dx, dz); dx /= l; dz /= l;
-    sp = ((keys.ShiftLeft || keys.ShiftRight || (isTouch && mag > 0.92) ? 12 : 6.5) + S.up.shoes * 3 + (S.up.board ? 7 : 0)) * mag;
+    sp = ((keys.ShiftLeft || keys.ShiftRight || (isTouch && mag > 0.92) ? 12 : 6.5) + S.up.shoes * 3 + (S.up.board ? 7 : 0) + (Date.now() < TOM_UNTIL ? 4 : 0)) * mag;
     const nx = pos.x + dx * sp * dt, nz = pos.z + dz * sp * dt; if (!blockedAt(nx, pos.z)) pos.x = nx; if (!blockedAt(pos.x, nz)) pos.z = nz;
     facing += angDiff(facing, Math.atan2(dx, dz)) * Math.min(1, dt * 12);
     if (clock - lastDrag > 1.5 && f > 0.3) yaw += angDiff(yaw, facing + Math.PI) * Math.min(1, dt * 1.2);
