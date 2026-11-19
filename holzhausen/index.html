@@ -1,3 +1,7 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
 <title>Die Prüfungen von Holzhausen</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -617,7 +621,6 @@ table.rep th { color: var(--muted); font-weight: 400; font-family: var(--font-di
     </div>
     <p class="note" id="startMsg"></p>
     <div class="actions">
-      <button class="btn ghost" id="btnPreview" type="button">Vorschau für Lehrkräfte</button>
       <button class="btn ghost" id="btnContinue" type="button" hidden>Weiterspielen</button>
       <button class="btn" id="btnStart" type="button">Neues Spiel</button>
     </div>
@@ -2448,7 +2451,15 @@ const startNew = (preview) => {
   S = fresh(name || "Lehrkraft (Vorschau)", kl || "–", preview); if (preview) S.metHolger = true; save(); begin();
 };
 $("btnStart").onclick = () => startNew(false);
-$("btnPreview").onclick = () => startNew(true);
+/* Versteckte Lehrkraft-Vorschau: 7-mal schnell auf den Titel klicken */
+(() => {
+  const t = document.querySelector("#mStart .title-art"); let n = 0, last = 0;
+  t.style.userSelect = "none"; t.style.webkitUserSelect = "none";
+  t.addEventListener("click", () => {
+    const now = Date.now(); n = now - last < 1500 ? n + 1 : 1; last = now;
+    if (n >= 7) { n = 0; startNew(true); }
+  });
+})();
 $("inName").addEventListener("keydown", (e) => { if (e.key === "Enter") startNew(false); });
 
 buildMap(); buildFields(); initFx(); renderStatic(); buildNpcs(); resize(); requestAnimationFrame(loop);
