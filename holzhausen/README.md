@@ -27,7 +27,6 @@ Aufgabentypen: Multiple Choice, Zuordnen, Reihenfolgen, Lückentexte und freie A
 
 - Laufen mit Pfeiltasten oder WASD, sprechen mit Leertaste oder E. Auf Tablets und Handys erscheinen Steuerkreuz und A-Knopf.
 - H öffnet das Werkstattheft mit allen Notizen, K die Karte, B den Bericht.
-- „Vorschau für Lehrkräfte“ schaltet alle Gebiete ohne Gespräche frei (im Bericht markiert).
 - Der Spielstand wird im Browser gespeichert.
 
 ## Technik
