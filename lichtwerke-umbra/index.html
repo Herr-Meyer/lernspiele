@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Die Lichtwerke von Umbra · TuN 9</title>
+<style>
+:root{
+  --ink:#0c0f1a; --panel:#141a2b; --panel2:#1c2438; --line:rgba(255,255,255,.12);
+  --gold:#f2c14e; --copper:#c98a3e; --good:#58c58a; --bad:#e8606a; --muted:#9aa6c2; --text:#e9ecf4;
+  --font:Verdana,"Segoe UI",Tahoma,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--ink);color:var(--text);font-family:var(--font);overflow:hidden;user-select:none}
+canvas#game{position:fixed;inset:0;width:100vw;height:100vh;display:block;image-rendering:pixelated}
+.hidden{display:none!important}
+button{font:700 15px var(--font);cursor:pointer}
+.btn{background:var(--gold);color:#241a02;border:0;border-radius:10px;padding:10px 18px;margin:4px}
+.btn.alt{background:#2a3450;color:var(--text);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:hover:not(:disabled){filter:brightness(1.1)}
+/* HUD */
+#hud{position:fixed;left:12px;top:10px;display:flex;gap:10px;align-items:center;font-size:14px;pointer-events:none}
+.chip{background:rgba(12,15,26,.78);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+#bulbs span{display:inline-block;width:14px;height:18px;margin:0 2px;border-radius:7px 7px 4px 4px;background:#333a4d;vertical-align:middle}
+#bulbs span.on{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+#hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(12,15,26,.85);border:1px solid var(--line);padding:8px 14px;border-radius:10px;font-size:14px;pointer-events:none}
+#topright{position:fixed;right:12px;top:10px;display:flex;gap:6px}
+#topright button{background:rgba(12,15,26,.78);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:6px 10px;font-size:13px}
+#quest{position:fixed;left:12px;top:52px;max-width:330px;font-size:13px;line-height:1.4}
+/* Dialog */
+#dialog{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:min(760px,94vw);background:var(--panel);border:2px solid var(--copper);border-radius:14px;padding:14px 18px 12px;display:flex;gap:14px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#dialog canvas{width:64px;height:64px;image-rendering:pixelated;flex:none;background:#0b0e18;border-radius:8px}
+#dialog .name{color:var(--gold);font-weight:700;margin-bottom:4px}
+#dialog .txt{line-height:1.5;font-size:15px;min-height:48px}
+#dialog .more{color:var(--muted);font-size:12px;text-align:right;margin-top:4px}
+/* Panel (Raetsel) */
+#overlay{position:fixed;inset:0;background:rgba(4,6,12,.72);display:flex;align-items:center;justify-content:center;z-index:5}
+#panel{width:min(860px,96vw);max-height:94vh;overflow:auto;background:var(--panel);border:2px solid var(--copper);border-radius:16px;padding:18px 22px;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+#panel h2{margin:0 0 4px;color:var(--gold);font-size:21px}
+#panel .sub{color:var(--muted);font-size:13px;margin-bottom:10px}
+.wolf{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border-radius:12px;padding:8px 12px;margin:8px 0 12px;font-size:14px;line-height:1.45}
+.wolf canvas{width:40px;height:40px;flex:none;image-rendering:pixelated}
+.q{font-size:17px;line-height:1.45;margin:6px 0 12px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{background:#232c44;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:left;font-weight:400;font-size:15px}
+.opt:hover:not(:disabled){border-color:var(--gold)}
+.opt.ok{background:#1f4a35;border-color:var(--good)}
+.opt.no{background:#4d2328;border-color:var(--bad)}
+.opt.strike{text-decoration:line-through;opacity:.4}
+.expl{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.45}
+.expl.ok{background:rgba(88,197,138,.14);border:1px solid var(--good)}
+.expl.no{background:rgba(232,96,106,.12);border:1px solid var(--bad)}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px;flex-wrap:wrap}
+.prog{color:var(--muted);font-size:13px}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcol{display:flex;flex-direction:column;gap:8px}
+.mitem{background:#232c44;border:2px solid var(--line);border-radius:10px;padding:8px 10px;min-height:52px;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px}
+.mitem canvas{background:#f4efe2;border-radius:6px}
+.mitem.sel{border-color:var(--gold)}
+.mitem.done{border-color:var(--good);background:#1f4a35;cursor:default}
+.mitem.wrong{border-color:var(--bad)}
+.center{text-align:center}
+#pz{display:block;margin:6px auto;background:#0e1322;border-radius:10px;cursor:pointer;image-rendering:auto}
+input.num{font:700 20px var(--font);width:150px;padding:8px 10px;border-radius:10px;border:2px solid var(--line);background:#0e1322;color:var(--text);text-align:right}
+.steps{display:flex;flex-direction:column;gap:8px;max-width:560px;margin:0 auto}
+.steps button{background:#232c44;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:left;font-weight:400}
+.steps button.done{background:#1f4a35;border-color:var(--good)}
+.chosen{min-height:30px;margin:8px auto;max-width:560px;font-size:14px;color:var(--good)}
+/* Titel */
+#title{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;background:radial-gradient(ellipse at 50% 35%,#1a2238 0%,#0a0d17 60%,#05070c 100%)}
+#title .box{width:min(720px,94vw);text-align:center}
+#title h1{font-size:44px;margin:0;color:var(--gold);letter-spacing:1px;text-shadow:0 0 18px rgba(242,193,78,.45)}
+#title .tag{color:var(--muted);margin:6px 0 18px}
+#title .story{background:rgba(20,26,43,.85);border:1px solid var(--line);border-radius:14px;padding:14px 18px;text-align:left;line-height:1.55;font-size:15px}
+#title .keys{color:var(--muted);font-size:13px;margin-top:12px}
+#title label{font-size:14px;color:var(--text)}
+.end{text-align:left;line-height:1.55}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <div class="chip">✦ <b id="pts">0</b> Lichtpunkte</div>
+  <div class="chip" id="bulbs"></div>
+</div>
+<div id="quest" class="chip hidden"></div>
+<div id="topright" class="hidden">
+  <button id="bSound" title="Ton an/aus">Ton: an</button>
+  <button id="bHelp" title="Hilfe">? Hilfe</button>
+</div>
+<div id="hint" class="hidden"></div>
+
+<div id="dialog" class="hidden">
+  <canvas id="dlgPic" width="16" height="16"></canvas>
+  <div style="flex:1">
+    <div class="name" id="dlgName"></div>
+    <div class="txt" id="dlgTxt"></div>
+    <div class="more">Leertaste / E / Klick: weiter</div>
+  </div>
+</div>
+
+<div id="overlay" class="hidden"><div id="panel"></div></div>
+
+<div id="title">
+  <div class="box">
+    <h1>Die Lichtwerke von Umbra</h1>
+    <div class="tag">Ein düsteres Lernabenteuer zu Elektrotechnik und Löten · TuN Klasse 9</div>
+    <div class="story">
+      Seit dem <b>Großen Kurzschluss</b> vor dreizehn Jahren liegt die Stadt <b>Umbra</b> im Dunkeln. Die Lichtwerke sind verrottet, die Lichtschmiede-Gilde ist auf zwei Mitglieder geschrumpft: dich, den neuen Lehrling, und <b>Wolfram</b> – eine alte 60-Watt-Glühlampe mit Persönlichkeit und Rentenanspruch.<br><br>
+      Das <b>Kerzenkartell</b> von Baron <b>Talgmund von Docht</b> verdient prächtig an der Finsternis. Repariere in fünf Bezirken die Lichtwerke, schalte das Große Lichtwerk wieder ein – und mach dem Baron das Geschäft kaputt.
+    </div>
+    <div style="margin-top:14px">
+      <label><input type="checkbox" id="optHelp"> Mit Hilfen spielen (eine falsche Antwort ist schon durchgestrichen)</label>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn" id="bStart">Neues Spiel</button>
+      <button class="btn alt hidden" id="bCont">Weiterspielen</button>
+    </div>
+    <div class="keys">Laufen: Pfeiltasten oder WASD · Untersuchen/Reden: E oder Leertaste · Rätsel: Maus</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   Die Lichtwerke von Umbra – Lernspiel Elektrotechnik & Löten, TuN 9
+   Eine Datei, nur Canvas + JavaScript, keine externen Anfragen.
+   Spielstand im Browser (localStorage), Schluessel: lichtwerke-umbra-v1
+   ===================================================================== */
+const SAVE_KEY = "lichtwerke-umbra-v1";
+const T = 16;                 // Kachelgroesse in Pixeln
+const MW = 64, MH = 48;       // Kartengroesse in Kacheln
+
+/* ============================ INHALTE ================================ */
+// Multiple-Choice-Fragen je Thema. a = Index der richtigen Antwort.
+const Q = {
+  kreis: [
+    { q: "Was braucht ein einfacher Stromkreis mindestens?", o: ["Spannungsquelle, Leitungen, Verbraucher – geschlossen", "Eine Steckdose und viel Mut", "Einen Verbraucher und eine Erdung", "Eine Batterie, die nur an einem Pol angeschlossen ist"], a: 0, e: "Strom fließt nur im geschlossenen Kreis: Quelle → Leitung → Verbraucher → Leitung zurück. Ein Schalter öffnet oder schließt ihn." },
+    { q: "Welcher Gegenstand ist ein Isolator?", o: ["Radiergummi", "Büroklammer", "Bleistiftmine (Graphit)", "Alufolie"], a: 0, e: "Kunststoff und Gummi leiten nicht. Metalle und Graphit leiten." },
+    { q: "Warum leuchtet die Lampe bei offenem Schalter nicht?", o: ["Der Stromkreis ist unterbrochen", "Der Schalter verbraucht den Strom", "Die Batterie schläft", "Der Strom staut sich vor dem Schalter und wird müde"], a: 0, e: "Ein offener Schalter unterbricht den Kreis – es kann kein Strom fließen." },
+    { q: "Warum ist die Steckdose für Versuche tabu?", o: ["230 V sind lebensgefährlich", "Weil Steckdosen nur nachts funktionieren", "Weil der Strom dort zu langsam ist", "Weil dann die LED zu dunkel wird"], a: 0, e: "Netzspannung (230 V) kann tödlich sein. Versuche nur mit Batterien bzw. freigegebener Kleinspannung." },
+  ],
+  atom: [
+    { q: "Wo sitzen die Protonen?", o: ["Im Atomkern", "In der Atomhülle auf den Schalen", "Zwischen den Atomen, frei beweglich", "Nur in Batterien"], a: 0, e: "Protonen (+) und Neutronen sitzen im Kern, Elektronen (–) in der Hülle." },
+    { q: "Welche Teilchen bewegen sich im Kupferdraht, wenn Strom fließt?", o: ["Freie Elektronen", "Protonen", "Neutronen", "Ganze Kupferatome"], a: 0, e: "Die Außenelektronen der Metallatome sind frei beweglich. Protonen sind im Kern gebunden." },
+    { q: "Was besagt das Coulomb’sche Gesetz (Grundregel)?", o: ["Gleichnamige Ladungen stoßen sich ab, ungleichnamige ziehen sich an", "Alle Ladungen ziehen sich an", "Gleichnamige Ladungen ziehen sich an", "Ladungen beeinflussen sich nicht"], a: 0, e: "+ und + (oder – und –) stoßen sich ab, + und – ziehen sich an." },
+    { q: "Warum ist ein Atom nach außen elektrisch neutral?", o: ["Es hat gleich viele Protonen wie Elektronen", "Es hat keine Elektronen", "Neutronen schlucken die Ladung", "Weil es so klein ist"], a: 0, e: "Gleich viele positive und negative Ladungen gleichen sich aus." },
+    { q: "Wie groß ist der Atomkern im Vergleich zum ganzen Atom?", o: ["Winzig: etwa 10 000- bis 100 000-mal kleiner", "Etwa halb so groß", "Genauso groß", "Größer als die Hülle"], a: 0, e: "Wäre das Atom ein Fußballstadion, wäre der Kern eine Erbse." },
+  ],
+  wasser: [
+    { q: "Welche Größe entspricht im Wassermodell dem Druckunterschied?", o: ["Die Spannung U", "Die Stromstärke I", "Der Widerstand R", "Die Batterieform"], a: 0, e: "Der Druck- bzw. Höhenunterschied treibt das Wasser – die Spannung treibt die Elektronen." },
+    { q: "In welcher Einheit misst man die Stromstärke?", o: ["Ampere (A)", "Volt (V)", "Ohm (Ω)", "Watt pro Kerze"], a: 0, e: "Stromstärke I in Ampere, Spannung U in Volt, Widerstand R in Ohm." },
+    { q: "Was sind die zwei Voraussetzungen, damit Strom fließt?", o: ["Eine Spannung und ein geschlossener Stromkreis", "Ein Schalter und eine Lampe", "Viele Protonen und ein Magnet", "Wärme und Licht"], a: 0, e: "Ohne Antrieb (Spannung) und ohne geschlossenen Kreis fließt nichts." },
+  ],
+  richtung: [
+    { q: "Wie fließen die Elektronen (physikalische Stromrichtung)?", o: ["Vom Minuspol zum Pluspol", "Vom Pluspol zum Minuspol", "Im Kreis um die Batterie herum, egal wie", "Gar nicht, sie zittern nur"], a: 0, e: "Elektronen sind negativ und fließen von – nach +. Die technische Stromrichtung (+ nach –) wurde festgelegt, bevor man Elektronen kannte." },
+    { q: "Wo ist das elektrische Potenzial am höchsten?", o: ["Am Pluspol", "Am Minuspol", "In der Mitte der Leitung", "Überall gleich"], a: 0, e: "Pluspol = hohes, Minuspol = niedriges Potenzial. Die Spannung ist der Unterschied dazwischen." },
+    { q: "Warum passiert dem Raben auf der Hochspannungsleitung nichts?", o: ["Beide Füße haben dasselbe Potenzial – keine Spannung, kein Strom", "Raben sind Isolatoren", "Die Leitung hat nachts frei", "Federn verbrauchen den Strom"], a: 0, e: "Strom fließt nur bei einem Potenzialunterschied. Zwischen den Füßen gibt es keinen." },
+    { q: "„Die Lampe verbraucht den Strom.“ Stimmt das?", o: ["Nein – die Elektronen fließen im Kreis zurück, umgewandelt wird Energie", "Ja, hinter der Lampe fließt kein Strom mehr", "Ja, deshalb sind Kabel hinten dünner", "Nur bei Glühlampen"], a: 0, e: "Vor und hinter der Lampe fließt gleich viel Strom. Die Lampe wandelt elektrische Energie in Licht und Wärme um." },
+  ],
+  bauteile: [
+    { q: "Breadboard: Welche Löcher sind leitend verbunden?", o: ["Die 5 Löcher a–e einer Nummer (und f–j getrennt davon)", "Alle Löcher einer Buchstabenzeile über die ganze Länge", "Keine – man muss löten", "Nur die Löcher am Mittelgraben"], a: 0, e: "In der Mitte sind je 5 Löcher einer Nummer verbunden, der Mittelgraben trennt a–e von f–j. Die Versorgungsleisten laufen längs." },
+    { q: "Welche Anschlüsse hat ein Transistor?", o: ["Basis, Kollektor, Emitter", "Anode, Kathode, Ring", "Plus, Minus, Erde", "Drei Leiterbahnen"], a: 0, e: "B, C und E. Ein kleiner Basisstrom schaltet einen großen Strom zwischen Kollektor und Emitter." },
+    { q: "Wie reagiert ein Fotowiderstand (LDR) auf Dunkelheit?", o: ["Sein Widerstand wird groß", "Sein Widerstand wird klein", "Er leuchtet", "Er wird heiß"], a: 0, e: "Hell = kleiner Widerstand, dunkel = großer Widerstand. Im Nachtlicht steigt dadurch die Spannung am Punkt N." },
+    { q: "EVA beim Nachtlicht: Welches Bauteil ist die Verarbeitung?", o: ["Der Transistor", "Der LDR", "Die LED", "Die Batterie"], a: 0, e: "Eingabe: LDR (Sensor) · Verarbeitung: Transistor · Ausgabe: LED." },
+    { q: "Wozu dient der Vorwiderstand einer LED?", o: ["Er begrenzt den Strom", "Er erhöht die Spannung", "Er macht das Licht bunter", "Er speichert Strom für später"], a: 0, e: "Ohne Vorwiderstand fließt zu viel Strom und die LED brennt durch. Am Widerstand fällt der Rest der Spannung ab." },
+    { q: "Woran erkennst du die Anode einer LED?", o: ["Am längeren Bein", "Am kürzeren Bein", "An der abgeflachten Seite", "Am Ring"], a: 0, e: "Anode = langes Bein (+). Kathode = kurzes Bein und abgeflachte Gehäuseseite." },
+  ],
+  loeten: [
+    { q: "Was passiert beim Weichlöten?", o: ["Metalle werden mit geschmolzenem Lot verbunden, die Werkstücke schmelzen nicht", "Die Werkstücke werden zusammengeschmolzen", "Metall wird mit Kleber verbunden", "Es wird über 1000 °C gearbeitet"], a: 0, e: "Weichlöten: unter 450 °C, nur das Lot schmilzt." },
+    { q: "Wozu ist das Flussmittel im Lötdraht?", o: ["Es löst die Oxidschicht und lässt das Lot fließen", "Es kühlt die Lötstelle", "Es färbt das Lot silbern", "Es verhindert Stromfluss"], a: 0, e: "Ohne Flussmittel haftet das Lot schlecht auf oxidierten Metallen." },
+    { q: "Wohin gehört der heiße Lötkolben, wenn du ihn nicht benutzt?", o: ["In den Ablageständer", "Auf die Werkbank", "In die Hosentasche", "Auf das Kabel"], a: 0, e: "Immer in den Ständer – sonst Verbrennungen und Brandgefahr." },
+    { q: "Wie heiß ist die Lötspitze ungefähr?", o: ["Etwa 350 °C", "Etwa 50 °C", "Etwa 100 °C", "Etwa 1500 °C"], a: 0, e: "Für bleifreies Lot etwa 350–380 °C. Das Lot schmilzt bei ca. 220 °C." },
+    { q: "Wie sieht eine kalte Lötstelle aus?", o: ["Matt, grau und kugelig", "Glänzend und kegelförmig", "Durchsichtig", "Rot glühend"], a: 0, e: "Kalte Lötstellen haben das Lötauge nicht benetzt – Wackelkontakt." },
+    { q: "Warum trägst du beim Abkneifen der Drähte eine Schutzbrille?", o: ["Drahtstücke fliegen weg", "Damit man besser sieht", "Wegen der UV-Strahlung", "Weil es cool aussieht"], a: 0, e: "Abgekniffene Drahtenden können ins Auge fliegen." },
+  ],
+};
+
+// Wolframs Sprueche
+const W_WRONG = [
+  "Falsch. Aber ich habe 1000 Betriebsstunden durchgehalten, du schaffst auch noch eine Frage.",
+  "Nein. Selbst das Kerzenkartell hätte das gewusst. Und die wissen wenig.",
+  "Leider daneben. Ich flackere vor Enttäuschung.",
+  "Nicht ganz. Lies die Erklärung, dann noch mal – ich habe Zeit, ich bin in Rente.",
+  "Autsch. Das tat meinem Glühfaden weh.",
+];
+const W_RIGHT = ["Richtig. Ich bin fast gerührt.", "Korrekt. Weiter so, Lehrling.", "Stimmt. Endlich jemand mit Spannung im Kopf.", "Richtig! Das gibt Lichtpunkte.", "Genau. Sogar eine LED würde zustimmen – und die stimmt mir sonst nie zu."];
+
+/* Stationen: id, Bezirk, Kachel x/y, Titel, Typ, Daten */
+const DIST = [
+  { name: "Kupfergasse", col: "#c98a3e", thema: "Stromkreis, Atome und Ladung" },
+  { name: "Altes Pumpwerk", col: "#5aa3d8", thema: "Wassermodell, Spannung, Stromrichtung" },
+  { name: "Archiv der Zeichen", col: "#a07fd6", thema: "Schaltzeichen, Widerstände, Schaltpläne" },
+  { name: "Halbleiterhafen", col: "#58c58a", thema: "Ohm’sches Gesetz, LED, Transistor" },
+  { name: "Zinnschmiede", col: "#e8833a", thema: "Löten und Sicherheit" },
+];
+const ST = [
+  { id: "1a", d: 0, x: 7, y: 34, t: "Laterne am Kupfertor", type: "circuit", lvl: 0 },
+  { id: "1b", d: 0, x: 12, y: 33, t: "Schaltkasten der Gasse", type: "mc", pool: "kreis", n: 3 },
+  { id: "1c", d: 0, x: 10, y: 39, t: "Atom-Orakel", type: "mc", pool: "atom", n: 3 },
+  { id: "2a", d: 1, x: 7, y: 9, t: "Pumpen-Steuerpult", type: "match", set: "wasser" },
+  { id: "2b", d: 1, x: 14, y: 9, t: "Druckventil", type: "mc", pool: "wasser", n: 3 },
+  { id: "2c", d: 1, x: 10, y: 15, t: "Rabenleitung", type: "mc", pool: "richtung", n: 3 },
+  { id: "3a", d: 2, x: 28, y: 7, t: "Regal der Schaltzeichen", type: "match", set: "symbole" },
+  { id: "3b", d: 2, x: 35, y: 7, t: "Widerstands-Tresor", type: "color", n: 3 },
+  { id: "3c", d: 2, x: 31, y: 13, t: "Archiv-Beleuchtung", type: "circuit", lvl: 1 },
+  { id: "4a", d: 3, x: 49, y: 9, t: "Hafenkran-Steuerung", type: "ohm" },
+  { id: "4b", d: 3, x: 56, y: 9, t: "Leuchtfeuer-Dioden", type: "led" },
+  { id: "4c", d: 3, x: 52, y: 15, t: "Dämmerungsschalter am Kai", type: "mc", pool: "bauteile", n: 4 },
+  { id: "5a", d: 4, x: 49, y: 33, t: "Prüftisch der Lötstellen", type: "match", set: "loet" },
+  { id: "5b", d: 4, x: 56, y: 33, t: "Lötmeisterin Zinnas Probe", type: "sort" },
+  { id: "5c", d: 4, x: 52, y: 39, t: "Sicherheitstafel", type: "mc", pool: "loeten", n: 3 },
+];
+const FINAL = { id: "fin", x: 31, y: 36, t: "Das Große Lichtwerk", type: "final" };
+
+// Zuordnungsaufgaben
+const MATCH = {
+  wasser: { title: "Ordne zu: Wassermodell → Stromkreis", pairs: [["Pumpe", "Batterie / Spannungsquelle"], ["Druckunterschied", "Spannung U"], ["Wasserstrom", "Stromstärke I"], ["Mühlrad", "Verbraucher (Lampe)"], ["Rohre", "Leitungen"]] },
+  symbole: { title: "Ordne jedem Schaltzeichen den Namen zu", sym: true, pairs: [["bat", "Spannungsquelle"], ["res", "Widerstand"], ["led", "Leuchtdiode (LED)"], ["dio", "Diode"], ["npn", "Transistor"], ["ldr", "Fotowiderstand (LDR)"], ["sw", "Schalter"]] },
+  loet: { title: "Beurteile die Lötstellen", joint: true, pairs: [["j0", "in Ordnung: glänzender Kegel"], ["j1", "kalte Lötstelle: matte Kugel"], ["j2", "zu wenig Lot"], ["j3", "zu viel Lot / Lötbrücke"]] },
+};
+// Loetschritte in richtiger Reihenfolge
+const STEPS = ["Lötspitze an Lötauge UND Draht halten (1–2 s vorwärmen)", "Lot an die Lötstelle führen, bis es fließt", "Lot wegnehmen, sobald das Lötauge bedeckt ist", "Lötkolben wegnehmen", "Abkühlen lassen und nicht bewegen"];
+// Ohm-Aufgaben: g = gesucht
+const OHM = [
+  [{ U: 9, R: 450, g: "I" }, { U: 4.5, R: 150, g: "I" }, { U: 12, R: 600, g: "I" }],
+  [{ I: 0.02, R: 150, g: "U" }, { I: 0.5, R: 24, g: "U" }, { I: 0.03, R: 300, g: "U" }],
+  [{ U: 4.5, I: 0.03, g: "R" }, { U: 9, I: 0.02, g: "R" }, { U: 6, I: 0.02, g: "R" }],
+];
+// Rotationsraetsel. B/b = Batterie waagerecht/senkrecht, L/l = Lampe waagerecht/senkrecht, . = Fuellteil
+const LEVELS = [
+  ["┌─B─┐", "│...│", "└─L─┘"],
+  ["┌─B──┐", "│.┌┐.│", "└─┘└L┘"],
+  ["┌─┐┌─┐", "b.└┘.│", "│.┌─┐l", "└─┘.└┘"],
+];
+
+// NPC-Texte
+const NPC = [
+  { id: "wolfram", x: 30, y: 34, name: "Wolfram (60 W, im Ruhestand)", spr: "bulb", lines: () => wolframLines() },
+  { id: "baron", x: 35, y: 41, name: "Baron Talgmund von Docht", spr: "baron", lines: () => baronLines() },
+  { id: "valenz", x: 13, y: 37, name: "Valentin Valenz, freies Elektron", spr: "elec", lines: () => ["Hallo! Tschüss! Ich bin ein freies Außenelektron, ich bleibe nie lange an einem Atom.", "In Metallen gibt es Millionen wie mich. Darum leiten Metalle. In Plastik sind wir alle festgebunden. Furchtbar spießig.", "Ein Tipp: Ohne geschlossenen Kreis kommen wir nirgends an. Wir sind treu, aber wir brauchen einen Rückweg."] },
+  { id: "grimm", x: 15, y: 13, name: "Pumpenwärter Grimm", spr: "worker", lines: () => ["Mein Pumpwerk hält den Höhenunterschied aufrecht. Ohne Pumpe kein Fluss. Ohne Batterie kein Strom. Ganz einfach.", "Die Leute sagen, das Wasser wird verbraucht. Unsinn. Es läuft im Kreis. Genau wie eure Elektronen.", "Und lass dich nicht verwirren: Die Raben auf der Leitung sterben nicht. Gleiches Potenzial unter beiden Füßen. Glückliche Viecher."] },
+  { id: "kapazitas", x: 26, y: 12, name: "Archivarin Frau Kapazitas", spr: "arch", lines: () => ["Psst. Im Archiv der Zeichen wird nicht gezeichnet, wie es aussieht, sondern wie es genormt ist.", "Eine LED ist ein Dreieck mit Strich und zwei Pfeilen. Sie sieht nicht aus wie eine LED. Das ist der Witz an Normen.", "Und die Farbringe auf Widerständen: erste Ziffer, zweite Ziffer, Anzahl der Nullen, Toleranz. Braun-Schwarz-Rot? Tausend Ohm. Nicht zuhören? Auch tausend Ohm."] },
+  { id: "kai", x: 57, y: 15, name: "Hafenmeister Kollektor", spr: "worker2", lines: () => ["Mein Hafen läuft mit Transistoren. Kleiner Basisstrom rein, großer Strom raus. Wie bei mir: kleiner Kaffee, große Laune.", "Unser Leuchtfeuer hat Dioden. Falsch herum eingebaut leuchten die nicht. Das hat der letzte Lehrling auch erst nach drei Wochen gemerkt.", "U gleich R mal I. Wer das kann, darf meinen Kran steuern."] },
+  { id: "zinna", x: 57, y: 39, name: "Lötmeisterin Zinna", spr: "smith", lines: () => ["Willkommen in der Zinnschmiede. Regel eins: Der Kolben liegt im Ständer, nicht auf dem Tisch. Regel zwei: siehe Regel eins.", "Eine gute Lötstelle glänzt wie ein kleiner Vulkan. Eine kalte Lötstelle sieht aus wie ein grauer Kaugummi und benimmt sich auch so.", "Brille auf beim Abkneifen. Ich habe schon genug Lehrlinge mit Drahtstück im Auge gesehen. Na gut, einen. Der hieß übrigens Baron von Docht."] },
+];
+
+/* ============================ ZUSTAND =============================== */
+let S = null;
+function newState(help) {
+  return { v: 1, px: 31 * T + 8, py: 39 * T + 8, dir: 0, done: {}, pts: 0, help: !!help, finished: false, intro: false, wrong: 0 };
+}
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } }
+function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) { } return null; }
+function distDone(d) { return ST.filter(s => s.d === d).every(s => S.done[s.id]); }
+function nDone() { return ST.filter(s => S.done[s.id]).length; }
+function distOpen(d) { return d === 0 || distDone(d - 1); }
+
+/* ============================ KARTE ================================= */
+// 0 Pflaster, 1 Haus, 2 Wasser, 3 Nebeltor, 4 Mauer/Kante
+const map = new Uint8Array(MW * MH);
+const region = new Int8Array(MW * MH).fill(-1);
+const gates = []; // {d, cells:[]}
+function rect(x0, y0, x1, y1, v, reg) {
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { map[y * MW + x] = v; if (reg !== undefined) region[y * MW + x] = reg; }
+}
+function buildMap() {
+  map.fill(1); region.fill(-1); gates.length = 0;
+  rect(26, 32, 37, 43, 0, 9);             // Gildenplatz (Hub)
+  rect(4, 31, 15, 41, 0, 0);              // P1 Kupfergasse
+  rect(16, 36, 25, 38, 0, 0);             // Weg Hub -> P1
+  rect(4, 6, 17, 17, 0, 1);               // P2 Pumpwerk
+  rect(8, 18, 10, 30, 0, 1);              // Weg P1 -> P2
+  rect(25, 4, 38, 15, 0, 2);              // P3 Archiv
+  rect(18, 10, 24, 12, 0, 2);             // Weg P2 -> P3
+  rect(46, 6, 59, 17, 0, 3);              // P4 Hafen
+  rect(39, 9, 45, 11, 0, 3);              // Weg P3 -> P4
+  rect(46, 30, 59, 41, 0, 4);             // P5 Schmiede
+  rect(51, 18, 53, 29, 0, 4);             // Weg P4 -> P5
+  rect(38, 37, 45, 39, 0, 9);             // Weg P5 -> Hub
+  // Wasser im Pumpwerk und Hafen
+  rect(5, 11, 8, 12, 2); rect(12, 11, 16, 12, 2);
+  rect(46, 12, 48, 17, 2); rect(58, 6, 59, 7, 2);
+  // Tore (Nebel) – oeffnen sich mit Fortschritt
+  gates.push({ d: 1, cells: [[8, 24], [9, 24], [10, 24]] });
+  gates.push({ d: 2, cells: [[21, 10], [21, 11], [21, 12]] });
+  gates.push({ d: 3, cells: [[42, 9], [42, 10], [42, 11]] });
+  gates.push({ d: 4, cells: [[51, 24], [52, 24], [53, 24]] });
+  gates.push({ d: 5, cells: [[41, 37], [41, 38], [41, 39]] });
+  updateGates();
+}
+function updateGates() {
+  for (const g of gates) {
+    const open = g.d === 5 ? distDone(4) : distOpen(g.d);
+    for (const [x, y] of g.cells) map[y * MW + x] = open ? 0 : 3;
+  }
+}
+function tileAt(x, y) { if (x < 0 || y < 0 || x >= MW || y >= MH) return 1; return map[y * MW + x]; }
+
+// Deko: Laternen entlang der Wege; leuchten, wenn ihr Bezirk fertig ist
+const LAMPS = [];
+function buildLamps() {
+  LAMPS.length = 0;
+  const add = (x, y, d) => LAMPS.push({ x, y, d });
+  add(26, 32, 9); add(37, 32, 9); add(26, 43, 9); add(37, 43, 9);
+  add(19, 36, 0); add(23, 38, 0); add(4, 31, 0); add(15, 41, 0);
+  add(8, 20, 1); add(10, 28, 1); add(4, 6, 1); add(17, 17, 1);
+  add(19, 10, 2); add(24, 12, 2); add(25, 4, 2); add(38, 15, 2);
+  add(40, 9, 3); add(45, 11, 3); add(59, 17, 3); add(49, 6, 3);
+  add(51, 19, 4); add(53, 28, 4); add(46, 41, 4); add(59, 30, 4);
+}
+
+/* Zufall mit festem Startwert fuer die Kartengrafik */
+function rnd(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+
+const mapCanvas = document.createElement("canvas");
+mapCanvas.width = MW * T; mapCanvas.height = MH * T;
+const FLOOR = { 0: ["#5a4632", "#634d37", "#4f3d2b"], 1: ["#2f3d4a", "#34434f", "#2a3743"], 2: ["#3f3550", "#463b58", "#382f48"], 3: ["#2e3f37", "#33463d", "#283830"], 4: ["#4a3a33", "#523f37", "#43342e"], 9: ["#3a3f4c", "#40465a", "#353a46"], "-1": ["#333", "#333", "#333"] };
+function drawMap() {
+  const c = mapCanvas.getContext("2d"); const r = rnd(7);
+  c.fillStyle = "#0b0d14"; c.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+    const t = map[y * MW + x], X = x * T, Y = y * T, reg = region[y * MW + x];
+    if (t === 0 || t === 3) {
+      const pal = FLOOR[reg] || FLOOR[9];
+      c.fillStyle = pal[0]; c.fillRect(X, Y, T, T);
+      // Pflastersteine
+      for (let k = 0; k < 4; k++) {
+        const bx = (k % 2) * 8 + ((y % 2) ? 4 : 0), by = Math.floor(k / 2) * 8;
+        c.fillStyle = pal[1 + Math.floor(r() * 2)];
+        c.fillRect(X + (bx % 16), Y + by, 7, 7);
+      }
+      if (r() < 0.06) { c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(X + r() * 12, Y + r() * 12, 3, 2); }
+    } else if (t === 2) {
+      c.fillStyle = "#132a3a"; c.fillRect(X, Y, T, T);
+      c.fillStyle = "#1c3a50"; c.fillRect(X + 2, Y + 4 + (x % 3), 6, 1); c.fillRect(X + 9, Y + 11 - (x % 2), 5, 1);
+    } else {
+      // Haus/Dach: Nachbarn pruefen fuer Kanten
+      const below = tileAt(x, y + 1);
+      c.fillStyle = "#1b1e2a"; c.fillRect(X, Y, T, T);
+      c.fillStyle = (x + y) % 2 ? "#232738" : "#202434"; c.fillRect(X, Y, T, T - 1);
+      c.fillStyle = "#2a2f44"; for (let k = 0; k < 4; k++) c.fillRect(X, Y + k * 4, T, 1);
+      const rr = r();
+      if (rr < 0.05) { c.fillStyle = "#3a2e2a"; c.fillRect(X + 5, Y + 2, 5, 9); c.fillStyle = "#4a3a33"; c.fillRect(X + 4, Y + 1, 7, 2); }
+      else if (rr < 0.09) { c.fillStyle = "#2f4a3a"; c.fillRect(X + 2, Y + 9, 6, 3); }
+      else if (rr < 0.12) { c.fillStyle = "#151821"; c.fillRect(X + 3, Y + 3, 10, 6); c.fillStyle = "#2a2f44"; c.fillRect(X + 3, Y + 6, 10, 1); }
+      if (below === 0 || below === 3 || below === 2) {
+        // Hausfront mit Fenster
+        c.fillStyle = "#3b3329"; c.fillRect(X, Y + 6, T, 10);
+        c.fillStyle = "#2b251e"; c.fillRect(X, Y + 6, T, 1);
+        if (r() < 0.5) { const lit = r() < 0.25; c.fillStyle = lit ? "#d9a441" : "#151821"; c.fillRect(X + 5, Y + 9, 6, 5); c.fillStyle = "#3b3329"; c.fillRect(X + 7, Y + 9, 1, 5); }
+        else if (r() < 0.3) { c.fillStyle = "#1a140f"; c.fillRect(X + 4, Y + 8, 8, 8); }
+      }
+    }
+  }
+  // Nebeltore
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (map[y * MW + x] === 3) {
+    c.fillStyle = "rgba(120,130,170,.55)"; c.fillRect(x * T, y * T, T, T);
+    c.fillStyle = "rgba(200,210,240,.35)"; c.fillRect(x * T + 2, y * T + 3, 12, 2); c.fillRect(x * T + 4, y * T + 10, 9, 2);
+  }
+  // Plakate des Kerzenkartells und Kisten
+  const R2 = rnd(99);
+  for (let y = 1; y < MH - 1; y++) for (let x = 1; x < MW - 1; x++) {
+    if (map[y * MW + x] === 1 && map[(y + 1) * MW + x] === 0 && R2() < 0.05) { c.fillStyle = "#c9b48a"; c.fillRect(x * T + 4, y * T + 7, 8, 7); c.fillStyle = "#ffb347"; c.fillRect(x * T + 7, y * T + 8, 2, 2); c.fillStyle = "#5c1f2e"; c.fillRect(x * T + 6, y * T + 10, 4, 3); }
+    if (map[y * MW + x] === 0 && map[(y - 1) * MW + x] === 1 && R2() < 0.035) { c.fillStyle = "#4a3523"; c.fillRect(x * T + 3, y * T + 1, 9, 8); c.fillStyle = "#6b4c30"; c.fillRect(x * T + 3, y * T + 1, 9, 2); c.fillStyle = "#2c2016"; c.fillRect(x * T + 7, y * T + 1, 1, 8); }
+  }
+  // Schilder der Bezirke auf den Boden
+  const labels = [[9, 32, 0], [10, 7, 1], [31, 5, 2], [52, 7, 3], [52, 31, 4]];
+  c.font = "bold 7px Verdana"; c.textAlign = "center";
+  for (const [x, y, d] of labels) { c.fillStyle = "rgba(0,0,0,.4)"; c.fillText(DIST[d].name.toUpperCase(), x * T + 9, y * T + 9); c.fillStyle = DIST[d].col; c.fillText(DIST[d].name.toUpperCase(), x * T + 8, y * T + 8); }
+  c.fillStyle = "#d9c79a"; c.fillText("GILDE DER LICHTSCHMIEDE", 31.5 * T, 33 * T + 6);
+}
+
+/* ============================ SPRITES =============================== */
+// Pixel-Sprites als Zeichenketten (16x16). Farben ueber Palette.
+function spr(rows, pal) {
+  const cv = document.createElement("canvas"); cv.width = 16; cv.height = 16; const c = cv.getContext("2d");
+  rows.forEach((row, y) => [...row].forEach((ch, x) => { if (pal[ch]) { c.fillStyle = pal[ch]; c.fillRect(x, y, 1, 1); } }));
+  return cv;
+}
+const P_PLAYER = { k: "#111", h: "#3a2f5a", H: "#4b3d74", f: "#e0b48a", e: "#111", c: "#2b2340", l: "#f2c14e", L: "#ffe9a0", b: "#3d2b1f" };
+const PLAYER_FRAMES = [
+  ["......kkkk......", ".....khHHhk.....", "....khHHHHhk....", "....khffffhk....", "....kfekkefk....", "....khffffhk.....", ".....kcccck.....", "....kcccccckl...", "...kccccccckLl..", "...kccccccckll..", "....kcccccck....", "....kcccccck....", ".....kcckcck....", ".....kbbkbbk....", ".....kbbkbbk....", "......kk.kk....."],
+  ["......kkkk......", ".....khHHhk.....", "....khHHHHhk....", "....khffffhk....", "....kfekkefk....", "....khffffhk.....", ".....kcccck.....", "....kcccccckl...", "...kccccccckLl..", "...kccccccckll..", "....kcccccck....", "....kcccccck....", ".....kcck.ck....", "....kbbk.kbbk...", "....kbbk..kbk...", ".....kk....kk..."],
+];
+const SPR = {};
+function buildSprites() {
+  SPR.p0 = spr(PLAYER_FRAMES[0], P_PLAYER); SPR.p1 = spr(PLAYER_FRAMES[1], P_PLAYER);
+  SPR.bulb = spr(["................", "......kkkk......", ".....kyyyyk.....", "....kyyyyyyk....", "....kyekkeyk....", "....kyyyyyyk....", "....kyykkyyk....", ".....kyyyyk.....", "......kyyk......", "......kggk......", "......kGGk......", "......kggk......", ".....kmmmmk.....", "....kmmmmmmk....", "....kkkkkkkk....", "................"], { k: "#111", y: "#f3d27a", e: "#222", g: "#a6a6a6", G: "#7d7d7d", m: "#5b3b28" });
+  SPR.baron = spr(["......kkkk......", ".....kssssk.....", "....kssssssk....", "...kkkkkkkkkk...", ".....kffffk.....", ".....kfekefk....", ".....kffffk.....", ".....kfmmfk.....", "....kppppppk....", "...kpppwwpppk...", "...kpppwwpppk...", "...kppppppppk.c.", "....kppppppk.kyk", ".....kppppk..kwk", ".....kk..kk..kwk", "................"], { k: "#111", s: "#1a1a1a", f: "#d9b38c", e: "#111", m: "#5a2a2a", p: "#5c1f2e", w: "#e8e2cf", c: "#ffb347", y: "#ffd27a" });
+  SPR.elec = spr(["................", "................", ".....kkkkkk.....", "....kbbbbbbk....", "...kbbBBBBbbk...", "...kbBekkeBbk...", "...kbBBBBBBbk...", "...kbBkkkkBbk...", "...kbbBBBBbbk...", "....kbbbbbbk....", ".....kkkkkk.....", "......k..k......", ".....k....k.....", "................", "................", "................"], { k: "#111", b: "#3fa7ff", B: "#8fd0ff", e: "#111" });
+  SPR.worker = spr(["......kkkk......", ".....kggggk.....", "....kggggggk....", "....kffffffk....", "....kfekkefk....", "....kffbbffk....", ".....kbbbbk.....", "....kooooook....", "...kooooooook...", "...kfoooooofk...", "....koooooo k...", "....kooooook....", ".....kbbkbbk....", ".....kbbkbbk....", ".....kkk.kkk....", "................"], { k: "#111", g: "#555c66", f: "#d4a37a", e: "#111", b: "#6b5440", o: "#3f6f8f" });
+  SPR.worker2 = spr(["......kkkk......", ".....knnnnk.....", "....knnnnnnk....", "....kffffffk....", "....kfekkefk....", "....kffffffk....", ".....kffffk.....", "....kggggggk....", "...kggyyyyggk...", "...kfgggggggfk..", "....kggggggk....", "....kggggggk....", ".....kbbkbbk....", ".....kbbkbbk....", ".....kkk.kkk....", "................"], { k: "#111", n: "#2d4a3a", f: "#c99872", e: "#111", g: "#2f5a46", y: "#d7c24a", b: "#2a2a2a" });
+  SPR.arch = spr(["......kkkk......", ".....kwwwwk.....", "....kwwwwwwk....", "....kffffffk....", "....kgekkegk....", "....kffffffk....", ".....kffffk.....", "....kllllllk....", "...kllllllllk...", "...kllllllllk...", "...kllllllllk...", "...kllllllllk...", "...kllllllllk...", "....kllllllk....", ".....kkkkkk.....", "................"], { k: "#111", w: "#bbb", f: "#e1bc95", g: "#7fa", e: "#111", l: "#4a3a6b" });
+  SPR.smith = spr(["......kkkk......", ".....krrrrk.....", "....krrrrrrk....", "....kffffffk....", "....kfekkefk....", "....kffffffk....", ".....kffffk.....", "....kaaaaaak....", "...kfaaaaaafk...", "...kfaaaaaafk...", "....kaaaaaak....", "....kaaaaaak....", ".....kbbkbbk....", ".....kbbkbbk....", ".....kkk.kkk....", "................"], { k: "#111", r: "#a8432e", f: "#cf9a73", e: "#111", a: "#6b4a2e", b: "#2c2c2c" });
+}
+// Station (Lichtwerk-Maschine)
+function drawStation(c, x, y, done, col, t) {
+  c.fillStyle = "#14161f"; c.fillRect(x + 2, y + 13, 12, 3);
+  c.fillStyle = "#3a3f52"; c.fillRect(x + 3, y + 2, 10, 12);
+  c.fillStyle = "#2a2e3d"; c.fillRect(x + 3, y + 12, 10, 2);
+  c.fillStyle = col; c.fillRect(x + 3, y + 2, 10, 2);
+  const glow = done ? "#ffe08a" : ((Math.floor(t / 400) % 2) ? "#6b2a2a" : "#a33a3a");
+  c.fillStyle = glow; c.fillRect(x + 6, y + 5, 4, 4);
+  c.fillStyle = "#111"; c.fillRect(x + 5, y + 10, 6, 1);
+}
+function drawLamp(c, x, y, on) {
+  c.fillStyle = "#111"; c.fillRect(x + 7, y + 4, 2, 12);
+  c.fillStyle = "#2a2a2a"; c.fillRect(x + 5, y + 14, 6, 2);
+  c.fillStyle = "#111"; c.fillRect(x + 5, y, 6, 5);
+  c.fillStyle = on ? "#ffe08a" : "#3a3f52"; c.fillRect(x + 6, y + 1, 4, 3);
+}
+
+/* ============================ RENDERING ============================= */
+const cv = document.getElementById("game"), ctx = cv.getContext("2d");
+const dark = document.createElement("canvas"), dctx = dark.getContext("2d");
+let zoom = 3, VW = 0, VH = 0;
+function resize() {
+  cv.width = innerWidth; cv.height = innerHeight;
+  zoom = Math.max(2, Math.floor(Math.min(innerWidth / 380, innerHeight / 230)));
+  VW = Math.ceil(innerWidth / zoom); VH = Math.ceil(innerHeight / zoom);
+  dark.width = VW; dark.height = VH;
+}
+addEventListener("resize", resize);
+
+function camera() {
+  let cx = Math.round(S.px - VW / 2), cy = Math.round(S.py - VH / 2);
+  cx = Math.max(0, Math.min(MW * T - VW, cx)); cy = Math.max(0, Math.min(MH * T - VH, cy));
+  if (MW * T < VW) cx = -(VW - MW * T) / 2; if (MH * T < VH) cy = -(VH - MH * T) / 2;
+  return [cx, cy];
+}
+let walkT = 0, finaleT = 0;
+function render(t) {
+  ctx.imageSmoothingEnabled = false;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#05060a"; ctx.fillRect(0, 0, cv.width, cv.height);
+  const [cx, cy] = camera();
+  ctx.setTransform(zoom, 0, 0, zoom, -cx * zoom, -cy * zoom);
+  ctx.drawImage(mapCanvas, 0, 0);
+  // Laternen
+  for (const l of LAMPS) drawLamp(ctx, l.x * T, l.y * T, lampOn(l));
+  // Stationen
+  for (const s of ST) drawStation(ctx, s.x * T, s.y * T, !!S.done[s.id], DIST[s.d].col, t);
+  drawFinal(ctx, t);
+  // Figuren (nach y sortiert)
+  const actors = NPC.filter(n => n.id !== "baron" || !S.finished).map(n => ({ y: n.y * T + 16, draw: () => ctx.drawImage(SPR[n.spr], n.x * T, n.y * T + (n.spr === "elec" ? Math.round(Math.sin(t / 300) * 1.5) : 0)) }));
+  actors.push({ y: S.py + 8, draw: () => drawPlayer(t) });
+  actors.sort((a, b) => a.y - b.y).forEach(a => a.draw());
+  // Raben auf der Leitung im Pumpwerk
+  drawRavens(ctx, t);
+  // Dunkelheit
+  drawDark(cx, cy, t);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(dark, 0, 0, VW * zoom, VH * zoom);
+}
+function lampOn(l) { return l.d === 9 ? S.finished : distDone(l.d); }
+function drawPlayer(t) {
+  const f = moving && Math.floor(walkT / 150) % 2 ? SPR.p1 : SPR.p0;
+  ctx.save();
+  if (S.dir === 2) { ctx.translate(Math.round(S.px), 0); ctx.scale(-1, 1); ctx.drawImage(f, -8, Math.round(S.py) - 12); }
+  else ctx.drawImage(f, Math.round(S.px) - 8, Math.round(S.py) - 12);
+  ctx.restore();
+}
+function drawRavens(c, t) {
+  const y = 8 * T + 4; c.fillStyle = "#222"; c.fillRect(4 * T, y, 14 * T, 1);
+  [6, 6.7, 12.5].forEach((x, i) => { const X = x * T, bob = (Math.floor(t / 700 + i) % 5 === 0) ? 1 : 0; c.fillStyle = "#0d0d10"; c.fillRect(X, y - 5 - bob, 5, 4); c.fillRect(X + 4, y - 7 - bob, 3, 3); c.fillStyle = "#c9a03a"; c.fillRect(X + 7, y - 6 - bob, 2, 1); });
+}
+function drawFinal(c, t) {
+  const x = FINAL.x * T, y = FINAL.y * T, ready = nDone() === ST.length;
+  c.fillStyle = "#1a1d29"; c.fillRect(x - 6, y - 10, 28, 28);
+  c.fillStyle = "#4a4f66"; c.fillRect(x - 4, y - 8, 24, 22);
+  c.fillStyle = "#2a2e3d"; c.fillRect(x - 4, y + 10, 24, 4);
+  const on = S.finished ? "#fff2b8" : ready ? ((Math.floor(t / 300) % 2) ? "#f2c14e" : "#a07a20") : "#2d3142";
+  c.fillStyle = on; c.fillRect(x + 2, y - 4, 12, 10);
+  c.fillStyle = "#111"; c.fillRect(x + 7, y - 4, 2, 10);
+}
+function drawDark(cx, cy, t) {
+  const level = S.finished ? 0.25 : 0.9 - 0.07 * [0, 1, 2, 3, 4].filter(distDone).length;
+  dctx.globalCompositeOperation = "source-over"; dctx.clearRect(0, 0, VW, VH);
+  dctx.fillStyle = `rgba(4,5,12,${level})`; dctx.fillRect(0, 0, VW, VH);
+  dctx.globalCompositeOperation = "destination-out";
+  const light = (x, y, r, a = 1) => {
+    const X = x - cx, Y = y - cy; if (X < -r || Y < -r || X > VW + r || Y > VH + r) return;
+    const g = dctx.createRadialGradient(X, Y, 0, X, Y, r);
+    g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(0.55, `rgba(0,0,0,${a * 0.6})`); g.addColorStop(1, "rgba(0,0,0,0)");
+    dctx.fillStyle = g; dctx.fillRect(X - r, Y - r, r * 2, r * 2);
+  };
+  const flick = 1 + Math.sin(t / 90) * 0.03 + Math.sin(t / 37) * 0.02;
+  light(S.px + 4, S.py - 2, 78 * flick);
+  for (const l of LAMPS) if (lampOn(l)) light(l.x * T + 8, l.y * T + 3, 64);
+  for (const s of ST) light(s.x * T + 8, s.y * T + 7, S.done[s.id] ? 70 : 14, S.done[s.id] ? 1 : 0.8);
+  light(FINAL.x * T + 8, FINAL.y * T, S.finished ? 160 : 26);
+  light(30 * T + 8, 34 * T + 6, 30, 0.9); // Wolfram glimmt
+  dctx.globalCompositeOperation = "source-over";
+}
+
+/* ============================ STEUERUNG ============================= */
+const keys = {};
+let moving = false, mode = "title"; // title | play | dialog | panel
+addEventListener("keydown", e => {
+  keys[e.key.toLowerCase()] = true;
+  if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(e.key.toLowerCase())) e.preventDefault();
+  if (e.repeat) return;
+  const k = e.key.toLowerCase();
+  if (mode === "dialog" && (k === " " || k === "e" || k === "enter")) nextLine();
+  else if (mode === "play" && (k === " " || k === "e" || k === "enter")) interact();
+});
+addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+document.getElementById("dialog").addEventListener("click", () => { if (mode === "dialog") nextLine(); });
+
+function solid(px, py) {
+  const pts = [[px - 5, py - 2], [px + 5, py - 2], [px - 5, py + 4], [px + 5, py + 4]];
+  for (const [x, y] of pts) {
+    const tx = Math.floor(x / T), ty = Math.floor(y / T), t = tileAt(tx, ty);
+    if (t !== 0) return true;
+    for (const s of ST) if (s.x === tx && s.y === ty) return true;
+    for (const n of NPC) if (n.x === tx && n.y === ty && (n.id !== "baron" || !S.finished)) return true;
+    if (tx >= FINAL.x - 1 && tx <= FINAL.x + 1 && ty >= FINAL.y - 1 && ty <= FINAL.y) return true;
+  }
+  return false;
+}
+let last = 0;
+function update(dt) {
+  if (mode !== "play") { moving = false; return; }
+  let dx = 0, dy = 0;
+  if (keys["arrowleft"] || keys["a"]) dx -= 1; if (keys["arrowright"] || keys["d"]) dx += 1;
+  if (keys["arrowup"] || keys["w"]) dy -= 1; if (keys["arrowdown"] || keys["s"]) dy += 1;
+  moving = dx !== 0 || dy !== 0;
+  if (moving) {
+    const sp = 0.075 * dt / Math.hypot(dx, dy || 0.0001) * (dx && dy ? 1 : 1);
+    const len = Math.hypot(dx, dy); const vx = dx / len * 0.075 * dt, vy = dy / len * 0.075 * dt;
+    if (!solid(S.px + vx, S.py)) S.px += vx;
+    if (!solid(S.px, S.py + vy)) S.py += vy;
+    if (dx < 0) S.dir = 2; else if (dx > 0) S.dir = 0;
+    walkT += dt;
+    if (Math.random() < 0.002) save();
+  }
+  updateHint();
+}
+function nearby() {
+  const tx = S.px / T, ty = S.py / T, d2 = (x, y) => (x + 0.5 - tx) ** 2 + (y + 0.5 - ty) ** 2;
+  let best = null, bd = 2.6;
+  for (const s of ST) { const d = d2(s.x, s.y); if (d < bd) { bd = d; best = { kind: "st", o: s }; } }
+  for (const n of NPC) { if (n.id === "baron" && S.finished) continue; const d = d2(n.x, n.y); if (d < bd) { bd = d; best = { kind: "npc", o: n }; } }
+  if (d2(FINAL.x, FINAL.y) < 5) best = { kind: "fin", o: FINAL };
+  return best;
+}
+const hintEl = document.getElementById("hint");
+function updateHint() {
+  const n = nearby();
+  if (!n) { hintEl.classList.add("hidden"); return; }
+  hintEl.classList.remove("hidden");
+  if (n.kind === "st") hintEl.textContent = (S.done[n.o.id] ? "✓ " : "") + n.o.t + " – E: " + (S.done[n.o.id] ? "noch mal üben" : "reparieren");
+  else if (n.kind === "npc") hintEl.textContent = n.o.name + " – E: reden";
+  else hintEl.textContent = "Das Große Lichtwerk – E: " + (S.finished ? "ansehen" : "einschalten");
+}
+function interact() {
+  const n = nearby(); if (!n) return;
+  if (n.kind === "npc") { const lines = n.o.lines(); dialog(n.o.name, n.o.spr, lines); }
+  else if (n.kind === "st") openStation(n.o);
+  else if (n.kind === "fin") {
+    if (S.finished) dialog("Wolfram", "bulb", ["Schau dir das an. Ganz Umbra leuchtet. Ich glaube, ich muss weinen. Zum Glück habe ich keine Augen. Nur einen Glühfaden."]);
+    else if (nDone() < ST.length) dialog("Wolfram", "bulb", [`Das Große Lichtwerk braucht alle fünfzehn Lichtwerke. Du hast ${nDone()} repariert. Ich zähle mit. Ich habe ja sonst nichts zu tun.`]);
+    else openStation(FINAL);
+  }
+}
+
+/* ============================ DIALOG ================================ */
+let dlgLines = [], dlgDone = null;
+function dialog(name, sprName, lines, after) {
+  mode = "dialog"; dlgLines = lines.slice(); dlgDone = after || null;
+  document.getElementById("dlgName").textContent = name;
+  const pc = document.getElementById("dlgPic").getContext("2d"); pc.clearRect(0, 0, 16, 16); pc.drawImage(SPR[sprName], 0, 0);
+  document.getElementById("dialog").classList.remove("hidden");
+  nextLine();
+}
+function nextLine() {
+  if (!dlgLines.length) { document.getElementById("dialog").classList.add("hidden"); mode = "play"; const f = dlgDone; dlgDone = null; if (f) f(); return; }
+  document.getElementById("dlgTxt").textContent = dlgLines.shift();
+  beep(520, 0.03);
+}
+function wolframLines() {
+  const n = nDone();
+  if (S.finished) return ["Du hast es geschafft. Umbra leuchtet. Ich bin jetzt offiziell überflüssig. Fühlt sich gut an, ehrlich gesagt.", "Wenn du noch üben willst: Alle Lichtwerke lassen sich erneut bedienen."];
+  if (n === 0) return ["Ah. Der neue Lehrling. Ich bin Wolfram. Früher 60 Watt, heute Dekoration.", "Diese neumodischen LEDs haben mich ersetzt. Neunzig Prozent Licht, kaum Wärme. Wo bleibt da die Gemütlichkeit?", "Aber gut. Umbra braucht Licht. Geh nach Westen in die Kupfergasse. Dort sind drei Lichtwerke kaputt. Rote Lämpchen = kaputt. Mit E reparierst du sie.", "Jeder fertige Bezirk öffnet das Nebeltor zum nächsten. Und ich komme in jedem Rätsel mit. Als Stimme. Freu dich."];
+  const next = [0, 1, 2, 3, 4].find(d => !distDone(d));
+  if (next === undefined) return ["Alle fünfzehn Lichtwerke laufen! Das Große Lichtwerk hier auf dem Platz wartet. Geh hin und drück E. Ich halte die Luft an. Bildlich."];
+  return [`Du hast ${n} von 15 Lichtwerken repariert.`, `Als Nächstes: ${DIST[next].name} – Thema: ${DIST[next].thema}.`, "Wenn du nicht weiterkommst: Lies die Erklärungen. Ich habe sie persönlich diktiert."];
+}
+function baronLines() {
+  const n = nDone();
+  if (n === 0) return ["Talgmund von Docht, Kerzenkartell. Kerzen: brennen ohne Strom, ohne Kabel, ohne lästiges Nachdenken.", "Du willst die Lichtwerke reparieren? Mit dieser sprechenden Glühbirne? Viel Glück. Hier, ein Gutschein für zehn Teelichter. Für später."];
+  if (n < 9) return ["Ich höre, in der Gasse brennt wieder Licht. Ärgerlich. Die Kerzenumsätze sind um drei Prozent gesunken.", "Sag mal, eine LED ohne Vorwiderstand an die Batterie – das wäre doch ein lustiges Experiment, oder? Nein? Schade."];
+  if (n < 15) return ["Du kommst den Lichtwerken gefährlich nahe. Ich habe schon überlegt, auf Duftkerzen umzusteigen.", "Weißt du, was das Schöne an Dunkelheit ist? Man sieht die schlechten Lötstellen nicht."];
+  return ["Das Große Lichtwerk! Du willst es doch nicht wirklich ... einschalten? Denk an die vielen arbeitslosen Dochte!"];
+}
+
+/* ============================ PANEL / RAETSEL ======================= */
+const overlay = document.getElementById("overlay"), panel = document.getElementById("panel");
+let cur = null; // aktuelle Station
+function openStation(st) {
+  cur = st; mode = "panel"; overlay.classList.remove("hidden"); hintEl.classList.add("hidden");
+  ({ mc: puzzleMC, circuit: puzzleCircuit, match: puzzleMatch, color: puzzleColor, ohm: puzzleOhm, led: puzzleLED, sort: puzzleSort, final: puzzleFinal })[st.type](st);
+}
+function closePanel() { overlay.classList.add("hidden"); panel.innerHTML = ""; mode = "play"; cur = null; save(); }
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+function header(st, sub) {
+  panel.innerHTML = "";
+  const d = st.d !== undefined ? DIST[st.d] : { name: "Gildenplatz", col: "#f2c14e" };
+  panel.append(el("h2", null, st.t), el("div", "sub", d.name + (sub ? " · " + sub : "")));
+}
+function wolf(text) {
+  const w = el("div", "wolf"); const c = document.createElement("canvas"); c.width = 16; c.height = 16; c.getContext("2d").drawImage(SPR.bulb, 0, 0);
+  w.append(c, el("div", null, "<b>Wolfram:</b> " + text)); return w;
+}
+function closeBtn(label = "Zurück in die Stadt") { const b = el("button", "btn alt", label); b.onclick = closePanel; return b; }
+function solved(st, pts) {
+  const first = !S.done[st.id];
+  if (st.id !== "fin") S.done[st.id] = true;
+  if (first) S.pts += pts;
+  updateGates(); drawMap(); updateHUD(); save();
+  beep(660, 0.08); setTimeout(() => beep(880, 0.12), 90);
+  const box = el("div", "expl ok", first ? `<b>Lichtwerk repariert!</b> +${pts} Lichtpunkte.` : "<b>Gut geübt!</b> (Lichtpunkte gibt es nur beim ersten Mal.)");
+  panel.append(box);
+  if (first && st.d !== undefined && distDone(st.d)) {
+    panel.append(el("div", "expl ok", `<b>${DIST[st.d].name} leuchtet wieder!</b> ` + (st.d < 4 ? "Das Nebeltor zum nächsten Bezirk hat sich gelichtet." : "Der Weg zurück zum Gildenplatz ist frei – das Große Lichtwerk wartet.")));
+  }
+  const r = el("div", "row"); r.append(el("span"), closeBtn("Weiter")); panel.append(r);
+}
+
+/* ---- Multiple Choice ---- */
+function puzzleMC(st, custom) {
+  const qs = custom || shuffle(Q[st.pool]).slice(0, st.n);
+  let i = 0, firstTry = 0, queue = qs.slice(), wrongOnce = new Set();
+  const total = qs.length;
+  function show() {
+    header(st, `Frage ${total - queue.length + 1} von ${total}` + (custom ? "" : ""));
+    if (!custom && i === 0 && queue.length === total) panel.append(wolf(pick(["Beantworte alle Fragen richtig, dann läuft das Lichtwerk wieder.", "Konzentration. Ich flackere hier nicht zum Spaß.", "Falsche Antworten kommen am Ende noch einmal. Ich bin hartnäckig."])));
+    const q = queue[0];
+    panel.append(el("div", "q", q.q));
+    const order = shuffle(q.o.map((t, k) => k));
+    const opts = el("div", "opts"); const btns = [];
+    let strike = -1;
+    if (S.help) strike = pick(order.filter(k => k !== q.a));
+    order.forEach(k => {
+      const b = el("button", "opt" + (k === strike ? " strike" : ""), q.o[k]); if (k === strike) b.disabled = true;
+      b.onclick = () => answer(k, b); btns.push(b); opts.append(b);
+    });
+    panel.append(opts);
+    function answer(k, b) {
+      btns.forEach(x => x.disabled = true);
+      const ok = k === q.a;
+      b.classList.add(ok ? "ok" : "no");
+      if (!ok) btns.forEach(x => { if (x.textContent === q.o[q.a]) x.classList.add("ok"); });
+      panel.append(el("div", "expl " + (ok ? "ok" : "no"), `<b>${ok ? pick(W_RIGHT) : pick(W_WRONG)}</b><br>${q.e}`));
+      ok ? beep(700, 0.06) : beep(180, 0.15);
+      queue.shift();
+      if (ok) { if (!wrongOnce.has(q)) firstTry++; } else { wrongOnce.add(q); queue.push(q); S.wrong++; }
+      const r = el("div", "row"); r.append(el("span", "prog", `${total - queue.length} von ${total} geschafft`));
+      const nb = el("button", "btn", queue.length ? "Nächste Frage" : "Fertig");
+      nb.onclick = () => { i++; if (queue.length) show(); else finish(); };
+      r.append(nb); panel.append(r); nb.focus();
+    }
+  }
+  function finish() {
+    header(st);
+    if (st.type === "final") return finalStep2();
+    panel.append(wolf(firstTry === total ? "Alles auf Anhieb. Ich bin beeindruckt. Sag es niemandem." : "Geschafft. Die Fehler von eben merkst du dir jetzt, ja? Gut."));
+    solved(st, 10 + firstTry * 5);
+  }
+  show();
+}
+
+/* ---- Rotations-Stromkreis ---- */
+const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N E S W
+const CH = { "─": 10, "│": 5, "┌": 6, "┐": 12, "└": 3, "┘": 9, "B": 10, "b": 5, "L": 10, "l": 5 };
+function rot(m) { return ((m << 1) | (m >> 3)) & 15; }
+function puzzleCircuit(st, onDone) {
+  const lv = LEVELS[st.lvl]; const H = lv.length, Wd = lv[0].length;
+  const R = rnd(Date.now() & 0xffff);
+  const g = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < Wd; x++) {
+    const ch = [...lv[y]][x]; const fixed = "BbLl".includes(ch);
+    let m = ch === "." ? pick([10, 5, 6, 12, 3, 9]) : CH[ch];
+    if (!fixed) { const r = Math.floor(R() * 4); for (let k = 0; k < r; k++) m = rot(m); }
+    g.push({ m, fixed, kind: "Bb".includes(ch) ? "bat" : "Ll".includes(ch) ? "lamp" : "w" });
+  }
+  // Sicherstellen, dass es nicht schon geloest ist
+  if (check()) { const t = g.find(c => !c.fixed && c.m !== 15); if (t) t.m = rot(t.m); }
+  header(st, "Stromkreis schließen");
+  panel.append(wolf(st.lvl === 0 ? "Klick auf die Leitungsstücke, um sie zu drehen. Die Lampe leuchtet erst, wenn der Kreis von der Batterie über die Lampe zurück zur Batterie geschlossen ist." : st.lvl === 1 ? "Gleiches Prinzip, mehr Kurven. Ein Stromkreis ohne Rückweg ist wie ein Brief ohne Absender: kommt nie zurück." : "Das Große Lichtwerk. Ein letzter Kreis. Keine Panik. Ich bin auch ganz ruhig. Ich flackere nur aus Gewohnheit."));
+  const cs = 76, c = document.createElement("canvas"); c.id = "pz"; c.width = Wd * cs; c.height = H * cs; panel.append(c);
+  const msg = el("div", "center prog", "Drehe die Teile, bis der Kreis geschlossen ist."); panel.append(msg);
+  const r = el("div", "row"); r.append(el("span"), closeBtn("Abbrechen")); panel.append(r);
+  let done = false;
+  c.onclick = e => {
+    if (done) return;
+    const b = c.getBoundingClientRect(); const x = Math.floor((e.clientX - b.left) / b.width * Wd), y = Math.floor((e.clientY - b.top) / b.height * H);
+    const cell = g[y * Wd + x]; if (!cell || cell.fixed) { beep(200, 0.04); return; }
+    cell.m = rot(cell.m); beep(400, 0.02); draw();
+    if (check()) { done = true; draw(); setTimeout(() => { msg.remove(); r.remove(); if (onDone) onDone(); else { panel.append(wolf("Licht! Echtes Licht! Ein geschlossener Stromkreis, wie er im Buche steht.")); solved(st, 25); } }, 400); }
+  };
+  function at(x, y) { return x < 0 || y < 0 || x >= Wd || y >= H ? null : g[y * Wd + x]; }
+  function check() {
+    const bi = g.findIndex(c => c.kind === "bat"); let x = bi % Wd, y = Math.floor(bi / Wd);
+    const m0 = g[bi].m; let out = [0, 1, 2, 3].find(d => m0 & (1 << d)); const startOut = out;
+    let lamp = false, steps = 0;
+    while (steps++ < 200) {
+      const nx = x + DIRS[out][0], ny = y + DIRS[out][1]; const n = at(nx, ny); if (!n) return false;
+      const inn = (out + 2) % 4; if (!(n.m & (1 << inn))) return false;
+      if (n.kind === "bat") return lamp && inn !== startOut;
+      if (n.kind === "lamp") lamp = true;
+      const outs = [0, 1, 2, 3].filter(d => d !== inn && (n.m & (1 << d))); if (outs.length !== 1) return false;
+      x = nx; y = ny; out = outs[0];
+    }
+    return false;
+  }
+  function draw() {
+    const k = c.getContext("2d"); k.clearRect(0, 0, c.width, c.height);
+    for (let y = 0; y < H; y++) for (let x = 0; x < Wd; x++) {
+      const cell = g[y * Wd + x], X = x * cs, Y = y * cs, m = cell.m, mx = X + cs / 2, my = Y + cs / 2;
+      k.fillStyle = cell.fixed ? "#1d2438" : "#161c2d"; k.fillRect(X + 2, Y + 2, cs - 4, cs - 4);
+      k.strokeStyle = done ? "#f2c14e" : "#b98b52"; k.lineWidth = 7; k.lineCap = "round";
+      k.beginPath(); for (let d = 0; d < 4; d++) if (m & (1 << d)) { k.moveTo(mx, my); k.lineTo(mx + DIRS[d][0] * cs / 2, my + DIRS[d][1] * cs / 2); } k.stroke();
+      if (cell.kind === "bat") { const v = m === 5; k.save(); k.translate(mx, my); if (v) k.rotate(Math.PI / 2); k.fillStyle = "#1d2438"; k.fillRect(-14, -18, 28, 36); k.strokeStyle = "#e9ecf4"; k.lineWidth = 3; k.beginPath(); k.moveTo(-5, -16); k.lineTo(-5, 16); k.stroke(); k.lineWidth = 8; k.beginPath(); k.moveTo(6, -9); k.lineTo(6, 9); k.stroke(); k.restore(); k.fillStyle = "#e9ecf4"; k.font = "bold 13px Verdana"; k.fillText("+", X + 8, Y + 18); k.fillText("–", X + cs - 18, Y + 18); }
+      if (cell.kind === "lamp") { k.fillStyle = done ? "#fff2b8" : "#1d2438"; if (done) { k.shadowColor = "#f2c14e"; k.shadowBlur = 25; } k.beginPath(); k.arc(mx, my, 15, 0, 7); k.fill(); k.shadowBlur = 0; k.strokeStyle = "#e9ecf4"; k.lineWidth = 3; k.stroke(); k.beginPath(); k.moveTo(mx - 10, my - 10); k.lineTo(mx + 10, my + 10); k.moveTo(mx + 10, my - 10); k.lineTo(mx - 10, my + 10); k.stroke(); }
+    }
+  }
+  draw();
+}
+
+/* ---- Schaltzeichen / Loetstellen zeichnen ---- */
+function drawSym(k, type, w, h) {
+  k.clearRect(0, 0, w, h); k.strokeStyle = "#1a1a1a"; k.fillStyle = "#1a1a1a"; k.lineWidth = 2.2; k.lineCap = "round";
+  const my = h / 2, x0 = 8, x1 = w - 8, mx = w / 2;
+  const ln = (a, b, c, d) => { k.beginPath(); k.moveTo(a, b); k.lineTo(c, d); k.stroke(); };
+  const arrow = (a, b, c, d) => { ln(a, b, c, d); const an = Math.atan2(d - b, c - a); k.beginPath(); k.moveTo(c, d); k.lineTo(c - 6 * Math.cos(an - 0.5), d - 6 * Math.sin(an - 0.5)); k.lineTo(c - 6 * Math.cos(an + 0.5), d - 6 * Math.sin(an + 0.5)); k.closePath(); k.fill(); };
+  if (type === "bat") { ln(x0, my, mx - 4, my); ln(mx + 4, my, x1, my); ln(mx - 4, my - 12, mx - 4, my + 12); k.lineWidth = 6; ln(mx + 4, my - 7, mx + 4, my + 7); }
+  if (type === "res" || type === "ldr") { ln(x0, my, mx - 14, my); ln(mx + 14, my, x1, my); k.strokeRect(mx - 14, my - 6, 28, 12); if (type === "ldr") { arrow(mx - 14, my - 20, mx - 6, my - 9); arrow(mx - 4, my - 20, mx + 4, my - 9); } }
+  if (type === "dio" || type === "led") { ln(x0, my, mx - 8, my); ln(mx + 8, my, x1, my); k.beginPath(); k.moveTo(mx - 8, my - 9); k.lineTo(mx - 8, my + 9); k.lineTo(mx + 8, my); k.closePath(); k.stroke(); ln(mx + 8, my - 9, mx + 8, my + 9); if (type === "led") { arrow(mx, my - 10, mx + 8, my - 20); arrow(mx + 6, my - 8, mx + 14, my - 18); } }
+  if (type === "npn") { k.beginPath(); k.arc(mx + 3, my, 15, 0, 7); k.stroke(); ln(x0, my, mx - 4, my); k.lineWidth = 3.5; ln(mx - 4, my - 9, mx - 4, my + 9); k.lineWidth = 2.2; ln(mx - 4, my - 4, mx + 9, my - 12); ln(mx + 9, my - 12, mx + 9, my - 20); arrow(mx - 4, my + 4, mx + 9, my + 12); ln(mx + 9, my + 12, mx + 9, my + 20); }
+  if (type === "sw") { ln(x0, my, mx - 10, my); ln(mx + 10, my, x1, my); ln(mx - 10, my, mx + 9, my - 11); }
+  if (type[0] === "j") {
+    const j = +type[1]; k.fillStyle = "#3e8e5a"; k.fillRect(6, h - 16, w - 12, 7); k.fillStyle = "#c98a3e"; k.fillRect(mx - 14, h - 19, 28, 3);
+    k.fillStyle = "#8a8a8a"; k.fillRect(mx - 1.5, 6, 3, h - 14);
+    k.fillStyle = "#cfcfcf"; k.strokeStyle = "#333"; k.lineWidth = 1;
+    k.beginPath();
+    if (j === 0) { k.moveTo(mx - 14, h - 19); k.lineTo(mx + 14, h - 19); k.lineTo(mx + 2, h - 36); k.lineTo(mx - 2, h - 36); }
+    if (j === 1) { k.arc(mx, h - 29, 10, 0, 7); }
+    if (j === 2) { k.moveTo(mx - 5, h - 19); k.lineTo(mx + 5, h - 19); k.lineTo(mx + 2, h - 24); k.lineTo(mx - 2, h - 24); }
+    if (j === 3) { k.fillStyle = "#c98a3e"; k.fillRect(mx + 18, h - 19, 18, 3); k.fillStyle = "#cfcfcf"; k.beginPath(); k.ellipse(mx + 9, h - 23, 26, 9, 0, 0, 7); }
+    k.closePath(); k.fill(); k.stroke();
+  }
+}
+
+/* ---- Zuordnen ---- */
+function puzzleMatch(st, onDone) {
+  const set = MATCH[st.set]; header(st, "Zuordnen");
+  panel.append(wolf(set.joint ? "Zinna prüft streng. Ordne jeder Lötstelle das Urteil zu. Erst links klicken, dann rechts." : set.sym ? "Genormte Zeichen. Klick links ein Zeichen an, dann rechts den passenden Namen." : "Das Pumpwerk funktioniert wie ein Stromkreis. Klick links, dann rechts den passenden Partner."));
+  panel.append(el("div", "q", set.title));
+  const pairs = set.sym ? shuffle(set.pairs).slice(0, 5) : set.pairs;
+  const L = shuffle(pairs.map((p, i) => ({ i, v: p[0] }))), R = shuffle(pairs.map((p, i) => ({ i, v: p[1] })));
+  const grid = el("div", "match"), cl = el("div", "mcol"), cr = el("div", "mcol"); grid.append(cl, cr); panel.append(grid);
+  let sel = null, left = pairs.length, errors = 0;
+  L.forEach(it => {
+    const d = el("div", "mitem");
+    if (set.sym || set.joint) { const c = document.createElement("canvas"); c.width = set.joint ? 120 : 90; c.height = set.joint ? 56 : 44; drawSym(c.getContext("2d"), it.v, c.width, c.height); d.append(c); d.append(el("span", null, set.joint ? "Lötstelle" : "")); }
+    else d.textContent = it.v;
+    d.onclick = () => { if (d.classList.contains("done")) return; cl.querySelectorAll(".mitem").forEach(x => x.classList.remove("sel")); d.classList.add("sel"); sel = { it, d }; };
+    cl.append(d);
+  });
+  R.forEach(it => {
+    const d = el("div", "mitem", it.v);
+    d.onclick = () => {
+      if (!sel || d.classList.contains("done")) return;
+      if (sel.it.i === it.i) { sel.d.classList.remove("sel"); sel.d.classList.add("done"); d.classList.add("done"); sel = null; left--; beep(700, 0.05); if (!left) setTimeout(fin, 300); }
+      else { errors++; S.wrong++; d.classList.add("wrong"); beep(180, 0.12); setTimeout(() => d.classList.remove("wrong"), 500); fb.innerHTML = "<b>" + pick(W_WRONG) + "</b>"; fb.className = "expl no"; }
+    };
+    cr.append(d);
+  });
+  const fb = el("div", ""); panel.append(fb);
+  const r = el("div", "row"); r.append(el("span"), closeBtn("Abbrechen")); panel.append(r);
+  function fin() { fb.remove(); r.remove(); if (onDone) return onDone(); panel.append(wolf(errors === 0 ? "Fehlerfrei. Frau Kapazitas wäre stolz. Sie würde es nicht zeigen, aber sie wäre es." : `Alles zugeordnet, mit ${errors} Fehlgriff${errors === 1 ? "" : "en"}. Geht doch.`)); solved(st, 15 + Math.max(0, 15 - errors * 4)); }
+}
+
+/* ---- Farbcode ---- */
+const COLORS = [["schwarz", "#111"], ["braun", "#7b4a1e"], ["rot", "#d0302c"], ["orange", "#ef8a1d"], ["gelb", "#f2d43a"], ["grün", "#2ea84a"], ["blau", "#2f6fd6"], ["violett", "#8a4fc9"], ["grau", "#888"], ["weiß", "#f4f4f4"]];
+function fmtOhm(v) { if (v >= 1000) return (v / 1000).toLocaleString("de-DE", { maximumFractionDigits: 2 }) + " kΩ"; return v.toLocaleString("de-DE") + " Ω"; }
+function puzzleColor(st) {
+  let round = 0, first = 0;
+  function show() {
+    header(st, `Widerstand ${round + 1} von ${st.n}`);
+    if (round === 0) panel.append(wolf("Der Tresor öffnet sich nur, wenn du die Farbringe richtig liest: 1. Ziffer, 2. Ziffer, Multiplikator (Anzahl Nullen), goldener Ring = ± 5 %."));
+    const a = 1 + Math.floor(Math.random() * 9), b = Math.floor(Math.random() * 10), m = Math.floor(Math.random() * 4);
+    const val = (a * 10 + b) * 10 ** m;
+    const c = document.createElement("canvas"); c.width = 420; c.height = 110; c.id = "pz"; panel.append(c);
+    const k = c.getContext("2d"); k.fillStyle = "#8a8a8a"; k.fillRect(20, 52, 380, 6);
+    k.fillStyle = "#e3cfa1"; k.beginPath(); k.roundRect ? k.roundRect(110, 25, 200, 60, 26) : k.rect(110, 25, 200, 60); k.fill();
+    [[a, 140], [b, 168], [m, 196]].forEach(([d, x]) => { k.fillStyle = COLORS[d][1]; k.fillRect(x, 26, 16, 58); });
+    k.fillStyle = "#d4af37"; k.fillRect(272, 26, 14, 58);
+    panel.append(el("div", "center prog", `Ringe: ${COLORS[a][0]} – ${COLORS[b][0]} – ${COLORS[m][0]} – gold`));
+    let cands = [val, (b * 10 + a) * 10 ** m, val * 10, m > 0 ? val / 10 : val * 100, (a * 10 + b) * 10 ** ((m + 2) % 4)];
+    cands = [...new Set(cands.filter(v => v >= 1 && Number.isInteger(v)))];
+    const opts = shuffle([val, ...shuffle(cands.filter(v => v !== val)).slice(0, 3)]);
+    const box = el("div", "opts"); const btns = [];
+    opts.forEach(v => { const bt = el("button", "opt", fmtOhm(v) + " ± 5 %"); bt.onclick = () => ans(v, bt); btns.push(bt); box.append(bt); });
+    panel.append(box);
+    function ans(v, bt) {
+      btns.forEach(x => x.disabled = true); const ok = v === val; bt.classList.add(ok ? "ok" : "no");
+      if (!ok) { S.wrong++; btns.forEach(x => { if (x.textContent.startsWith(fmtOhm(val) + " ")) x.classList.add("ok"); }); }
+      ok ? (first++, beep(700, 0.06)) : beep(180, 0.15);
+      panel.append(el("div", "expl " + (ok ? "ok" : "no"), `<b>${ok ? pick(W_RIGHT) : pick(W_WRONG)}</b><br>${a} und ${b} ergibt ${a}${b}, dazu ${m} Null${m === 1 ? "" : "en"} → ${fmtOhm(val)}.`));
+      const r = el("div", "row"); r.append(el("span", "prog", `${round + 1} von ${st.n}`));
+      const nb = el("button", "btn", round + 1 < st.n ? "Nächster Widerstand" : "Tresor öffnen"); nb.onclick = () => { round++; if (round < st.n) show(); else fin(); }; r.append(nb); panel.append(r);
+    }
+  }
+  function fin() { header(st); if (first < 2) { panel.append(wolf(`Nur ${first} von ${st.n} richtig. Der Tresor bleibt zu. Noch eine Runde – die Farben laufen nicht weg.`)); const r = el("div", "row"); const b = el("button", "btn", "Noch mal"); b.onclick = () => { round = 0; first = 0; show(); }; r.append(closeBtn(), b); panel.append(r); return; } panel.append(wolf("Klick. Der Tresor ist offen. Darin: ein Widerstand. Wie poetisch.")); solved(st, 10 + first * 5); }
+  show();
+}
+
+/* ---- Ohm'sches Gesetz ---- */
+function puzzleOhm(st) {
+  const tasks = OHM.map(g => pick(g)); let i = 0, first = 0, tries = 0;
+  function show() {
+    header(st, `Aufgabe ${i + 1} von 3`);
+    if (i === 0) panel.append(wolf("U = R · I. Daraus: I = U : R und R = U : I. Rechne in Volt, Ampere und Ohm. Komma geht mit Komma oder Punkt."));
+    const t = tasks[i];
+    const given = { U: t.U, I: t.I, R: t.R }; let qtxt = "", unit = "", ans = 0;
+    const fmt = (v) => String(v).replace(".", ",");
+    if (t.g === "I") { qtxt = `Der Kranmotor hängt an <b>U = ${fmt(t.U)} V</b>, sein Widerstand ist <b>R = ${t.R} Ω</b>. Wie groß ist die Stromstärke in <b>mA</b>?`; unit = "mA"; ans = t.U / t.R * 1000; }
+    if (t.g === "U") { qtxt = `Durch eine Signallampe mit <b>R = ${t.R} Ω</b> fließen <b>I = ${fmt(t.I * 1000)} mA</b> (= ${fmt(t.I)} A). Welche Spannung liegt an? (in <b>V</b>)`; unit = "V"; ans = t.I * t.R; }
+    if (t.g === "R") { qtxt = `An einem Bauteil liegen <b>U = ${fmt(t.U)} V</b>, es fließen <b>I = ${fmt(t.I * 1000)} mA</b>. Wie groß ist der Widerstand? (in <b>Ω</b>)`; unit = "Ω"; ans = t.U / t.I; }
+    panel.append(el("div", "q", qtxt));
+    const row = el("div", "center"); const inp = el("input", "num"); inp.type = "text"; inp.inputMode = "decimal"; inp.placeholder = "?"; row.append(inp, el("span", null, " " + unit)); panel.append(row);
+    const fb = el("div", ""); panel.append(fb);
+    const r = el("div", "row"); const ok = el("button", "btn", "Prüfen"); r.append(closeBtn("Abbrechen"), ok); panel.append(r);
+    inp.focus(); inp.addEventListener("keydown", e => { e.stopPropagation(); if (e.key === "Enter") ok.click(); });
+    ok.onclick = () => {
+      const v = parseFloat(inp.value.replace(",", ".").replace(/\s/g, ""));
+      const right = isFinite(v) && Math.abs(v - ans) <= Math.max(0.01 * ans, 0.05);
+      const way = t.g === "I" ? `I = U : R = ${fmt(t.U)} V : ${t.R} Ω = ${fmt(+(ans / 1000).toFixed(4))} A = ${fmt(+ans.toFixed(2))} mA` : t.g === "U" ? `U = R · I = ${t.R} Ω · ${fmt(t.I)} A = ${fmt(+ans.toFixed(2))} V` : `R = U : I = ${fmt(t.U)} V : ${fmt(t.I)} A = ${fmt(+ans.toFixed(1))} Ω`;
+      if (right) {
+        if (tries === 0) first++; tries = 0; beep(700, 0.06);
+        fb.className = "expl ok"; fb.innerHTML = `<b>${pick(W_RIGHT)}</b><br>${way}`;
+        ok.textContent = i < 2 ? "Nächste Aufgabe" : "Fertig"; ok.onclick = () => { i++; if (i < 3) show(); else { header(st); panel.append(wolf("Der Kran fährt. Hafenmeister Kollektor nickt. Das ist bei ihm ein Gefühlsausbruch.")); solved(st, 10 + first * 5); } };
+        inp.disabled = true;
+      } else {
+        tries++; S.wrong++; beep(180, 0.15); fb.className = "expl no";
+        fb.innerHTML = tries < 2 ? `<b>${pick(W_WRONG)}</b><br>Tipp: Halte im Dreieck die gesuchte Größe zu. Achte auf die Einheit (1 A = 1000 mA).` : `<b>Ich verrate es dir:</b><br>${way}<br>Tippe das Ergebnis ein.`;
+      }
+    };
+  }
+  show();
+}
+
+/* ---- LED-Polung ---- */
+function puzzleLED(st) {
+  header(st, "Polung");
+  panel.append(wolf("Drei Leuchtfeuer, drei Dioden. Klick auf eine LED, um sie umzudrehen. Sie leuchtet nur in Flussrichtung: Das Dreieck zeigt in technischer Stromrichtung vom Plus- zum Minuspol."));
+  const n = 3; const cw = 250, ch = 170;
+  const c = document.createElement("canvas"); c.id = "pz"; c.width = cw * n; c.height = ch; panel.append(c);
+  const circ = []; for (let i = 0; i < n; i++) { const plusLeft = Math.random() < 0.5; let right = Math.random() < 0.5; if (i === 0 && right === plusLeft) right = !right; circ.push({ plusLeft, right }); }
+  const msg = el("div", "center prog", "Bring alle drei LEDs zum Leuchten."); panel.append(msg);
+  const r = el("div", "row"); r.append(el("span"), closeBtn("Abbrechen")); panel.append(r);
+  let flips = 0, done = false;
+  const okC = (o) => o.right === o.plusLeft; // + links: Strom laeuft links hoch, oben nach rechts
+  function draw() {
+    const k = c.getContext("2d"); k.clearRect(0, 0, c.width, c.height);
+    circ.forEach((o, i) => {
+      const X = i * cw, x0 = X + 30, x1 = X + cw - 30, y0 = 40, y1 = ch - 30, mx = X + cw / 2, lit = okC(o);
+      k.strokeStyle = "#b98b52"; k.lineWidth = 4; k.strokeRect(x0, y0, x1 - x0, y1 - y0);
+      // Batterie unten
+      k.fillStyle = "#0e1322"; k.fillRect(mx - 16, y1 - 18, 32, 36);
+      k.strokeStyle = "#e9ecf4"; const lx = o.plusLeft ? mx - 6 : mx + 6, sx = o.plusLeft ? mx + 6 : mx - 6;
+      k.lineWidth = 3; k.beginPath(); k.moveTo(lx, y1 - 16); k.lineTo(lx, y1 + 16); k.stroke(); k.lineWidth = 9; k.beginPath(); k.moveTo(sx, y1 - 9); k.lineTo(sx, y1 + 9); k.stroke();
+      k.fillStyle = "#e9ecf4"; k.font = "bold 16px Verdana"; k.fillText("+", lx - 5 + (o.plusLeft ? -14 : 14), y1 - 18); k.fillText("–", sx - 5 + (o.plusLeft ? 14 : -14), y1 - 18);
+      // LED oben
+      k.fillStyle = "#0e1322"; k.fillRect(mx - 26, y0 - 26, 52, 52);
+      if (lit) { k.shadowColor = "#ffd85a"; k.shadowBlur = 30; }
+      k.fillStyle = lit ? "#ffd85a" : "#2a3148"; k.strokeStyle = "#e9ecf4"; k.lineWidth = 3;
+      const s = o.right ? 1 : -1; k.beginPath(); k.moveTo(mx - 12 * s, y0 - 13); k.lineTo(mx - 12 * s, y0 + 13); k.lineTo(mx + 12 * s, y0); k.closePath(); k.fill(); k.shadowBlur = 0; k.stroke();
+      k.beginPath(); k.moveTo(mx + 12 * s, y0 - 13); k.lineTo(mx + 12 * s, y0 + 13); k.stroke();
+      k.lineWidth = 2; [[0, 0], [8, 4]].forEach(([dx, dy]) => { k.beginPath(); k.moveTo(mx + dx - 2, y0 - 16 + dy); k.lineTo(mx + dx + 8, y0 - 26 + dy); k.stroke(); });
+      k.fillStyle = lit ? "#58c58a" : "#e8606a"; k.font = "13px Verdana"; k.fillText(lit ? "leuchtet" : "sperrt", mx - 25, y0 + 48);
+    });
+  }
+  c.onclick = e => {
+    if (done) return; const b = c.getBoundingClientRect(); const i = Math.floor((e.clientX - b.left) / b.width * n); circ[i].right = !circ[i].right; flips++; beep(okC(circ[i]) ? 700 : 300, 0.04); draw();
+    if (circ.every(okC)) { done = true; setTimeout(() => { msg.remove(); r.remove(); quiz(); }, 500); }
+  };
+  function quiz() {
+    panel.append(el("div", "q", "Und warum hat die falsch herum eingebaute LED nicht geleuchtet?"));
+    const q = { o: ["Sie war in Sperrrichtung geschaltet – eine Diode leitet nur in eine Richtung", "Die Batterie war zu schwach", "Der Strom wurde vorher verbraucht", "LEDs leuchten nur jede zweite Sekunde"], a: 0 };
+    const box = el("div", "opts"); shuffle([0, 1, 2, 3]).forEach(k => { const b = el("button", "opt", q.o[k]); b.onclick = () => { box.querySelectorAll("button").forEach(x => x.disabled = true); if (k === 0) { b.classList.add("ok"); panel.append(wolf("Genau. Eine Diode ist eine Einbahnstraße. Und die LED ist eine Einbahnstraße mit Beleuchtung.")); solved(st, 15 + (flips <= 4 ? 10 : 5)); } else { b.classList.add("no"); S.wrong++; panel.append(el("div", "expl no", "<b>Nein.</b> Eine (Leucht-)Diode leitet nur in Flussrichtung. Falsch herum sperrt sie. Versuch es noch einmal.")); setTimeout(() => { box.querySelectorAll("button").forEach(x => { if (!x.classList.contains("no")) x.disabled = false; }); }, 600); } }; box.append(b); });
+    panel.append(box);
+  }
+  draw();
+}
+
+/* ---- Reihenfolge ---- */
+function puzzleSort(st, onDone) {
+  header(st, "Reihenfolge");
+  panel.append(wolf("Zinna will sehen, ob du die fünf Schritte beim Löten kennst. Klick sie in der richtigen Reihenfolge an. Ein Fehler – und sie schaut dich an. Lange."));
+  const box = el("div", "steps"), chosen = el("div", "chosen"); let next = 0, errors = 0;
+  shuffle(STEPS.map((s, i) => ({ s, i }))).forEach(o => {
+    const b = el("button", null, o.s); b.onclick = () => {
+      if (b.classList.contains("done")) return;
+      if (o.i === next) { b.classList.add("done"); b.textContent = (next + 1) + ". " + o.s; next++; beep(600 + next * 60, 0.05); if (next === STEPS.length) setTimeout(fin, 300); }
+      else { errors++; S.wrong++; beep(180, 0.12); fb.className = "expl no"; fb.innerHTML = `<b>${pick(W_WRONG)}</b> Das ist noch nicht Schritt ${next + 1}. Denk daran: erst vorwärmen, dann Lot, dann Lot weg, dann Kolben weg.`; }
+    }; box.append(b);
+  });
+  panel.append(box, chosen); const fb = el("div", ""); panel.append(fb);
+  const r = el("div", "row"); r.append(el("span"), closeBtn("Abbrechen")); panel.append(r);
+  function fin() { fb.remove(); r.remove(); if (onDone) return onDone(); panel.append(wolf(errors ? "Zinna brummt. Das bedeutet: bestanden." : "Zinna lächelt. Das habe ich in dreizehn Jahren nicht gesehen.")); solved(st, 15 + Math.max(0, 15 - errors * 4)); }
+}
+
+/* ---- Finale ---- */
+let finalSt = null;
+function puzzleFinal(st) {
+  finalSt = st;
+  header(st, "Teil 1 von 3: der Hauptstromkreis");
+  puzzleCircuit({ ...st, lvl: 2 }, () => {
+    panel.append(wolf("Der Hauptkreis ist geschlossen! Jetzt die Steuerung."));
+    const r = el("div", "row"); const b = el("button", "btn", "Weiter"); b.onclick = () => puzzleSort({ ...st, t: st.t }, finalQuiz); r.append(el("span"), b); panel.append(r);
+  });
+}
+function finalQuiz() {
+  const pool = shuffle([...Q.kreis, ...Q.atom, ...Q.wasser, ...Q.richtung, ...Q.bauteile, ...Q.loeten]).slice(0, 5);
+  puzzleMC({ ...finalSt, type: "final" }, pool);
+}
+function finalStep2() {
+  const first = !S.finished; S.finished = true; if (first) S.pts += 100; save(); updateHUD(); drawMap();
+  overlay.classList.add("hidden"); mode = "play";
+  beep(523, 0.1); setTimeout(() => beep(659, 0.1), 120); setTimeout(() => beep(784, 0.2), 240);
+  setTimeout(() => dialog("Wolfram", "bulb", ["Es ... es leuchtet. Ganz Umbra leuchtet!", "Der Baron ist gerade mit einem Karren voller Teelichter Richtung Stadttor verschwunden. Er hat „Ich komme wieder – mit Duftkerzen!“ gerufen.", "Lehrling, du bist jetzt Lichtschmiedin oder Lichtschmied. Offiziell. Ich habe den Stempel zwar nicht, aber ich habe eine Fassung, und das zählt."], showEnd), 400);
+}
+function showEnd() {
+  mode = "panel"; overlay.classList.remove("hidden"); panel.innerHTML = "";
+  panel.append(el("h2", null, "Umbra leuchtet!"), el("div", "sub", "Abschlussurkunde der Gilde der Lichtschmiede"));
+  panel.append(el("div", "end", `<p>Du hast alle fünfzehn Lichtwerke und das Große Lichtwerk repariert und <b>${S.pts} Lichtpunkte</b> gesammelt (Fehlversuche unterwegs: ${S.wrong}).</p>
+  <p><b>Das kannst du jetzt:</b></p><ul>
+  <li>Stromkreise schließen, Leiter und Isolatoren unterscheiden, den Atomaufbau erklären</li>
+  <li>das Wassermodell anwenden, Spannung und Stromstärke unterscheiden, Stromrichtung und Potenzial erklären</li>
+  <li>Schaltzeichen lesen, Widerstände mit dem Farbcode bestimmen</li>
+  <li>mit dem Ohm’schen Gesetz rechnen, LEDs richtig einbauen, Transistor und LDR erklären</li>
+  <li>gute und schlechte Lötstellen erkennen, die Lötschritte und Sicherheitsregeln nennen</li></ul>
+  <p>Du kannst weiter durch die (jetzt helle) Stadt laufen und jedes Lichtwerk noch einmal üben.</p>`));
+  const r = el("div", "row"); r.append(el("span"), closeBtn("Durch die helle Stadt laufen")); panel.append(r);
+}
+
+/* ============================ HUD / TON ============================= */
+function updateHUD() {
+  document.getElementById("pts").textContent = S.pts;
+  const b = document.getElementById("bulbs"); b.innerHTML = "";
+  DIST.forEach((d, i) => { const s = el("span", distDone(i) ? "on" : ""); s.title = d.name; b.append(s); });
+  const q = document.getElementById("quest");
+  const next = [0, 1, 2, 3, 4].find(d => !distDone(d));
+  if (S.finished) q.innerHTML = "<b>Geschafft!</b> Umbra leuchtet. Übe weiter, wenn du willst.";
+  else if (next === undefined) q.innerHTML = "<b>Ziel:</b> Zurück zum Gildenplatz – das Große Lichtwerk einschalten.";
+  else { const left = ST.filter(s => s.d === next && !S.done[s.id]).length; q.innerHTML = `<b>Ziel:</b> ${DIST[next].name} – noch ${left} kaputte${left === 1 ? "s" : ""} Lichtwerk${left === 1 ? "" : "e"} (rot blinkend).<br><span style="color:var(--muted)">${DIST[next].thema}</span>`; }
+}
+let soundOn = true, actx = null;
+function beep(f, d) {
+  if (!soundOn) return;
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(); o.type = "square"; o.frequency.value = f; g.gain.value = 0.04; o.connect(g); g.connect(actx.destination); o.start(); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + d); o.stop(actx.currentTime + d + 0.02); } catch (e) { }
+}
+document.getElementById("bSound").onclick = e => { soundOn = !soundOn; e.target.textContent = "Ton: " + (soundOn ? "an" : "aus"); e.target.blur(); };
+document.getElementById("bHelp").onclick = e => { e.target.blur(); if (mode !== "play") return; dialog("Wolfram", "bulb", ["Laufen: Pfeiltasten oder WASD. Untersuchen und reden: E oder Leertaste.", "Rot blinkende Lichtwerke sind kaputt. Jeder fertige Bezirk lichtet das Nebeltor zum nächsten.", "Dein Spielstand wird automatisch in diesem Browser gespeichert."]); };
+
+/* ============================ START ================================= */
+function start(fresh) {
+  if (fresh) S = newState(document.getElementById("optHelp").checked);
+  document.getElementById("title").classList.add("hidden");
+  ["hud", "quest", "topright"].forEach(id => document.getElementById(id).classList.remove("hidden"));
+  buildMap(); buildLamps(); drawMap(); updateHUD(); mode = "play"; save();
+  if (!S.intro) { S.intro = true; setTimeout(() => dialog("Wolfram", "bulb", ["Psst. Hier drüben. Die Glühlampe auf dem Tresen. Ja, ich rede. Komm her und drück E."]), 300); }
+}
+document.getElementById("bStart").onclick = () => { if (load() && !confirm("Neues Spiel starten? Der alte Spielstand wird überschrieben.")) return; start(true); };
+document.getElementById("bCont").onclick = () => { S = load(); if (S) { document.getElementById("optHelp").checked = S.help; start(false); } };
+if (load()) document.getElementById("bCont").classList.remove("hidden");
+buildSprites(); resize();
+S = newState(false); buildMap(); buildLamps(); drawMap();
+function loop(t) { const dt = Math.min(50, t - (last || t)); last = t; update(dt); render(t); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+addEventListener("beforeunload", () => { if (mode !== "title") save(); });
+</script>
+</body>
+</html>
