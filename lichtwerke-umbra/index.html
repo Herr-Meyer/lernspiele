@@ -76,6 +76,48 @@ input.num{font:700 20px var(--font);width:150px;padding:8px 10px;border-radius:1
 #title .keys{color:var(--muted);font-size:13px;margin-top:12px}
 #title label{font-size:14px;color:var(--text)}
 .end{text-align:left;line-height:1.55}
+/* Aufgabenleiste */
+#taskbar{display:flex;align-items:center;gap:8px}
+#taskbar .bar{width:190px;height:12px;background:#2a3148;border:1px solid #000;border-radius:3px;overflow:hidden}
+#taskbar i{display:block;height:100%;width:0;background:linear-gradient(#7be08f,#3fae5c);transition:width .8s}
+#quest ul{margin:4px 0 0;padding-left:0;list-style:none}
+#quest li.ok{color:#7be08f;text-decoration:line-through}
+#quest .sab{color:#ff6b6b;font-weight:700;animation:blink 0.8s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+/* Einspieler (diagonal) */
+#banner{position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden}
+#banner .b,#banner .b2{position:absolute;left:-40vw;right:-40vw;top:calc(50% - 68px);height:136px;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-13deg) translate(-130%,45vh)}
+#banner .b{animation:sweep 2.7s cubic-bezier(.15,.85,.25,1) forwards;box-shadow:0 0 0 6px rgba(0,0,0,.55),0 20px 50px rgba(0,0,0,.6)}
+#banner .b2{top:calc(50% - 92px);height:184px;opacity:.9;animation:sweep 2.7s cubic-bezier(.15,.85,.25,1) .07s forwards}
+#banner .t{font:900 italic 58px/1 Verdana,system-ui,sans-serif;letter-spacing:4px;color:#fff;text-shadow:4px 4px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000;text-transform:uppercase}
+#banner .s{font:700 18px Verdana,sans-serif;color:#fff;margin-top:8px;text-shadow:2px 2px 0 #000}
+#banner.big .b{height:210px;top:calc(50% - 105px)} #banner.big .b2{height:270px;top:calc(50% - 135px)} #banner.big .t{font-size:96px}
+#banner .fl{position:absolute;inset:0;background:#fff;animation:flash .5s ease-out forwards}
+#banner .sp{position:absolute;left:50%;top:50%;width:8px;height:8px;background:#ffe08a;box-shadow:0 0 10px #ffd04a;animation:spark 1.1s ease-out forwards}
+@keyframes sweep{0%{transform:rotate(-13deg) translate(-130%,45vh)}17%{transform:rotate(-13deg) translate(0,0)}80%{transform:rotate(-13deg) translate(4%,0)}100%{transform:rotate(-13deg) translate(130%,-45vh)}}
+@keyframes flash{0%{opacity:.55}100%{opacity:0}}
+@keyframes spark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+@media (prefers-reduced-motion:reduce){#banner .b,#banner .b2{animation:none;transform:rotate(-13deg)}}
+/* Alarm */
+#alarm{position:fixed;inset:0;pointer-events:none;z-index:2;box-shadow:inset 0 0 120px 40px rgba(220,30,40,.55);animation:alarm 1.2s ease-in-out infinite}
+@keyframes alarm{50%{box-shadow:inset 0 0 60px 10px rgba(220,30,40,.15)}}
+/* Besprechung und Rauswurf */
+.meet{display:grid;grid-template-columns:1fr;gap:8px}
+.sus{display:flex;gap:10px;align-items:center;background:#232c44;border:2px solid var(--line);border-radius:12px;padding:8px 10px}
+.sus canvas{width:48px;height:48px;image-rendering:pixelated;background:#0e1322;border-radius:8px;flex:none}
+.sus .who{font-weight:700;color:var(--gold);font-size:14px}
+.sus .say{font-size:14px;line-height:1.4}
+.sus button{margin-left:auto;flex:none}
+.sus.out{opacity:.4}
+.clues{background:#1a2133;border-radius:10px;padding:8px 12px;font-size:13px;line-height:1.5;margin-bottom:10px}
+#eject{position:fixed;inset:0;z-index:25;background:#03040a;overflow:hidden;cursor:pointer}
+#eject .stars{position:absolute;inset:-50%;background-image:radial-gradient(1px 1px at 20px 30px,#fff,transparent),radial-gradient(1px 1px at 80px 120px,#cfd8ff,transparent),radial-gradient(2px 2px at 160px 60px,#fff,transparent),radial-gradient(1px 1px at 230px 170px,#fff,transparent),radial-gradient(1px 1px at 300px 90px,#aab,transparent);background-size:320px 220px;animation:stars 18s linear infinite}
+@keyframes stars{to{transform:translateX(-320px)}}
+#eject canvas{position:absolute;top:38%;left:-15%;width:110px;height:110px;image-rendering:pixelated;animation:drift 6s linear forwards}
+@keyframes drift{to{left:110%;transform:rotate(720deg)}}
+#eject .txt{position:absolute;left:0;right:0;top:62%;text-align:center;font:700 26px Verdana,sans-serif;color:#fff;min-height:70px}
+#eject .small{font-size:15px;color:var(--muted);margin-top:10px}
+
 </style>
 </head>
 <body>
@@ -84,7 +126,10 @@ input.num{font:700 20px var(--font);width:150px;padding:8px 10px;border-radius:1
 <div id="hud" class="hidden">
   <div class="chip">✦ <b id="pts">0</b> Lichtpunkte</div>
   <div class="chip" id="bulbs"></div>
+  <div class="chip" id="taskbar">AUFGABEN <div class="bar"><i id="tbFill"></i></div> <span id="tbTxt">0/15</span></div>
 </div>
+<div id="alarm" class="hidden"></div>
+<div id="banner"></div>
 <div id="quest" class="chip hidden"></div>
 <div id="topright" class="hidden">
   <button id="bSound" title="Ton an/aus">Ton: an</button>
@@ -109,7 +154,7 @@ input.num{font:700 20px var(--font);width:150px;padding:8px 10px;border-radius:1
     <div class="tag">Ein düsteres Lernabenteuer zu Elektrotechnik und Löten · TuN Klasse 9</div>
     <div class="story">
       Seit dem <b>Großen Kurzschluss</b> vor dreizehn Jahren liegt die Stadt <b>Umbra</b> im Dunkeln. Die Lichtwerke sind verrottet, die Lichtschmiede-Gilde ist auf zwei Mitglieder geschrumpft: dich, den neuen Lehrling, und <b>Wolfram</b> – eine alte 60-Watt-Glühlampe mit Persönlichkeit und Rentenanspruch.<br><br>
-      Das <b>Kerzenkartell</b> von Baron <b>Talgmund von Docht</b> verdient prächtig an der Finsternis. Repariere in fünf Bezirken die Lichtwerke, schalte das Große Lichtwerk wieder ein – und mach dem Baron das Geschäft kaputt.
+      Das <b>Kerzenkartell</b> von Baron <b>Talgmund von Docht</b> verdient prächtig an der Finsternis. Jemand in Umbra <b>sabotiert</b> die Lichtwerke. Erledige in fünf Bezirken deine Aufgaben, behebe Sabotagen, berufe die <b>Notfall-Besprechung</b> ein – und finde heraus, wer hier verdächtig ist. (Wolfram sagt: „sehr verdächtig“. Die jungen Leute sagen: „sus“.) Und was macht eigentlich Chemie- und Mathelehrer <b>Herr Reuter</b> mit seiner Ziege im Archiv?
     </div>
     <div style="margin-top:14px">
       <label><input type="checkbox" id="optHelp"> Mit Hilfen spielen (eine falsche Antwort ist schon durchgestrichen)</label>
@@ -243,6 +288,8 @@ const NPC = [
   { id: "valenz", x: 13, y: 37, name: "Valentin Valenz, freies Elektron", spr: "elec", lines: () => ["Hallo! Tschüss! Ich bin ein freies Außenelektron, ich bleibe nie lange an einem Atom.", "In Metallen gibt es Millionen wie mich. Darum leiten Metalle. In Plastik sind wir alle festgebunden. Furchtbar spießig.", "Ein Tipp: Ohne geschlossenen Kreis kommen wir nirgends an. Wir sind treu, aber wir brauchen einen Rückweg."] },
   { id: "grimm", x: 15, y: 13, name: "Pumpenwärter Grimm", spr: "worker", lines: () => ["Mein Pumpwerk hält den Höhenunterschied aufrecht. Ohne Pumpe kein Fluss. Ohne Batterie kein Strom. Ganz einfach.", "Die Leute sagen, das Wasser wird verbraucht. Unsinn. Es läuft im Kreis. Genau wie eure Elektronen.", "Und lass dich nicht verwirren: Die Raben auf der Leitung sterben nicht. Gleiches Potenzial unter beiden Füßen. Glückliche Viecher."] },
   { id: "kapazitas", x: 26, y: 12, name: "Archivarin Frau Kapazitas", spr: "arch", lines: () => ["Psst. Im Archiv der Zeichen wird nicht gezeichnet, wie es aussieht, sondern wie es genormt ist.", "Eine LED ist ein Dreieck mit Strich und zwei Pfeilen. Sie sieht nicht aus wie eine LED. Das ist der Witz an Normen.", "Und die Farbringe auf Widerständen: erste Ziffer, zweite Ziffer, Anzahl der Nullen, Toleranz. Braun-Schwarz-Rot? Tausend Ohm. Nicht zuhören? Auch tausend Ohm."] },
+  { id: "reuter", x: 36, y: 12, name: "Herr Reuter, Chemie- und Mathelehrer", spr: "reuter", lines: () => reuterLines() },
+  { id: "goat", x: 37, y: 13, name: "Berthold, Herrn Reuters Ziege", spr: "goat", lines: () => [pick(["Määäh.", "Mäh. Mäh-mäh.", "Mööh. (Berthold kaut auf einem Schaltplan.)", "Määh! (Berthold rammt dir sanft das Knie.)"]), pick(["Wolfram: Die Ziege versteht vom Stromkreis ungefähr so viel wie vom Abseits. Also mehr als manche Verteidiger.", "Wolfram: Herr Reuter sagt, Berthold sei ein Glücksbringer. Statistisch gesehen ist das nicht belegt.", "Wolfram: Ich weiß nicht, wer hier hässlicher ist: die Ziege oder die Lötstelle vom letzten Lehrling."])] },
   { id: "kai", x: 57, y: 15, name: "Hafenmeister Kollektor", spr: "worker2", lines: () => ["Mein Hafen läuft mit Transistoren. Kleiner Basisstrom rein, großer Strom raus. Wie bei mir: kleiner Kaffee, große Laune.", "Unser Leuchtfeuer hat Dioden. Falsch herum eingebaut leuchten die nicht. Das hat der letzte Lehrling auch erst nach drei Wochen gemerkt.", "U gleich R mal I. Wer das kann, darf meinen Kran steuern."] },
   { id: "zinna", x: 57, y: 39, name: "Lötmeisterin Zinna", spr: "smith", lines: () => ["Willkommen in der Zinnschmiede. Regel eins: Der Kolben liegt im Ständer, nicht auf dem Tisch. Regel zwei: siehe Regel eins.", "Eine gute Lötstelle glänzt wie ein kleiner Vulkan. Eine kalte Lötstelle sieht aus wie ein grauer Kaugummi und benimmt sich auch so.", "Brille auf beim Abkneifen. Ich habe schon genug Lehrlinge mit Drahtstück im Auge gesehen. Na gut, einen. Der hieß übrigens Baron von Docht."] },
 ];
@@ -250,13 +297,19 @@ const NPC = [
 /* ============================ ZUSTAND =============================== */
 let S = null;
 function newState(help) {
-  return { v: 1, px: 31 * T + 8, py: 39 * T + 8, dir: 0, done: {}, pts: 0, help: !!help, finished: false, intro: false, wrong: 0 };
+  return { v: 1, px: 31 * T + 8, py: 39 * T + 8, dir: 0, done: {}, pts: 0, help: !!help, finished: false, intro: false, wrong: 0, sab: null, sabDone: {}, pendingSab: null };
 }
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } }
 function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) { } return null; }
 function distDone(d) { return ST.filter(s => s.d === d).every(s => S.done[s.id]); }
 function nDone() { return ST.filter(s => S.done[s.id]).length; }
 function distOpen(d) { return d === 0 || distDone(d - 1); }
+function fix(s) { s.sabDone = s.sabDone || {}; if (s.sab === undefined) s.sab = null; if (s.pendingSab === undefined) s.pendingSab = null; return s; }
+// Sabotagen nach Bezirk 2 und 4; Sicherungskasten im jeweiligen Bezirk
+const SAB = { 1: { x: 16, y: 16 }, 3: { x: 58, y: 16 } };
+// Beweise je abgeschlossenem Bezirk
+const CLUES = ["Wachsflecken am Laternenpfahl in der Kupfergasse", "Ein abgebrannter Docht im Ventil des Pumpwerks", "Ein Kerzen-Gutschein im Archiv, unterschrieben mit „T. v. D.“", "Ein Zettel im Hafen: C₂₅H₅₂ + 38 O₂ → 25 CO₂ + 26 H₂O – die Verbrennung von Kerzenwachs, in sehr ordentlicher Lehrerhandschrift", "Ein Teelicht-Rest im Sicherungskasten der Zinnschmiede"];
+const BUTTON = { x: 34, y: 35 }; // Notfallknopf
 
 /* ============================ KARTE ================================= */
 // 0 Pflaster, 1 Haus, 2 Wasser, 3 Nebeltor, 4 Mauer/Kante
@@ -394,6 +447,8 @@ function buildSprites() {
   SPR.worker = spr(["......kkkk......", ".....kggggk.....", "....kggggggk....", "....kffffffk....", "....kfekkefk....", "....kffbbffk....", ".....kbbbbk.....", "....kooooook....", "...kooooooook...", "...kfoooooofk...", "....koooooo k...", "....kooooook....", ".....kbbkbbk....", ".....kbbkbbk....", ".....kkk.kkk....", "................"], { k: "#111", g: "#555c66", f: "#d4a37a", e: "#111", b: "#6b5440", o: "#3f6f8f" });
   SPR.worker2 = spr(["......kkkk......", ".....knnnnk.....", "....knnnnnnk....", "....kffffffk....", "....kfekkefk....", "....kffffffk....", ".....kffffk.....", "....kggggggk....", "...kggyyyyggk...", "...kfgggggggfk..", "....kggggggk....", "....kggggggk....", ".....kbbkbbk....", ".....kbbkbbk....", ".....kkk.kkk....", "................"], { k: "#111", n: "#2d4a3a", f: "#c99872", e: "#111", g: "#2f5a46", y: "#d7c24a", b: "#2a2a2a" });
   SPR.arch = spr(["......kkkk......", ".....kwwwwk.....", "....kwwwwwwk....", "....kffffffk....", "....kgekkegk....", "....kffffffk....", ".....kffffk.....", "....kllllllk....", "...kllllllllk...", "...kllllllllk...", "...kllllllllk...", "...kllllllllk...", "...kllllllllk...", "....kllllllk....", ".....kkkkkk.....", "................"], { k: "#111", w: "#bbb", f: "#e1bc95", g: "#7fa", e: "#111", l: "#4a3a6b" });
+  SPR.reuter = spr(["......kkkk......", ".....khhhhk.....", "....khhhhhhk....", "....kffffffk....", "....kgGfgGfk....", "....kffffffk....", ".....kfmmfk.....", "....krwrwrwk....", "...kwwrwrwwwk...", "...kwwwwwwwwk...", "...kfwwbwwwfk...", "....kwwwwwwk....", ".....kbbkbbk....", ".....kbbkbbk....", ".....kkk.kkk....", "................"], { k: "#111", h: "#5b4a3a", f: "#e2b48c", g: "#1a1a1a", G: "#bfe3ff", m: "#9a5a4a", r: "#d22b2b", w: "#f2f2f2", b: "#2c3550" });
+  SPR.goat = spr(["................", "..kk..k.........", ".k..kk.k........", "k..kkwk.k.......", "...kwwwk........", "..kwEEwwk.......", ".kwwEewwkkkkkkk.", "kwwwwwwwwwgwwwwk", "kddwwwwwwggwwwwwk", ".kpkwwwwwwwwwgwk", "..kbkwwgwwwwwwwk", "..kbbkwwwwwwwwk.", "...kk.kwkkkkwwk.", "......kwk..kwk..", "......kkk..kkk..", "................"], { k: "#111", w: "#d8d0bd", g: "#9c937f", E: "#fff", e: "#111", p: "#e8828a", d: "#b9a98f", b: "#7a6a4f" });
   SPR.smith = spr(["......kkkk......", ".....krrrrk.....", "....krrrrrrk....", "....kffffffk....", "....kfekkefk....", "....kffffffk....", ".....kffffk.....", "....kaaaaaak....", "...kfaaaaaafk...", "...kfaaaaaafk...", "....kaaaaaak....", "....kaaaaaak....", ".....kbbkbbk....", ".....kbbkbbk....", ".....kkk.kkk....", "................"], { k: "#111", r: "#a8432e", f: "#cf9a73", e: "#111", a: "#6b4a2e", b: "#2c2c2c" });
 }
 // Station (Lichtwerk-Maschine)
@@ -443,6 +498,8 @@ function render(t) {
   // Stationen
   for (const s of ST) drawStation(ctx, s.x * T, s.y * T, !!S.done[s.id], DIST[s.d].col, t);
   drawFinal(ctx, t);
+  drawButton(ctx, t);
+  if (S.sab) drawFuse(ctx, S.sab.x * T, S.sab.y * T, t);
   // Figuren (nach y sortiert)
   const actors = NPC.filter(n => n.id !== "baron" || !S.finished).map(n => ({ y: n.y * T + 16, draw: () => ctx.drawImage(SPR[n.spr], n.x * T, n.y * T + (n.spr === "elec" ? Math.round(Math.sin(t / 300) * 1.5) : 0)) }));
   actors.push({ y: S.py + 8, draw: () => drawPlayer(t) });
@@ -453,6 +510,7 @@ function render(t) {
   drawDark(cx, cy, t);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(dark, 0, 0, VW * zoom, VH * zoom);
+  drawArrow(cx, cy, t);
 }
 function lampOn(l) { return l.d === 9 ? S.finished : distDone(l.d); }
 function drawPlayer(t) {
@@ -475,8 +533,46 @@ function drawFinal(c, t) {
   c.fillStyle = on; c.fillRect(x + 2, y - 4, 12, 10);
   c.fillStyle = "#111"; c.fillRect(x + 7, y - 4, 2, 10);
 }
+function drawButton(c, t) {
+  const x = BUTTON.x * T, y = BUTTON.y * T;
+  c.fillStyle = "#2a2e3d"; c.fillRect(x + 1, y + 6, 14, 9); c.fillStyle = "#1a1d29"; c.fillRect(x + 1, y + 13, 14, 2);
+  c.fillStyle = "#555"; c.fillRect(x + 3, y + 4, 10, 4);
+  c.fillStyle = (Math.floor(t / 500) % 2 && !S.finished) ? "#ff3b3b" : "#b81d24"; c.fillRect(x + 4, y + 2, 8, 4); c.fillStyle = "#ff8a8a"; c.fillRect(x + 5, y + 2, 3, 1);
+}
+function drawFuse(c, x, y, t) {
+  c.fillStyle = "#14161f"; c.fillRect(x + 2, y + 13, 12, 3);
+  c.fillStyle = "#59606f"; c.fillRect(x + 2, y + 1, 12, 13); c.fillStyle = "#3a3f52"; c.fillRect(x + 3, y + 2, 10, 11);
+  c.fillStyle = "#f2c14e"; c.fillRect(x + 7, y + 4, 2, 3); c.fillRect(x + 6, y + 7, 2, 2); c.fillRect(x + 8, y + 7, 1, 3);
+  c.fillStyle = (Math.floor(t / 250) % 2) ? "#ff3b3b" : "#5a1010"; c.fillRect(x + 4, y + 11, 8, 1);
+}
+// Pfeil am Bildschirmrand zum naechsten Ziel
+function target() {
+  if (S.sab) return [S.sab.x * T + 8, S.sab.y * T + 8, "#ff4b4b"];
+  if (S.finished) return null;
+  const next = [0, 1, 2, 3, 4].find(d => !distDone(d));
+  if (next === undefined) return [FINAL.x * T + 8, FINAL.y * T, "#f2c14e"];
+  let best = null, bd = 1e9;
+  for (const s of ST) if (s.d === next && !S.done[s.id]) { const d = (s.x * T - S.px) ** 2 + (s.y * T - S.py) ** 2; if (d < bd) { bd = d; best = s; } }
+  return best ? [best.x * T + 8, best.y * T + 8, "#f2c14e"] : null;
+}
+function drawArrow(cx, cy, t) {
+  if (mode === "title") return;
+  const tg = target(); if (!tg) return;
+  const sx = (tg[0] - cx) * zoom, sy = (tg[1] - cy) * zoom, m = 46;
+  if (sx > m && sy > m && sx < cv.width - m && sy < cv.height - m) return; // sichtbar
+  const px = (S.px - cx) * zoom, py = (S.py - cy) * zoom, a = Math.atan2(sy - py, sx - px);
+  const ex = Math.max(m, Math.min(cv.width - m, px + Math.cos(a) * 2000)), ey = Math.max(m, Math.min(cv.height - m, py + Math.sin(a) * 2000));
+  // Schnittpunkt mit dem Rand
+  const kx = (Math.cos(a) > 0 ? cv.width - m - px : m - px) / Math.cos(a), ky = (Math.sin(a) > 0 ? cv.height - m - py : m - py) / Math.sin(a);
+  const k = Math.min(Math.abs(kx), Math.abs(ky)), ax = px + Math.cos(a) * k, ay = py + Math.sin(a) * k;
+  const pulse = 1 + Math.sin(t / 150) * 0.12;
+  ctx.save(); ctx.translate(ax, ay); ctx.rotate(a); ctx.scale(pulse, pulse);
+  ctx.fillStyle = tg[2]; ctx.strokeStyle = "#000"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(18, 0); ctx.lineTo(-10, -13); ctx.lineTo(-4, 0); ctx.lineTo(-10, 13); ctx.closePath(); ctx.stroke(); ctx.fill();
+  ctx.restore();
+}
 function drawDark(cx, cy, t) {
-  const level = S.finished ? 0.25 : 0.9 - 0.07 * [0, 1, 2, 3, 4].filter(distDone).length;
+  const level = S.finished ? 0.25 : S.sab ? 0.97 : 0.9 - 0.07 * [0, 1, 2, 3, 4].filter(distDone).length;
   dctx.globalCompositeOperation = "source-over"; dctx.clearRect(0, 0, VW, VH);
   dctx.fillStyle = `rgba(4,5,12,${level})`; dctx.fillRect(0, 0, VW, VH);
   dctx.globalCompositeOperation = "destination-out";
@@ -487,8 +583,9 @@ function drawDark(cx, cy, t) {
     dctx.fillStyle = g; dctx.fillRect(X - r, Y - r, r * 2, r * 2);
   };
   const flick = 1 + Math.sin(t / 90) * 0.03 + Math.sin(t / 37) * 0.02;
-  light(S.px + 4, S.py - 2, 78 * flick);
-  for (const l of LAMPS) if (lampOn(l)) light(l.x * T + 8, l.y * T + 3, 64);
+  light(S.px + 4, S.py - 2, (S.sab ? 46 : 78) * flick);
+  if (S.sab) light(S.sab.x * T + 8, S.sab.y * T + 8, 22 + Math.sin(t / 120) * 4);
+  if (!S.sab) for (const l of LAMPS) if (lampOn(l)) light(l.x * T + 8, l.y * T + 3, 64);
   for (const s of ST) light(s.x * T + 8, s.y * T + 7, S.done[s.id] ? 70 : 14, S.done[s.id] ? 1 : 0.8);
   light(FINAL.x * T + 8, FINAL.y * T, S.finished ? 160 : 26);
   light(30 * T + 8, 34 * T + 6, 30, 0.9); // Wolfram glimmt
@@ -517,6 +614,8 @@ function solid(px, py) {
     for (const s of ST) if (s.x === tx && s.y === ty) return true;
     for (const n of NPC) if (n.x === tx && n.y === ty && (n.id !== "baron" || !S.finished)) return true;
     if (tx >= FINAL.x - 1 && tx <= FINAL.x + 1 && ty >= FINAL.y - 1 && ty <= FINAL.y) return true;
+    if (tx === BUTTON.x && ty === BUTTON.y) return true;
+    if (S.sab && tx === S.sab.x && ty === S.sab.y) return true;
   }
   return false;
 }
@@ -543,7 +642,9 @@ function nearby() {
   let best = null, bd = 2.6;
   for (const s of ST) { const d = d2(s.x, s.y); if (d < bd) { bd = d; best = { kind: "st", o: s }; } }
   for (const n of NPC) { if (n.id === "baron" && S.finished) continue; const d = d2(n.x, n.y); if (d < bd) { bd = d; best = { kind: "npc", o: n }; } }
+  if (d2(BUTTON.x, BUTTON.y) < bd) { bd = d2(BUTTON.x, BUTTON.y); best = { kind: "btn" }; }
   if (d2(FINAL.x, FINAL.y) < 5) best = { kind: "fin", o: FINAL };
+  if (S.sab && d2(S.sab.x, S.sab.y) < 3) best = { kind: "sab" };
   return best;
 }
 const hintEl = document.getElementById("hint");
@@ -553,12 +654,20 @@ function updateHint() {
   hintEl.classList.remove("hidden");
   if (n.kind === "st") hintEl.textContent = (S.done[n.o.id] ? "✓ " : "") + n.o.t + " – E: " + (S.done[n.o.id] ? "noch mal üben" : "reparieren");
   else if (n.kind === "npc") hintEl.textContent = n.o.name + " – E: reden";
+  else if (n.kind === "btn") hintEl.textContent = "Notfallknopf – E: drücken";
+  else if (n.kind === "sab") hintEl.textContent = "⚠ Sicherungskasten – E: Sabotage beheben";
   else hintEl.textContent = "Das Große Lichtwerk – E: " + (S.finished ? "ansehen" : "einschalten");
 }
 function interact() {
   const n = nearby(); if (!n) return;
   if (n.kind === "npc") { const lines = n.o.lines(); dialog(n.o.name, n.o.spr, lines); }
-  else if (n.kind === "st") openStation(n.o);
+  else if (n.kind === "st") { if (S.sab && !S.done[n.o.id]) dialog("Wolfram", "bulb", ["Erst die Sabotage! Ohne Licht siehst du nicht mal deine eigenen Lötstellen. Der rote Pfeil zeigt dir den Sicherungskasten."]); else openStation(n.o); }
+  else if (n.kind === "sab") openFuse();
+  else if (n.kind === "btn") {
+    if (S.finished) dialog("Wolfram", "bulb", ["Die Besprechung ist vorbei. Der Saboteur treibt irgendwo im Nichts. Mit seinen Teelichtern."]);
+    else if (nDone() < ST.length) dialog("Wolfram", "bulb", [`Notfall-Besprechung? Mit ${Math.min(5, [0, 1, 2, 3, 4].filter(distDone).length)} von 5 Beweisen? Wir wollen niemanden ohne Beweise rauswerfen. Erledige erst alle Aufgaben.`, "Ich sag nur so viel: Irgendwer hier riecht nach Wachs."]);
+    else dialog("Wolfram", "bulb", ["Die Besprechung beginnt, sobald du das Große Lichtwerk startest. Ich habe schon Stühle hingestellt. Gedanklich."]);
+  }
   else if (n.kind === "fin") {
     if (S.finished) dialog("Wolfram", "bulb", ["Schau dir das an. Ganz Umbra leuchtet. Ich glaube, ich muss weinen. Zum Glück habe ich keine Augen. Nur einen Glühfaden."]);
     else if (nDone() < ST.length) dialog("Wolfram", "bulb", [`Das Große Lichtwerk braucht alle fünfzehn Lichtwerke. Du hast ${nDone()} repariert. Ich zähle mit. Ich habe ja sonst nichts zu tun.`]);
@@ -583,13 +692,23 @@ function nextLine() {
 function wolframLines() {
   const n = nDone();
   if (S.finished) return ["Du hast es geschafft. Umbra leuchtet. Ich bin jetzt offiziell überflüssig. Fühlt sich gut an, ehrlich gesagt.", "Wenn du noch üben willst: Alle Lichtwerke lassen sich erneut bedienen."];
-  if (n === 0) return ["Ah. Der neue Lehrling. Ich bin Wolfram. Früher 60 Watt, heute Dekoration.", "Diese neumodischen LEDs haben mich ersetzt. Neunzig Prozent Licht, kaum Wärme. Wo bleibt da die Gemütlichkeit?", "Aber gut. Umbra braucht Licht. Geh nach Westen in die Kupfergasse. Dort sind drei Lichtwerke kaputt. Rote Lämpchen = kaputt. Mit E reparierst du sie.", "Jeder fertige Bezirk öffnet das Nebeltor zum nächsten. Und ich komme in jedem Rätsel mit. Als Stimme. Freu dich."];
+  if (S.sab) return ["SABOTAGE! Jemand hat die Hauptsicherung rausgedreht. Folge dem roten Pfeil zum Sicherungskasten!"];
+  if (n === 0) return ["Ah. Der neue Lehrling. Ich bin Wolfram. Früher 60 Watt, heute Dekoration.", "Diese neumodischen LEDs haben mich ersetzt. Neunzig Prozent Licht, kaum Wärme. Wo bleibt da die Gemütlichkeit?", "Aber gut. Umbra braucht Licht. Geh nach Westen in die Kupfergasse. Dort sind drei Lichtwerke kaputt. Rote Lämpchen = kaputt. Mit E reparierst du sie.", "Jeder fertige Bezirk öffnet das Nebeltor zum nächsten. Oben siehst du die Aufgabenleiste, der gelbe Pfeil zeigt zur nächsten Aufgabe.", "Und noch was: Irgendjemand sabotiert unsere Lichtwerke. Ich sage nicht, wer. Aber er trägt einen Zylinder. Und riecht nach Wachs."];
   const next = [0, 1, 2, 3, 4].find(d => !distDone(d));
   if (next === undefined) return ["Alle fünfzehn Lichtwerke laufen! Das Große Lichtwerk hier auf dem Platz wartet. Geh hin und drück E. Ich halte die Luft an. Bildlich."];
-  return [`Du hast ${n} von 15 Lichtwerken repariert.`, `Als Nächstes: ${DIST[next].name} – Thema: ${DIST[next].thema}.`, "Wenn du nicht weiterkommst: Lies die Erklärungen. Ich habe sie persönlich diktiert."];
+  return [`Du hast ${n} von 15 Lichtwerken repariert.`, `Als Nächstes: ${DIST[next].name} – Thema: ${DIST[next].thema}.`, "Wenn du nicht weiterkommst: Lies die Erklärungen. Ich habe sie persönlich diktiert.", "Und im Archiv steht Herr Reuter mit seiner Ziege. Sehr schlau, der Mann. Verdächtig schlau."];
+}
+function reuterLines() {
+  const n = nDone();
+  if (S.finished) return ["Respekt, Lehrling. Ich rechne jetzt für die Gilde. Licht ist ohnehin schöner als Kerzen – man sieht die Anzeigetafel besser.", "Berthold und ich gehen gleich zum Heimspiel. Hoffnung ist, chemisch gesehen, eine erneuerbare Energie."];
+  if (S.sab) return ["Sabotage? Ich war hier im Archiv und habe gerechnet. Die Wahrscheinlichkeit, dass ich es war, ist ... vernachlässigbar klein. Sagen wir: so klein wie die Chance auf die Meisterschaft.", "Berthold kann das bezeugen. Nicht wahr, Berthold? – „Mäh.“ – Siehst du."];
+  if (n < 3) return ["Ah, der neue Lehrling. Reuter, Chemie und Mathe. Und das hier ist Berthold. Er ist hässlich, aber loyal. Wie meine Fußballmannschaft.", "Kleiner Tipp vom Chemiker: Metalle leiten, weil ihre Außenelektronen frei beweglich sind. Ein Kupferatom hat 29 davon – also Elektronen, nicht freie. Präzision ist alles.", "Und vom Mathelehrer: Wer U = R · I umstellen kann, hat schon gewonnen. Wer es nicht kann, hat immer noch die Ziege."];
+  if (n < 15) return ["Du kommst gut voran. Erstaunlich gut. Fast schon ... ärgerlich gut. Für die Kerzenbranche, meine ich. Rein hypothetisch.", "Wusstest du, dass eine Kerze aus Paraffin besteht, ungefähr C₂₅H₅₂? Wenn sie brennt, entstehen Kohlenstoffdioxid und Wasser. Nur so. Allgemeinbildung.", "Ich bin Chemiker, Mathematiker und FC-Fan. Ich weiß also, wie man mit Wahrscheinlichkeiten lebt, die gegen einen sprechen."];
+  return ["Alle Lichtwerke laufen? Bemerkenswert. Dann sehen wir uns gleich bei der Besprechung. Ich bringe Berthold mit. Er stimmt immer mit ab."];
 }
 function baronLines() {
   const n = nDone();
+  if (S.sab) return ["Sabotage? Ich? Ich war in der Kerzengasse. Allein. Ohne Zeugen. Völlig normaler Abend.", "Warum ich nach Wachs rieche? Das ist ... Parfüm. Eau de Docht."];
   if (n === 0) return ["Talgmund von Docht, Kerzenkartell. Kerzen: brennen ohne Strom, ohne Kabel, ohne lästiges Nachdenken.", "Du willst die Lichtwerke reparieren? Mit dieser sprechenden Glühbirne? Viel Glück. Hier, ein Gutschein für zehn Teelichter. Für später."];
   if (n < 9) return ["Ich höre, in der Gasse brennt wieder Licht. Ärgerlich. Die Kerzenumsätze sind um drei Prozent gesunken.", "Sag mal, eine LED ohne Vorwiderstand an die Batterie – das wäre doch ein lustiges Experiment, oder? Nein? Schade."];
   if (n < 15) return ["Du kommst den Lichtwerken gefährlich nahe. Ich habe schon überlegt, auf Duftkerzen umzusteigen.", "Weißt du, was das Schöne an Dunkelheit ist? Man sieht die schlechten Lötstellen nicht."];
@@ -603,7 +722,11 @@ function openStation(st) {
   cur = st; mode = "panel"; overlay.classList.remove("hidden"); hintEl.classList.add("hidden");
   ({ mc: puzzleMC, circuit: puzzleCircuit, match: puzzleMatch, color: puzzleColor, ohm: puzzleOhm, led: puzzleLED, sort: puzzleSort, final: puzzleFinal })[st.type](st);
 }
-function closePanel() { overlay.classList.add("hidden"); panel.innerHTML = ""; mode = "play"; cur = null; save(); }
+function closePanel() {
+  overlay.classList.add("hidden"); panel.innerHTML = ""; mode = "play"; cur = null;
+  if (S.pendingSab !== null && !S.sab) { const d = S.pendingSab; S.pendingSab = null; setTimeout(() => startSabotage(d), 1400); }
+  save();
+}
 function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
@@ -612,9 +735,9 @@ function header(st, sub) {
   const d = st.d !== undefined ? DIST[st.d] : { name: "Gildenplatz", col: "#f2c14e" };
   panel.append(el("h2", null, st.t), el("div", "sub", d.name + (sub ? " · " + sub : "")));
 }
-function wolf(text) {
-  const w = el("div", "wolf"); const c = document.createElement("canvas"); c.width = 16; c.height = 16; c.getContext("2d").drawImage(SPR.bulb, 0, 0);
-  w.append(c, el("div", null, "<b>Wolfram:</b> " + text)); return w;
+function wolf(text, sp = "bulb", who = "Wolfram") {
+  const w = el("div", "wolf"); const c = document.createElement("canvas"); c.width = 16; c.height = 16; c.getContext("2d").drawImage(SPR[sp], 0, 0);
+  w.append(c, el("div", null, "<b>" + who + ":</b> " + text)); return w;
 }
 function closeBtn(label = "Zurück in die Stadt") { const b = el("button", "btn alt", label); b.onclick = closePanel; return b; }
 function solved(st, pts) {
@@ -623,6 +746,9 @@ function solved(st, pts) {
   if (first) S.pts += pts;
   updateGates(); drawMap(); updateHUD(); save();
   beep(660, 0.08); setTimeout(() => beep(880, 0.12), 90);
+  const distNow = first && st.d !== undefined && distDone(st.d);
+  if (first) banner("Aufgabe erledigt", st.t + " · +" + pts + " Lichtpunkte", "green");
+  if (distNow) { banner(DIST[st.d].name + " leuchtet", "Beweis gefunden: " + CLUES[st.d], "gold"); if (SAB[st.d] && !S.sabDone[st.d]) S.pendingSab = st.d; }
   const box = el("div", "expl ok", first ? `<b>Lichtwerk repariert!</b> +${pts} Lichtpunkte.` : "<b>Gut geübt!</b> (Lichtpunkte gibt es nur beim ersten Mal.)");
   panel.append(box);
   if (first && st.d !== undefined && distDone(st.d)) {
@@ -638,6 +764,7 @@ function puzzleMC(st, custom) {
   const total = qs.length;
   function show() {
     header(st, `Frage ${total - queue.length + 1} von ${total}` + (custom ? "" : ""));
+    if (st.type === "reuter" && queue.length === total) panel.append(wolf("Vier Fragen. Chemie, Mathe, Strom. Wenn du gewinnst, rechne ich ab sofort für die Gilde. Wenn ich gewinne ... ach, ich gewinne selten. Ich bin FC-Fan.", "reuter", "Herr Reuter"));
     if (!custom && i === 0 && queue.length === total) panel.append(wolf(pick(["Beantworte alle Fragen richtig, dann läuft das Lichtwerk wieder.", "Konzentration. Ich flackere hier nicht zum Spaß.", "Falsche Antworten kommen am Ende noch einmal. Ich bin hartnäckig."])));
     const q = queue[0];
     panel.append(el("div", "q", q.q));
@@ -655,7 +782,7 @@ function puzzleMC(st, custom) {
       const ok = k === q.a;
       b.classList.add(ok ? "ok" : "no");
       if (!ok) btns.forEach(x => { if (x.textContent === q.o[q.a]) x.classList.add("ok"); });
-      panel.append(el("div", "expl " + (ok ? "ok" : "no"), `<b>${ok ? pick(W_RIGHT) : pick(W_WRONG)}</b><br>${q.e}`));
+      panel.append(el("div", "expl " + (ok ? "ok" : "no"), `<b>${ok ? pick(st.rl || W_RIGHT) : pick(st.wl || W_WRONG)}</b><br>${q.e}`));
       ok ? beep(700, 0.06) : beep(180, 0.15);
       queue.shift();
       if (ok) { if (!wrongOnce.has(q)) firstTry++; } else { wrongOnce.add(q); queue.push(q); S.wrong++; }
@@ -667,7 +794,8 @@ function puzzleMC(st, custom) {
   }
   function finish() {
     header(st);
-    if (st.type === "final") return finalStep2();
+    if (st.type === "final") return meeting();
+    if (st.type === "reuter") return reuterWin(firstTry, total);
     panel.append(wolf(firstTry === total ? "Alles auf Anhieb. Ich bin beeindruckt. Sag es niemandem." : "Geschafft. Die Fehler von eben merkst du dir jetzt, ja? Gut."));
     solved(st, 10 + firstTry * 5);
   }
@@ -934,13 +1062,14 @@ function finalQuiz() {
 function finalStep2() {
   const first = !S.finished; S.finished = true; if (first) S.pts += 100; save(); updateHUD(); drawMap();
   overlay.classList.add("hidden"); mode = "play";
+  banner("Sieg", "Die Lichtschmiede gewinnen – Umbra leuchtet", "gold", true);
   beep(523, 0.1); setTimeout(() => beep(659, 0.1), 120); setTimeout(() => beep(784, 0.2), 240);
-  setTimeout(() => dialog("Wolfram", "bulb", ["Es ... es leuchtet. Ganz Umbra leuchtet!", "Der Baron ist gerade mit einem Karren voller Teelichter Richtung Stadttor verschwunden. Er hat „Ich komme wieder – mit Duftkerzen!“ gerufen.", "Lehrling, du bist jetzt Lichtschmiedin oder Lichtschmied. Offiziell. Ich habe den Stempel zwar nicht, aber ich habe eine Fassung, und das zählt."], showEnd), 400);
+  setTimeout(() => dialog("Wolfram", "bulb", ["Es ... es leuchtet. Ganz Umbra leuchtet!", "Und der Baron treibt irgendwo da draußen. Mit einem Karren Teelichter. Ich habe ihn noch „Ich komme wieder – mit Duftkerzen!“ rufen hören.", "Lehrling, du bist jetzt Lichtschmiedin oder Lichtschmied. Offiziell. Ich habe den Stempel zwar nicht, aber ich habe eine Fassung, und das zählt."], showEnd), 3100);
 }
 function showEnd() {
   mode = "panel"; overlay.classList.remove("hidden"); panel.innerHTML = "";
   panel.append(el("h2", null, "Umbra leuchtet!"), el("div", "sub", "Abschlussurkunde der Gilde der Lichtschmiede"));
-  panel.append(el("div", "end", `<p>Du hast alle fünfzehn Lichtwerke und das Große Lichtwerk repariert und <b>${S.pts} Lichtpunkte</b> gesammelt (Fehlversuche unterwegs: ${S.wrong}).</p>
+  panel.append(el("div", "end", `<p>Du hast alle fünfzehn Aufgaben erledigt, die Sabotagen behoben, beide Saboteure entlarvt (einen davon mit Ziege) und <b>${S.pts} Lichtpunkte</b> gesammelt (Fehlversuche unterwegs: ${S.wrong}).</p>
   <p><b>Das kannst du jetzt:</b></p><ul>
   <li>Stromkreise schließen, Leiter und Isolatoren unterscheiden, den Atomaufbau erklären</li>
   <li>das Wassermodell anwenden, Spannung und Stromstärke unterscheiden, Stromrichtung und Potenzial erklären</li>
@@ -951,16 +1080,168 @@ function showEnd() {
   const r = el("div", "row"); r.append(el("span"), closeBtn("Durch die helle Stadt laufen")); panel.append(r);
 }
 
+/* ============================ EINSPIELER ============================ */
+const BCOL = { green: ["#2f9e55", "#1d6b38"], gold: ["#d9a12a", "#8a5a12"], red: ["#d22b33", "#6e0f14"], blue: ["#3b6fd6", "#1d3a7a"] };
+const bq = []; let bBusy = false;
+function banner(title, sub, col = "green", big = false) { bq.push({ title, sub, col, big }); if (!bBusy) nextBanner(); }
+function nextBanner() {
+  const b = bq.shift(), box = document.getElementById("banner");
+  if (!b) { bBusy = false; box.innerHTML = ""; box.className = ""; return; }
+  bBusy = true; box.className = b.big ? "big" : ""; const [c1, c2] = BCOL[b.col];
+  box.innerHTML = `<div class="fl"></div><div class="b2" style="background:${c2}"></div><div class="b" style="background:linear-gradient(180deg,${c1},${c2})"><div class="t"></div><div class="s"></div></div>`;
+  box.querySelector(".t").textContent = b.title; box.querySelector(".s").textContent = b.sub || "";
+  for (let i = 0; i < 16; i++) { const sp = el("div", "sp"); const a = Math.random() * 6.28, r = 160 + Math.random() * 260; sp.style.setProperty("--dx", Math.cos(a) * r + "px"); sp.style.setProperty("--dy", Math.sin(a) * r + "px"); sp.style.animationDelay = (0.35 + Math.random() * 0.2) + "s"; if (b.col === "red") sp.style.background = "#ff6b6b"; box.append(sp); }
+  if (b.col === "red") { beep(330, 0.25); setTimeout(() => beep(220, 0.35), 260); }
+  else { beep(523, 0.08); setTimeout(() => beep(784, 0.08), 90); setTimeout(() => beep(1046, 0.16), 180); }
+  setTimeout(nextBanner, b.big ? 2900 : 2500);
+}
+
+/* ============================ SABOTAGE ============================== */
+let alarmT = null;
+function startSabotage(d) {
+  S.sab = { x: SAB[d].x, y: SAB[d].y, d }; save(); updateHUD();
+  banner("Sabotage!", "Licht aus in ganz Umbra – repariere den Sicherungskasten", "red");
+  clearInterval(alarmT); alarmT = setInterval(() => { if (!S.sab) { clearInterval(alarmT); return; } if (mode === "play") beep(260, 0.18); }, 1600);
+}
+function openFuse() {
+  mode = "panel"; overlay.classList.remove("hidden"); hintEl.classList.add("hidden");
+  const st = { t: "Sicherungskasten", d: S.sab.d };
+  header(st, "Sabotage beheben");
+  panel.append(wolf("Der Saboteur hat die Schalter umgelegt. Die Schalter liegen in <b>Reihe</b>. Leg sie alle richtig um, dann fließt wieder Strom. Ich halte so lange den Atem an. Bildlich."));
+  const n = 5, c = document.createElement("canvas"); c.id = "pz"; c.width = 720; c.height = 230; panel.append(c);
+  const sw = Array.from({ length: n }, () => Math.random() < 0.4); if (sw.every(Boolean)) sw[1] = false; if (sw.filter(v => !v).length < 2) sw[3] = false;
+  const msg = el("div", "center prog", "Klicke auf die Schalter."); panel.append(msg);
+  let done = false;
+  const xs = i => 150 + i * 105;
+  function draw() {
+    const k = c.getContext("2d"), all = sw.every(Boolean); k.clearRect(0, 0, c.width, c.height);
+    k.strokeStyle = all ? "#f2c14e" : "#b98b52"; k.lineWidth = 5; k.lineCap = "round";
+    // Rahmen: oben Schalter, rechts Lampe, unten Batterie
+    k.beginPath(); k.moveTo(60, 60); k.lineTo(xs(0) - 30, 60); k.moveTo(xs(n - 1) + 30, 60); k.lineTo(660, 60); k.lineTo(660, 95); k.moveTo(660, 145); k.lineTo(660, 190); k.lineTo(380, 190); k.moveTo(340, 190); k.lineTo(60, 190); k.lineTo(60, 60); k.stroke();
+    for (let i = 0; i < n - 1; i++) { k.beginPath(); k.moveTo(xs(i) + 30, 60); k.lineTo(xs(i + 1) - 30, 60); k.stroke(); }
+    sw.forEach((on, i) => {
+      const x = xs(i); k.fillStyle = "#e9ecf4"; k.beginPath(); k.arc(x - 30, 60, 5, 0, 7); k.fill(); k.beginPath(); k.arc(x + 30, 60, 5, 0, 7); k.fill();
+      k.strokeStyle = on ? "#7be08f" : "#ff6b6b"; k.lineWidth = 5; k.beginPath(); k.moveTo(x - 30, 60); on ? k.lineTo(x + 30, 60) : k.lineTo(x + 22, 22); k.stroke();
+      k.fillStyle = on ? "#7be08f" : "#ff6b6b"; k.font = "bold 13px Verdana"; k.textAlign = "center"; k.fillText(on ? "zu" : "offen", x, 100);
+    });
+    // Lampe
+    if (all) { k.shadowColor = "#f2c14e"; k.shadowBlur = 30; }
+    k.fillStyle = all ? "#fff2b8" : "#1d2438"; k.beginPath(); k.arc(660, 120, 22, 0, 7); k.fill(); k.shadowBlur = 0; k.strokeStyle = "#e9ecf4"; k.lineWidth = 3; k.stroke();
+    k.beginPath(); k.moveTo(645, 105); k.lineTo(675, 135); k.moveTo(675, 105); k.lineTo(645, 135); k.stroke();
+    // Batterie
+    k.lineWidth = 3; k.beginPath(); k.moveTo(352, 170); k.lineTo(352, 210); k.stroke(); k.lineWidth = 9; k.beginPath(); k.moveTo(368, 178); k.lineTo(368, 202); k.stroke();
+    k.fillStyle = "#e9ecf4"; k.font = "bold 15px Verdana"; k.fillText("+", 340, 165); k.fillText("–", 382, 165); k.textAlign = "left";
+  }
+  c.onclick = e => {
+    if (done) return; const b = c.getBoundingClientRect(); const x = (e.clientX - b.left) / b.width * c.width;
+    const i = Math.round((x - 150) / 105); if (i < 0 || i >= n) return; sw[i] = !sw[i]; beep(sw[i] ? 600 : 300, 0.04); draw();
+    if (sw.every(Boolean)) { done = true; setTimeout(quiz, 450); }
+  };
+  function quiz() {
+    msg.remove();
+    panel.append(el("div", "q", "Warum hat die Lampe erst geleuchtet, als <b>alle</b> Schalter zu waren?"));
+    const o = ["In einer Reihenschaltung muss der Strom durch jeden Schalter – ist einer offen, ist der ganze Kreis unterbrochen", "Jeder Schalter liefert ein Fünftel der Spannung", "Der Strom wird an jedem offenen Schalter verbraucht", "Die Lampe braucht fünf Anläufe zum Aufwärmen"];
+    const box = el("div", "opts");
+    shuffle([0, 1, 2, 3]).forEach(k => { const bt = el("button", "opt", o[k]); bt.onclick = () => { if (k === 0) { box.querySelectorAll("button").forEach(x => x.disabled = true); bt.classList.add("ok"); fixed(); } else { bt.classList.add("no"); bt.disabled = true; S.wrong++; beep(180, 0.12); } }; box.append(bt); });
+    panel.append(box);
+  }
+  function fixed() {
+    const d = S.sab.d; S.sab = null; S.sabDone[d] = true; S.pts += 10; save(); updateHUD();
+    banner("Sabotage behoben", "Reihenschaltung: Ein offener Schalter unterbricht alles · +10", "green");
+    panel.append(wolf("Licht! Und am Kasten klebt ... ein Tropfen Kerzenwachs. Ich sag ja nichts. Ich sag nur: verdächtig."));
+    const r = el("div", "row"); r.append(el("span"), closeBtn("Weiter")); panel.append(r);
+  }
+  draw();
+}
+
+/* ======================= NOTFALL-BESPRECHUNG ======================== */
+const SUSPECTS = [
+  { id: "wolfram", name: "Wolfram", spr: "bulb", say: "Ich stand die ganze Nacht auf dem Tresen. Als Glühlampe wandle ich den größten Teil der Energie in Wärme um – darum heize ich besser, als ich leuchte.", why: "Stimmt: Glühlampen wandeln den größten Teil der Energie in Wärme um. Außerdem hat Wolfram keine Beine." },
+  { id: "valenz", name: "Valentin Valenz", spr: "elec", say: "Ich war im Kupferdraht unterwegs, wie immer – vom Minuspol zum Pluspol. Das ist nun mal meine Richtung.", why: "Stimmt: Elektronen fließen vom Minus- zum Pluspol (physikalische Stromrichtung)." },
+  { id: "grimm", name: "Pumpenwärter Grimm", spr: "worker", say: "Ich war im Pumpwerk. Meine Pumpe hält den Druckunterschied aufrecht – genau wie eine Batterie die Spannung.", why: "Stimmt: Pumpe ≙ Spannungsquelle, Druckunterschied ≙ Spannung." },
+  { id: "zinna", name: "Lötmeisterin Zinna", spr: "smith", say: "Ich war in der Schmiede. Mein Lötkolben lag die ganze Zeit im Ständer – bei etwa 350 Grad.", why: "Stimmt: Kolben gehört in den Ständer, die Spitze hat etwa 350 °C." },
+  { id: "reuter", name: "Herr Reuter", spr: "reuter", say: "Ich war im Archiv und habe gerechnet: 4,5 Volt geteilt durch 150 Ohm ergibt 30 Milliampere. Damit ist bewiesen, dass ich es nicht war. Irgendwie.", why: "Die Rechnung stimmt: 4,5 V : 150 Ω = 0,03 A = 30 mA. Verdächtig schlau – aber kein fachlicher Fehler. Und ob das ein Beweis ist? Hm." },
+  { id: "baron", name: "Baron Talgmund von Docht", spr: "baron", say: "Ich war zu Hause bei Kerzenschein. Die Lichter sind von selbst ausgegangen: Die Lampen haben einfach den ganzen Strom verbraucht!", why: "" },
+];
+function meeting() {
+  banner("Notfall-Besprechung", "Bevor das Große Lichtwerk startet: Wer ist der Saboteur?", "red");
+  const st = { t: "Notfall-Besprechung", d: undefined };
+  header(st, "Abstimmung");
+  panel.append(wolf("Alle Verdächtigen sind da. Der Saboteur verrät sich durch einen <b>fachlichen Fehler</b> in seiner Aussage. Lies genau – und stimm ab."));
+  panel.append(el("div", "clues", "<b>Beweise:</b><br>" + CLUES.map(c => "• " + c).join("<br>")));
+  const box = el("div", "meet"); panel.append(box);
+  const fb = el("div", ""); 
+  shuffle(SUSPECTS).forEach(su => {
+    const row = el("div", "sus"); const c = document.createElement("canvas"); c.width = 16; c.height = 16; c.getContext("2d").drawImage(SPR[su.spr], 0, 0);
+    const txt = el("div"); txt.append(el("div", "who", su.name), el("div", "say", "„" + su.say + "“"));
+    const b = el("button", "btn alt", "Abstimmen");
+    b.onclick = () => {
+      if (su.id === "baron") { box.querySelectorAll("button").forEach(x => x.disabled = true); beep(700, 0.1); setTimeout(() => eject(), 500); return; }
+      S.wrong++; row.classList.add("out"); b.disabled = true; beep(180, 0.15);
+      fb.className = "expl no"; fb.innerHTML = `<b>${su.name} wurde nicht ausgestoßen.</b> ${su.why} Lies die anderen Aussagen noch einmal.`;
+    };
+    row.append(c, txt, b); box.append(row);
+  });
+  const skip = el("button", "btn alt", "Überspringen"); skip.onclick = () => { fb.className = "expl no"; fb.innerHTML = "<b>Niemand wurde ausgestoßen.</b> Überspringen ist keine Lösung, Lehrling. Einer von ihnen behauptet etwas fachlich Falsches."; beep(180, 0.15); };
+  const r = el("div", "row"); r.append(el("span", "prog", "Tipp: Was haben wir über „Stromverbrauch“ gelernt?"), skip); panel.append(fb, r);
+}
+function eject() {
+  overlay.classList.add("hidden");
+  const e = el("div"); e.id = "eject"; e.innerHTML = '<div class="stars"></div>'; const c = document.createElement("canvas"); c.width = 16; c.height = 16; c.getContext("2d").drawImage(SPR.baron, 0, 0); e.append(c);
+  const t = el("div", "txt"); e.append(t); document.body.append(e);
+  const full = "Talgmund von Docht wurde ausgestoßen.", full2 = "Er war EIN Saboteur.";
+  let i = 0; const tick = setInterval(() => { i++; t.textContent = full.slice(0, i); if (i % 2) beep(900, 0.015); if (i >= full.length) { clearInterval(tick); setTimeout(() => { t.innerHTML = full + "<br>" + full2 + '<div class="small">Saboteure übrig: <b style="color:#ff6b6b">1</b> · (Strom wird nicht verbraucht, Herr Baron.) · Klick zum Weitermachen</div>'; beep(330, 0.3); ready = true; }, 700); } }, 70);
+  let ready = false;
+  e.onclick = () => { if (!ready) return; e.remove(); reuterReveal(); };
+}
+
+/* ======================== ENDGEGNER: HERR REUTER ===================== */
+const RQ = [
+  { q: "Kupfer hat die Ordnungszahl 29. Ein Cu²⁺-Ion hat zwei Elektronen abgegeben. Wie viele Elektronen hat es noch?", o: ["27", "29", "31", "2"], a: 0, e: "Die 29 Protonen bleiben, 29 − 2 = 27 Elektronen. Darum ist das Ion zweifach positiv geladen." },
+  { q: "Eine rote LED braucht 2,0 V und 20 mA, die Batterie liefert 4,5 V. Wie groß muss der Vorwiderstand mindestens sein?", o: ["125 Ω", "225 Ω", "90 Ω", "2,5 Ω"], a: 0, e: "Am Widerstand fallen 4,5 V − 2,0 V = 2,5 V ab. R = 2,5 V : 0,02 A = 125 Ω. Im Handel nimmt man den nächstgrößeren Wert, z. B. 150 Ω." },
+  { q: "Rot – rot – rot – gold. Wie groß ist der Widerstand?", o: ["2,2 kΩ", "222 Ω", "220 Ω", "22 kΩ"], a: 0, e: "2 und 2 ergibt 22, der dritte Ring rot heißt zwei Nullen: 2200 Ω = 2,2 kΩ." },
+  { q: "Du verdoppelst die Spannung an einem Widerstand. Was passiert mit der Stromstärke?", o: ["Sie verdoppelt sich", "Sie halbiert sich", "Sie bleibt gleich", "Sie vervierfacht sich"], a: 0, e: "I = U : R. Bleibt R gleich, wird I doppelt so groß." },
+];
+const R_WRONG = ["Knapp daneben ist auch vorbei. Kenne ich vom Elfmeterpunkt.", "Falsch. Aber keine Sorge, ich bin Kummer gewohnt – ich bin FC-Fan.", "Nein. Rechne noch mal. Ich habe Zeit, das nächste Heimspiel ist erst Samstag.", "Leider falsch. Berthold hätte es auch nicht gewusst. Aber Berthold ist eine Ziege."];
+const R_RIGHT = ["Richtig. Verflixt.", "Stimmt. Du rechnest sicherer, als unsere Abwehr verteidigt.", "Korrekt. Ein Punkt für dich – mehr, als wir manchmal auswärts holen.", "Richtig. Ich bin beeindruckt. Ich zeige es nur nicht. Chemiker-Gesicht."];
+function reuterReveal() {
+  mode = "play";
+  banner("Saboteure übrig: 1", "Wer hat dem Baron die Pläne gezeichnet?", "red");
+  setTimeout(() => dialog("Herr Reuter", "reuter", [
+    "Gut gespielt, Lehrling. Wirklich. Aber glaubst du ernsthaft, ein Kerzenhändler kann einen Stromkreis sabotieren? Der Mann kann nicht mal „Ohm“ schreiben.",
+    "Ja. Ich war es. Ich bin Chemiker – ich weiß, wie Paraffin brennt. Ich bin Mathematiker – ich weiß, wie viele Kerzen eine dunkle Stadt braucht.",
+    "Und ich bin FC-Fan. Der Baron hat versprochen, eine neue Tribüne zu sponsern. Mit Kerzenbeleuchtung. Sehr stimmungsvoll.",
+    "Berthold: „Mäh.“",
+    "Bevor du das Große Lichtwerk einschaltest, schlag mich in meinem eigenen Fach. Vier Fragen. Keine Ausreden, kein Videobeweis.",
+  ], () => {
+    mode = "panel"; overlay.classList.remove("hidden");
+    puzzleMC({ t: "Das Reuter-Derby", type: "reuter", d: undefined, wl: R_WRONG, rl: R_RIGHT }, shuffle(RQ));
+  }), 2600);
+}
+function reuterWin(firstTry, total) {
+  banner("Reuter besiegt", `${total}:0 für die Lichtschmiede`, "gold");
+  panel.append(wolf(firstTry === total ? "Vier von vier auf Anhieb. Ein klarer Heimsieg. So etwas sehe ich nicht oft." : "Gewonnen ist gewonnen. Unentschieden war gestern.", "reuter", "Herr Reuter"));
+  panel.append(wolf("Ich hab’s doch gesagt: verdächtig schlau. Aber gegen einen Lehrling mit Ohm’schem Gesetz kommt eben keiner an."));
+  const r = el("div", "row"); const b = el("button", "btn", "Großes Lichtwerk einschalten");
+  b.onclick = () => { overlay.classList.add("hidden"); mode = "play"; dialog("Herr Reuter", "reuter", ["Na gut. Respekt. Ab jetzt rechne ich für die Gilde. Ehrlich gesagt ist Licht ohnehin schöner – man sieht die Anzeigetafel besser.", "Komm, Berthold. Wir gehen Licht gucken."], finalStep2); };
+  r.append(el("span"), b); panel.append(r);
+}
+
 /* ============================ HUD / TON ============================= */
 function updateHUD() {
   document.getElementById("pts").textContent = S.pts;
   const b = document.getElementById("bulbs"); b.innerHTML = "";
   DIST.forEach((d, i) => { const s = el("span", distDone(i) ? "on" : ""); s.title = d.name; b.append(s); });
+  document.getElementById("tbFill").style.width = (nDone() / ST.length * 100) + "%";
+  document.getElementById("tbTxt").textContent = nDone() + "/" + ST.length;
+  document.getElementById("alarm").classList.toggle("hidden", !S.sab || mode === "title");
   const q = document.getElementById("quest");
   const next = [0, 1, 2, 3, 4].find(d => !distDone(d));
-  if (S.finished) q.innerHTML = "<b>Geschafft!</b> Umbra leuchtet. Übe weiter, wenn du willst.";
-  else if (next === undefined) q.innerHTML = "<b>Ziel:</b> Zurück zum Gildenplatz – das Große Lichtwerk einschalten.";
-  else { const left = ST.filter(s => s.d === next && !S.done[s.id]).length; q.innerHTML = `<b>Ziel:</b> ${DIST[next].name} – noch ${left} kaputte${left === 1 ? "s" : ""} Lichtwerk${left === 1 ? "" : "e"} (rot blinkend).<br><span style="color:var(--muted)">${DIST[next].thema}</span>`; }
+  let h = S.sab ? '<div class="sab">⚠ SABOTAGE: Licht! Repariere den Sicherungskasten (roter Pfeil).</div>' : "";
+  if (S.finished) h += "<b>Sieg!</b> Umbra leuchtet. Übe weiter, wenn du willst.";
+  else if (next === undefined) h += "<b>Aufgabe:</b> Zurück zum Gildenplatz – Großes Lichtwerk starten.";
+  else h += `<b>Aufgaben · ${DIST[next].name}</b><ul>` + ST.filter(s => s.d === next).map(s => `<li class="${S.done[s.id] ? "ok" : ""}">${S.done[s.id] ? "✓" : "○"} ${s.t}</li>`).join("") + `</ul><span style="color:var(--muted)">${DIST[next].thema}</span>`;
+  q.innerHTML = h;
 }
 let soundOn = true, actx = null;
 function beep(f, d) {
@@ -975,11 +1256,12 @@ function start(fresh) {
   if (fresh) S = newState(document.getElementById("optHelp").checked);
   document.getElementById("title").classList.add("hidden");
   ["hud", "quest", "topright"].forEach(id => document.getElementById(id).classList.remove("hidden"));
-  buildMap(); buildLamps(); drawMap(); updateHUD(); mode = "play"; save();
+  buildMap(); buildLamps(); drawMap(); mode = "play"; updateHUD(); save();
+  if (S.sab) startSabotage(S.sab.d);
   if (!S.intro) { S.intro = true; setTimeout(() => dialog("Wolfram", "bulb", ["Psst. Hier drüben. Die Glühlampe auf dem Tresen. Ja, ich rede. Komm her und drück E."]), 300); }
 }
 document.getElementById("bStart").onclick = () => { if (load() && !confirm("Neues Spiel starten? Der alte Spielstand wird überschrieben.")) return; start(true); };
-document.getElementById("bCont").onclick = () => { S = load(); if (S) { document.getElementById("optHelp").checked = S.help; start(false); } };
+document.getElementById("bCont").onclick = () => { S = load(); if (S) { fix(S); document.getElementById("optHelp").checked = S.help; start(false); } };
 if (load()) document.getElementById("bCont").classList.remove("hidden");
 buildSprites(); resize();
 S = newState(false); buildMap(); buildLamps(); drawMap();
