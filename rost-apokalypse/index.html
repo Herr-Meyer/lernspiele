@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Rost-Apokalypse · TuN 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{--rust:#b5541c;--rust2:#e07b39;--steel:#37474f;--steel2:#546e7a;--ink:#0d0f10;--paper:#efe6d8;--acid:#5fd0b0;--red:#d23b2a;--line:rgba(255,255,255,.14);
+ --mono:"Special Elite","Courier New",Courier,monospace;--disp:"Black Ops One",Impact,"Arial Narrow Bold",sans-serif;--patina:#5fd0b0;--bone:#e9dfc8;--body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#050606;color:#fff;font-family:var(--body);overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+canvas{display:block;touch-action:none;image-rendering:auto}
+.hidden{display:none!important}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,6,6,.72);backdrop-filter:blur(3px);z-index:5}
+.card{width:min(760px,100%);max-height:calc(100vh - 32px);overflow:auto;background:radial-gradient(rgba(233,223,200,.035) 1px,transparent 1.4px) 0 0/6px 6px,linear-gradient(180deg,#22292a,#141819);border:2px solid #3b4a48;border-radius:3px;box-shadow:0 0 0 4px #0b0d0d,0 0 0 5px rgba(196,88,31,.5),0 24px 70px rgba(0,0,0,.8);padding:22px 24px;position:relative}
+.card:before,.card:after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#9aa3a7,#3b4245);top:8px;left:8px}
+.card:after{left:auto;right:8px}
+h1.logo{font-family:var(--disp);font-weight:400;font-size:clamp(2.6rem,9vw,5.2rem);line-height:.92;margin:6px 0 4px;letter-spacing:.03em;color:#ff8a3d;text-shadow:4px 4px 0 #3a1607,0 0 26px rgba(255,138,61,.35)}
+h1.logo span{display:block;font-size:.42em;letter-spacing:.22em;color:var(--patina);text-shadow:3px 3px 0 #08241e}
+.tag{font-family:var(--mono);color:var(--patina);font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.funk{font-family:var(--mono);background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),#0b1714;border:1px solid #24534a;color:#bdeee0;padding:12px 14px;border-radius:3px;margin:12px 0;line-height:1.5;font-size:15.5px;box-shadow:inset 0 0 24px rgba(95,208,176,.08)}
+.funk b{color:var(--patina);letter-spacing:.04em}
+.funk.r{background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px),#1a0c09;border-color:#6b2c1c;color:#ffc4ab;box-shadow:inset 0 0 24px rgba(255,90,40,.08)}
+.funk.r b{color:#ff6b4a}
+p{line-height:1.45}
+.btn{font:400 18px var(--disp);letter-spacing:.06em;background:var(--rust);color:#fff;border:0;border-bottom:4px solid #6e2f0c;border-radius:4px;padding:12px 20px;cursor:pointer;letter-spacing:.02em}
+.btn:hover{filter:brightness(1.12)}
+.btn:active{transform:translateY(2px);border-bottom-width:2px}
+.btn.g{background:#3a4347;border-bottom-color:#1e2426}
+.btn.s{padding:8px 14px;font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text]{font:600 17px var(--body);padding:10px 12px;border-radius:4px;border:2px solid #4d5559;background:#111;color:#fff;width:220px}
+.seg{display:flex;border:2px solid #4d5559;border-radius:4px;overflow:hidden}
+.seg button{font:700 15px var(--body);background:#111;color:#aaa;border:0;padding:10px 14px;cursor:pointer}
+.seg button.on{background:var(--steel2);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:10px}
+.mini{background:#121516;border:1px solid #333b3e;border-radius:4px;padding:10px;font-size:14px;line-height:1.4}
+.mini b{color:var(--rust2);font-family:var(--disp);font-weight:400;letter-spacing:.04em}
+.small{font-size:13px;color:#9aa3a7}
+/* Frage */
+.q h2{font-size:21px;margin:10px 0 14px;line-height:1.3}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;font:600 17px var(--body);background:#111618;color:#fff;border:2px solid #3d474b;border-radius:4px;padding:12px 14px;cursor:pointer}
+.opt:hover{border-color:var(--rust2)}
+.opt.ok{background:#123a31;border-color:var(--patina)}
+.opt.no{background:#3d1410;border-color:#ff6b4a}
+.opt:disabled{cursor:default}
+.erk{margin-top:12px;padding:10px 12px;border-left:5px solid var(--patina);background:#141a10;line-height:1.45;font-size:15px}
+.erk.bad{border-left-color:#ff6b4a;background:#1c100e}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.stats div{background:#121516;border:1px solid #333b3e;padding:10px;border-radius:4px}
+.stats b{display:block;font-family:var(--disp);font-size:30px;color:var(--rust2);font-weight:400}
+kbd{background:#222;border:1px solid #555;border-radius:3px;padding:1px 6px;font-family:var(--mono);font-size:13px}
+@media (max-width:560px){.card{padding:16px}.q h2{font-size:18px}}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="c" width="1280" height="720" aria-label="Spielfeld Rost-Apokalypse"></canvas></div>
+
+<!-- START -->
+<div id="start" class="ov">
+ <div class="card">
+  <div class="tag">TuN-Kurs Klasse 8 · Metall bewegt · Lernspiel</div>
+  <h1 class="logo">ROST-<br>APOKALYPSE<span>Die letzte Werkstatt</span></h1>
+  <div class="funk"><b>FUNK · 23:41 Uhr · Herr Meyer:</b> „Hört mich jemand? Der Fahrradkeller ist gefallen. Alles, was nicht geölt war, ist aufgestanden und läuft jetzt Richtung Werkstatt. Halte das Tor bis zum Morgengrauen. Werkzeug ist da. Ersatzteile gibt es gegen richtige Antworten. Pädagogik, du verstehst.“</div>
+  <div class="funk r"><b>STÖRSENDER · Herr Reuter:</b> „Ich habe das Streusalz-Budget der Schule verdreifacht. Aus reiner Sorge um die Verkehrssicherheit. Und für einen kleinen Schauversuch. Gute Nacht.“</div>
+  <div class="row" style="margin:14px 0 6px">
+   <input id="name" type="text" maxlength="24" placeholder="Dein Name" aria-label="Dein Name">
+   <div class="seg" role="group" aria-label="Niveau">
+    <button id="nivRS" class="on" type="button">● Normal</button>
+    <button id="nivBR" type="button">◆ Leichter</button>
+   </div>
+  </div>
+  <div class="row" style="margin-top:14px">
+   <button class="btn" id="go">Werkstatt verteidigen</button>
+   <button class="btn g" id="howBtn">So geht's</button>
+   <button class="btn g" id="bestBtn">Zombie-Akte</button>
+  </div>
+  <p class="small" id="hs"></p>
+ </div>
+</div>
+
+<!-- ANLEITUNG -->
+<div id="how" class="ov hidden">
+ <div class="card">
+  <div class="tag">Einweisung</div>
+  <h2 style="margin:6px 0">So überlebst du die Nacht</h2>
+  <p>Rost-Zombies kommen von rechts über fünf Bahnen auf das <b>Werkstatt-Tor</b> zu. Fällt das Tor, ist die Nacht vorbei. Für dich.</p>
+  <div class="grid">
+   <div class="mini"><b>Werkzeug bauen:</b> Oben ein Werkzeug anklicken (oder Taste <kbd>1</kbd>–<kbd>6</kbd>), dann ein freies Feld anklicken.</div>
+   <div class="mini"><b>Schrott verdienen:</b> Ersatzteilkisten fallen vom Himmel. Anklicken, Frage aus „Metall bewegt“ richtig beantworten, Schrott kassieren.</div>
+   <div class="mini"><b>Drei richtige in Folge:</b> Meyer-Bonus. Falsch: Herr Reuter lacht in den Funk und die Kiste ist weg.</div>
+   <div class="mini"><b>Recycling-Presse:</b> macht aus Zombie-Schrott neue Rohstoffe. Spart Energie. Und Nerven.</div>
+   <div class="mini"><b>Magnetkran:</b> zieht nur, was aus Eisen ist. Alu und Kupfer? Pech gehabt. Merkst du was?</div>
+   <div class="mini"><b>Schraubenschlüssel:</b> baut ein Werkzeug ab (halber Schrott zurück). <kbd>P</kbd> = Pause, <kbd>Esc</kbd> = abwählen.</div>
+  </div>
+  <div class="row" style="margin-top:16px"><button class="btn" data-close="how">Verstanden</button></div>
+ </div>
+</div>
+
+<!-- ZOMBIE-AKTE -->
+<div id="akte" class="ov hidden">
+ <div class="card">
+  <div class="tag">Streng vertraulich · Zombie-Akte</div>
+  <h2 style="margin:6px 0">Wer da kommt</h2>
+  <div class="grid" id="akteGrid"></div>
+  <div class="row" style="margin-top:16px"><button class="btn" data-close="akte">Zurück</button></div>
+ </div>
+</div>
+
+<!-- INTRO -->
+<div id="intro" class="ov hidden">
+ <div class="card" style="width:min(820px,100%)">
+  <div class="row" style="justify-content:space-between"><div class="tag" id="iTag"></div><div class="small" id="iStep"></div></div>
+  <canvas id="ic" width="760" height="250" style="width:100%;height:auto;background:#121415;border:1px solid #333b3e;border-radius:4px;margin:10px 0 4px"></canvas>
+  <div class="funk" id="iFunk" style="min-height:96px"></div>
+  <div class="row" style="justify-content:space-between">
+   <button class="btn g s" id="iSkip" type="button">Überspringen</button>
+   <button class="btn" id="iNext" type="button">Weiter</button>
+  </div>
+ </div>
+</div>
+
+<!-- FRAGE -->
+<div id="frage" class="ov hidden">
+ <div class="card q">
+  <div class="tag" id="fTag">Ersatzteilkiste</div>
+  <div class="funk" id="fFunk" style="margin-bottom:0"></div>
+  <h2 id="fQ"></h2>
+  <div class="opts" id="fOpts"></div>
+  <div id="fErk" class="erk hidden"></div>
+  <div class="row" style="margin-top:14px"><button class="btn hidden" id="fWeiter">Weiter kämpfen</button></div>
+ </div>
+</div>
+
+<!-- PAUSE -->
+<div id="pause" class="ov hidden">
+ <div class="card" style="width:min(460px,100%);text-align:center">
+  <div class="tag">Pause</div>
+  <h2>Die Zombies warten. Höflich, aber hungrig.</h2>
+  <div class="row" style="justify-content:center"><button class="btn" id="resume">Weiter</button><button class="btn g" id="quit">Aufgeben</button></div>
+ </div>
+</div>
+
+<!-- ENDE -->
+<div id="ende" class="ov hidden">
+ <div class="card">
+  <div class="tag" id="eTag"></div>
+  <h1 class="logo" id="eHead" style="font-size:clamp(2rem,7vw,3.6rem)"></h1>
+  <div class="funk" id="eFunk"></div>
+  <div class="stats" id="eStats"></div>
+  <div id="eThemen" class="small"></div>
+  <div class="row" style="margin-top:14px"><button class="btn" id="again">Noch eine Nacht</button><button class="btn g" id="toStart">Startbildschirm</button></div>
+ </div>
+</div>
+
+<script>
+// a[0] is always the correct answer
+const FRAGEN = [
+ {t:'Eigenschaften', q:'Welches dieser Metalle ist magnetisch?', a:['Eisen','Aluminium','Kupfer','Messing'], e:'Von den üblichen Werkstattmetallen ist nur Eisen bzw. Stahl magnetisch. Deshalb lassen Alu- und Kupfer-Zombies den Magnetkran kalt.'},
+ {t:'Eigenschaften', q:'Die 1-Cent-Münze bleibt am Magneten hängen. Warum?', a:['Sie ist aus Stahl mit Kupferüberzug.','Sie ist aus reinem Kupfer.','Kupfer wird bei Kälte magnetisch.','Sie enthält Gold.'], e:'Der Kern ist Stahl, nur die Haut ist Kupfer. Wie manche Zombies: außen hübsch, innen Eisen.'},
+ {t:'Eigenschaften', q:'Welches Metall leitet Wärme am besten?', a:['Kupfer','Eisen','Aluminium','alle gleich gut'], e:'Reihenfolge aus Station 5: Kupfer vor Aluminium vor Eisen.'},
+ {t:'Eigenschaften', q:'Bei der Ritzprobe hat welches Blech den tiefsten Kratzer?', a:['Aluminium','Eisen','Kupfer','alle gleich'], e:'Aluminium ist das weichste der drei Metalle.'},
+ {t:'Eigenschaften', q:'Was bedeutet „Dichte“?', a:['wie schwer 1 cm³ eines Stoffes ist','wie hart ein Stoff ist','wie gut ein Stoff Strom leitet','wie dick ein Blech ist'], e:'Dichte = Masse : Volumen, Einheit g/cm³.'},
+ {t:'Eigenschaften', q:'Gleich große Würfel aus Al, Fe und Cu: Welcher ist am schwersten?', a:['Kupfer','Eisen','Aluminium','alle gleich schwer'], e:'Kupfer 8,9 g/cm³, Eisen 7,9 g/cm³, Aluminium 2,7 g/cm³.'},
+ {t:'Eigenschaften', q:'Was haben ALLE Metalle gemeinsam?', a:['Sie leiten elektrischen Strom.','Sie sind magnetisch.','Sie rosten.','Sie sind schwerer als Wasser… und rot.'], e:'Strom leiten alle Metalle. Magnetisch und rostend sind längst nicht alle.'},
+ {t:'Werkstoff', q:'Was ist eine Legierung?', a:['ein Gemisch aus einem Metall mit anderen Metallen oder Stoffen','ein besonders reines Metall','ein Metall mit Lackschicht','ein Werkzeug zum Biegen'], e:'Man schmilzt die Bestandteile zusammen. Die Legierung hat neue Eigenschaften.'},
+ {t:'Werkstoff', q:'Woraus besteht Messing?', a:['Kupfer und Zink','Kupfer und Zinn','Eisen und Chrom','Aluminium und Magnesium'], e:'Messing = Kupfer + Zink, z. B. für Türklinken und Ventile. Kupfer + Zinn wäre Bronze.'},
+ {t:'Werkstoff', q:'Ab welcher Dichte spricht man von Schwermetallen?', a:['über 4,5 g/cm³','über 1 g/cm³','über 10 g/cm³','über 100 g/cm³'], e:'Unter 4,5 g/cm³: Leichtmetall (z. B. Aluminium 2,7), darüber: Schwermetall (z. B. Kupfer 8,9).'},
+ {t:'Werkstoff', q:'Welches Metall ist ein Leichtmetall?', a:['Magnesium','Blei','Kupfer','Zink'], e:'Magnesium hat nur 1,7 g/cm³.'},
+ {t:'Werkstoff', q:'Warum ist Carbon (CFK) kein Metall?', a:['Es sind Kohlenstofffasern in Kunststoff.','Es ist zu leicht.','Es ist schwarz.','Es ist zu teuer.'], e:'Carbon ist ein Faserverbundwerkstoff, kein Metall.'},
+ {t:'Werkstoff', q:'Welcher Rahmenwerkstoff ist am günstigsten und lässt sich gut schweißen?', a:['Stahl','Titan','Carbon','Gold (für Reuter)'], e:'Stahl ist günstig, robust und fast überall reparierbar. Dafür schwer und rostanfällig.'},
+ {t:'Erz', q:'In welcher Anlage wird aus Eisenerz Roheisen?', a:['im Hochofen','im Konverter','in der Kokerei','im Walzwerk'], e:'Im Hochofen. Der Konverter macht danach aus Roheisen Stahl.'},
+ {t:'Erz', q:'Was passiert bei der Reduktion im Hochofen?', a:['Der Koks entzieht dem Eisenerz den Sauerstoff.','Das Eisen wird lackiert.','Dem Eisen wird Wasser zugegeben.','Das Eisen wird magnetisiert.'], e:'Reduktion = Sauerstoff wird entzogen. Übrig bleibt flüssiges Roheisen.'},
+ {t:'Erz', q:'Wie heißt es, wenn unten am Hochofen das flüssige Roheisen abgelassen wird?', a:['Abstich','Frischen','Gichtgas','Ausguss'], e:'Beim Abstich fließt das Roheisen aus dem Hochofen.'},
+ {t:'Erz', q:'Was versteht man unter „Frischen“?', a:['Sauerstoff wird aufgeblasen, Kohlenstoff verbrennt: aus Roheisen wird Stahl.','Stahl wird mit Wasser abgeschreckt.','Rost wird abgeschliffen.','Erz wird gewaschen.'], e:'Frischen passiert im Konverter. Danach enthält das Eisen weniger als 2 % Kohlenstoff.'},
+ {t:'Erz', q:'Was unterscheidet Stahl von Roheisen?', a:['Stahl enthält weniger Kohlenstoff und ist schmiedbar.','Stahl enthält mehr Kohlenstoff.','Stahl ist ein Leichtmetall.','Stahl rostet nie.'], e:'Roheisen: 3–5 % Kohlenstoff, spröde. Stahl: unter 2 %, zäh und walzbar.'},
+ {t:'Erz', q:'Was ist ein Halbzeug?', a:['ein genormtes Ausgangsstück wie Blech, Rohr oder Draht','ein halb fertiges Fahrrad','ein Werkzeug mit halbem Griff','Schrott'], e:'Fahrradrahmen werden z. B. aus Rohren gebaut, Speichen aus Draht.'},
+ {t:'Rost', q:'Was braucht Eisen, um zu rosten?', a:['Wasser und Sauerstoff','nur Wärme','nur Licht','Öl'], e:'Wasser + Sauerstoff. Salz beschleunigt das Ganze. Die Salz-Zombies wissen das.'},
+ {t:'Rost', q:'In welchem Glas rostete der Nagel am stärksten?', a:['Salzwasser','trocken','eingeölt','lackiert'], e:'Salz beschleunigt Rost. Deshalb rosten Fahrräder im Winter (Streusalz!) schneller.'},
+ {t:'Rost', q:'Warum rostet Aluminium kaum?', a:['Es bildet eine dünne, dichte Oxidschicht.','Es ist magnetisch.','Es enthält Öl.','Es ist schwerer als Eisen.'], e:'Die Oxidschicht schützt das Metall darunter. Darum haben Alu-Zombies einen Schild, der nachwächst.'},
+ {t:'Rost', q:'Welcher Schutz passt am besten zur Fahrradkette?', a:['Ölen','Lackieren','Verchromen','Mit Klebeband umwickeln'], e:'Die Glieder bewegen sich, Lack würde abplatzen. Öl schützt und schmiert.'},
+ {t:'Rost', q:'Wie werden Schrauben meist vor Rost geschützt?', a:['Verzinken','Ölen jeden Tag','Lackieren mit Nagellack','gar nicht'], e:'Ein Zinküberzug schützt Stahl, sogar bei kleinen Kratzern.'},
+ {t:'Rost', q:'Warum wischt man nach dem Ölen das überschüssige Öl von der Kette?', a:['Es zieht Schmutz an und wird zur Schleifpaste.','Es macht die Kette magnetisch.','Es lässt die Kette rosten.','Es ist giftig für Zombies.'], e:'Öl gehört in die Gelenke, nicht außen auf die Kette.'},
+ {t:'Rost', q:'Wie viel Energie spart Aluminium-Recycling ungefähr gegenüber der Herstellung aus Bauxit?', a:['rund 95 %','rund 5 %','gar keine','rund 30 %'], e:'Recycling spart enorm Energie und Rohstoffe. Metalle verlieren beim Einschmelzen nicht an Qualität.'},
+ {t:'Bearbeiten', q:'Welche Hauptgruppe der Fertigungsverfahren ist „Biegen“?', a:['Umformen','Trennen','Fügen','Urformen'], e:'Beim Umformen ändert sich die Form, ohne dass Material verloren geht.'},
+ {t:'Bearbeiten', q:'Ein Kabel wird angelötet. Welche Hauptgruppe ist das?', a:['Fügen','Trennen','Beschichten','Umformen'], e:'Fügen = Teile verbinden: Schrauben, Nieten, Löten.'},
+ {t:'Bearbeiten', q:'Welches Verfahren trennt OHNE Späne?', a:['Scheren','Sägen','Bohren','Feilen'], e:'Scheren ist spanlos. Sägen, Bohren und Feilen sind spanend.'},
+ {t:'Bearbeiten', q:'In welche Richtung zeigen die Zähne einer Bügelsäge?', a:['nach vorn, gesägt wird auf Stoß','nach hinten, gesägt wird auf Zug','nach oben','egal'], e:'Die Säge schneidet beim Vorschieben.'},
+ {t:'Bearbeiten', q:'Was passiert beim Biegen auf der Außenseite?', a:['Sie wird gedehnt.','Sie wird gestaucht.','Sie bleibt gleich lang.','Sie schmilzt.'], e:'Außen gedehnt, innen gestaucht, die neutrale Faser bleibt gleich lang.'},
+ {t:'Bearbeiten', q:'Wie heißt die Schicht, die beim Biegen ihre Länge behält?', a:['neutrale Faser','Oxidschicht','Biegekante','Mittelnaht'], e:'Die neutrale Faser liegt zwischen gedehnter und gestauchter Seite.'},
+ {t:'Bearbeiten', q:'Warum füllt man Rohre vor dem Biegen mit Sand?', a:['damit sie nicht einknicken','damit sie schwerer werden','damit sie nicht rosten','für die Optik'], e:'Der Sand stützt die Rohrwand von innen.'},
+ {t:'Bearbeiten', q:'Womit schneidet man ein Außengewinde auf einen Rundstab?', a:['Schneideisen','Gewindebohrer','Körner','Blechschere'], e:'Schneideisen = Außengewinde, Gewindebohrer = Innengewinde.'},
+ {t:'Bearbeiten', q:'Welche Verbindung ist UNLÖSBAR?', a:['Niet','Schraube mit Mutter','Schnellspanner','Steckverbindung'], e:'Nieten, Löten, Schweißen, Kleben lassen sich nur durch Zerstören trennen.'},
+ {t:'Bearbeiten', q:'Ab welcher Temperatur spricht man von Hartlöten?', a:['über 450 °C','über 45 °C','über 4500 °C','unter 100 °C'], e:'Weichlöten unter 450 °C (Kabel), Hartlöten darüber (Kupferrohre, Rahmenmuffen).'},
+ {t:'Bearbeiten', q:'Welches Fahrradteil besteht aus vielen vernieteten Gliedern?', a:['die Kette','der Sattel','der Reifen','die Klingel'], e:'Die Kette ist das Paradebeispiel für Nietverbindungen.'},
+ {t:'Sicherheit', q:'Was bedeutet ein blauer, runder Sicherheitszeichen-Kreis?', a:['Gebot: Das musst du tun.','Verbot','Warnung','Rettungsweg'], e:'Blau = Gebot, gelbes Dreieck = Warnung, roter Rand = Verbot, grün = Rettung.'},
+ {t:'Sicherheit', q:'Warum trägt man am Bohrer KEINE Handschuhe?', a:['Sie können sich aufwickeln.','Sie werden schmutzig.','Sie leiten Strom.','Weil Herr Reuter es verbietet.'], e:'Ein aufgewickelter Handschuh zieht die Hand mit. Deshalb: keine Handschuhe am Bohrer.'},
+ {t:'Sicherheit', q:'Wie entfernst du Späne von der Werkbank?', a:['mit einem Pinsel','wegpusten','mit der Hand','gar nicht'], e:'Pusten treibt Späne in die Augen, Hände schneiden sich.'},
+ {t:'Sicherheit', q:'Warum körnt man eine Bohrung vor?', a:['damit der Bohrer nicht verläuft','damit das Metall weicher wird','für die Optik','damit es nicht rostet'], e:'Der Körnerpunkt gibt dem Bohrer Halt.'},
+ {t:'Fahrrad', q:'Pedal, Kette, Reifen: Wie ordnet man sie nach dem EVA-Prinzip?', a:['Pedal E, Kette V, Reifen A','Pedal A, Kette E, Reifen V','Pedal V, Kette A, Reifen E','alle drei sind E'], e:'Eingabe am Pedal, Verarbeitung über Kette und Zahnräder, Ausgabe am Reifen.'},
+ {t:'Fahrrad', q:'Was ist beim Bremsen die Verarbeitung (V)?', a:['der Bowdenzug','der Bremshebel','die Felge','die Hand'], e:'Hand am Bremshebel (E) → Bowdenzug (V) → Bremsbacken an der Felge (A).'},
+ {t:'Fahrrad', q:'Was ist laut StVZO KEINE Pflicht am Fahrrad?', a:['Gepäckträger','Klingel','zwei unabhängige Bremsen','rotes Rücklicht'], e:'Gepäckträger, Schutzbleche, Schloss und Kettenschutz sind sinnvoll, aber nicht vorgeschrieben.'},
+ {t:'Fahrrad', q:'Ist ein Dynamo heute noch vorgeschrieben?', a:['Nein, Akku- und Batterieleuchten mit Prüfzeichen sind erlaubt.','Ja, immer.','Nur am Sonntag.','Nur bei Rennrädern.'], e:'Seit der StVZO-Änderung reicht eine zugelassene Leuchte mit Prüfzeichen (Wellenlinie, K-Nummer).'},
+ {t:'Fahrrad', q:'Wozu dient das Felgenband?', a:['Es schützt den Schlauch vor den Speichenlöchern.','Es hält den Reifen warm.','Es ist ein Reflektor.','Es ersetzt die Bremse.'], e:'Ohne Felgenband scheuert der Schlauch an den Speichen auf.'},
+ {t:'Fahrrad', q:'Wo steht der empfohlene Luftdruck?', a:['auf der Reifenflanke','auf dem Sattel','im Schlauch','auf der Klingel'], e:'Auf der Seite des Reifens, in bar oder psi.'},
+ {t:'Fahrrad', q:'Welches Ventil ist schlank und hat oben eine kleine Rändelmutter?', a:['Französisches Ventil (Sclaverand)','Autoventil (Schrader)','Blitzventil (Dunlop)','Herzventil'], e:'Typisch für Renn- und Trekkingräder, hält hohen Druck.'},
+ {t:'Fahrrad', q:'Was tust du beim Flicken, bevor die Vulkanisierflüssigkeit drauf kommt?', a:['die Stelle mit Schmirgelpapier aufrauen','den Schlauch einölen','den Flicken anfeuchten','das Ventil abschneiden'], e:'Aufrauen, dünn einstreichen, ablüften lassen, Flicken fest andrücken.'},
+ {t:'Fahrrad', q:'Woran erkennst du abgefahrene Bremsbeläge?', a:['Die Rillen im Belag sind nicht mehr zu sehen.','Sie quietschen nie.','Sie sind rot.','Sie sind magnetisch.'], e:'Dann müssen sie getauscht werden. Vorher wird nicht gefahren.'},
+ {t:'Fahrrad', q:'Woran erkennst du einen richtig geschlossenen Schnellspanner?', a:['Der Hebel hinterlässt einen deutlichen Abdruck in der Hand.','Er klappert leise.','Er zeigt nach vorn.','Man kann ihn mit einem Finger öffnen.'], e:'Ein offener Schnellspanner kann das Vorderrad lösen. Lebensgefährlich, auch ohne Zombies.'},
+ {t:'Beruf', q:'Wie heißt der Ausbildungsberuf rund um die Fahrradreparatur?', a:['Zweiradmechatroniker/in','Fahrradologe/in','Kettenbeauftragte/r','Speichenmeister/in'], e:'Zweiradmechatroniker/in, Fachrichtung Fahrradtechnik. Eine kürzere Ausbildung ist Fahrradmonteur/in.'},
+];
+
+</script>
+<script>
+(()=>{
+'use strict';
+const W=1280,H=720, COLS=9, ROWS=5, BX=150, BY=150, CW=112, CH=112;
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a), pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+// ---------- Fit canvas ----------
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H);cv.style.width=Math.floor(W*s)+'px';cv.style.height=Math.floor(H*s)+'px';}
+addEventListener('resize',fit);fit();
+
+// ---------- Sound ----------
+let AC=null, soundOn=true;
+function beep(f=440,d=.08,type='square',vol=.04,slide=0){if(!soundOn)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),AC.currentTime+d);g.gain.value=vol;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+const sfx={place:()=>beep(220,.12,'square',.05,-80),hit:()=>beep(120,.05,'sawtooth',.02),ok:()=>{beep(523,.1,'triangle',.06);setTimeout(()=>beep(784,.15,'triangle',.06),90)},no:()=>beep(110,.35,'sawtooth',.05,-60),crate:()=>beep(660,.06,'square',.03),groan:()=>beep(70,.4,'sawtooth',.03,30),gate:()=>beep(90,.12,'square',.04),coin:()=>beep(880,.06,'triangle',.04)};
+
+// ---------- Data ----------
+const TOWERS=[
+ {id:'oel',name:'Ölkännchen',cost:50,hp:70,cd:1.4,info:'Öl-Tropfen: Schaden + Ölfilm bremst'},
+ {id:'zaun',name:'Zink-Zaun',cost:50,hp:450,cd:0,info:'verzinkt, hält lange'},
+ {id:'presse',name:'Recycling-Presse',cost:75,hp:70,cd:11,info:'+25 Schrott alle 11 s'},
+ {id:'lack',name:'Lackierpistole',cost:100,hp:80,cd:2,info:'Sprühnebel trifft alle vorn'},
+ {id:'magnet',name:'Magnetkran',cost:125,hp:90,cd:3.5,info:'zieht & lähmt nur Eisen'},
+ {id:'loet',name:'Lötkolben',cost:150,hp:100,cd:.9,info:'350 °C aus nächster Nähe'},
+];
+const ZT={
+ rost:{name:'Rost-Zombie',hp:120,sp:15,dps:14,gate:5,mag:true,col:'#8a4a22',score:10,
+   akte:'Ehemals Schulfahrrad, drei Winter draußen. Eisen + Wasser + Sauerstoff = schlechte Laune. Schwach gegen Öl und Lack.'},
+ salz:{name:'Streusalz-Zombie',hp:85,sp:28,dps:10,gate:4,mag:true,col:'#9a6a4a',score:12,
+   akte:'Schnell und überall weiße Krümel. Beschleunigt alle Zombies in seiner Nähe, so wie Salz das Rosten beschleunigt.'},
+ kette:{name:'Ketten-Zombie',hp:280,sp:12,dps:20,gate:7,mag:true,col:'#5b4636',score:18,
+   akte:'Nie geölt, völlig gelängt. Zäh wie eine vernietete Fahrradkette. Unlösbare Verbindung, unlösbares Problem.'},
+ alu:{name:'Alu-Zombie',hp:140,shield:130,sp:17,dps:12,gate:5,mag:false,col:'#9aa7ad',score:20,
+   akte:'Rostet nicht. Bildet eine Oxidschicht als Schild, die nachwächst, wenn man ihn in Ruhe lässt. Nicht magnetisch.'},
+ kupfer:{name:'Kupfer-Koloss',hp:400,sp:9,dps:26,gate:9,mag:false,col:'#b8693a',score:30,
+   akte:'8,9 g/cm³ schlechte Absichten. Langsam, schwer, grünlich angelaufen. Nicht magnetisch, leitet aber hervorragend Wärme. Der Lötkolben freut sich.'},
+ boss:{name:'Herr Reuter',hp:1800,sp:6.5,dps:40,gate:20,mag:true,col:'#5a2d1a',score:250,
+   akte:'„Der Oxidator“. Chemielehrer, Fachgebiet Oxidation. Fährt ein Stahlrad, das seit 1987 kein Öl gesehen hat. Streut Natriumchlorid auf deine Werkzeuge und ruft Verstärkung. Behauptet, das sei „nur ein Schauversuch“.'},
+};
+const WAVES=[
+ {n:8, types:{rost:1}, gap:[3.2,4.6]},
+ {n:12,types:{rost:3,salz:1}, gap:[2.4,3.8]},
+ {n:15,types:{rost:3,salz:2,kette:1}, gap:[2.0,3.4]},
+ {n:18,types:{rost:3,salz:2,kette:1,alu:2}, gap:[1.7,3.0]},
+ {n:22,types:{rost:3,salz:2,kette:2,alu:2,kupfer:1}, gap:[1.5,2.7]},
+ {n:14,types:{rost:3,salz:2,kette:2,alu:2,kupfer:1}, gap:[1.9,3.2], boss:true},
+];
+const MEYER_WAVE=[
+ 'Welle 1. Klassische Rost-Zombies. Ölkännchen hilft. Merke: Rost braucht Wasser und Sauerstoff. Die haben beides. Und schlechte Laune.',
+ 'Welle 2. Ich sehe weiße Krümel. Streusalz-Zombies! Die machen die anderen schneller. Salz beschleunigt Rost. Steht übrigens im Lernlogbuch.',
+ 'Welle 3. Ketten-Zombies. Keine Ahnung, wer die drei Jahre nicht geölt hat. Doch, ich hab eine Ahnung.',
+ 'Welle 4. Alu-Zombies. Die rosten nicht, die haben eine Oxidschicht. Und der Magnet ist ihnen egal. Wie Hausaufgaben.',
+ 'Welle 5. Der Boden bebt. Kupfer-Kolosse, 8,9 Gramm pro Kubikzentimeter. Lötkolben bereithalten.',
+ 'Letzte Welle. Störsignal auf allen Kanälen … Ich glaube, er kommt selbst. Halte durch. Ich bringe Kaffee. Irgendwann.',
+];
+const MEYER_IDLE=[
+ 'Wer am Bohrer Handschuhe trägt, muss nicht gegen Zombies kämpfen. Der hat andere Probleme.',
+ 'Späne nicht wegpusten. Zombie-Späne erst recht nicht.',
+ 'Kiste! Klick drauf. Ich stell die Fragen, du kriegst den Schrott.',
+ 'Die Recycling-Presse spart Energie. Rund 95 Prozent bei Alu. Ich wollte das nur gesagt haben.',
+ 'Falls du Herrn Reuter siehst: nicht anfassen, nicht füttern, vor allem nicht salzen.',
+ 'Reuter sagt, Rost sei „nur eine Redoxreaktion“. Das sagen sie alle, bevor die Kette reißt.',
+ 'Der Chemieraum ist seit 22 Uhr verschlossen. Von innen. Ich frage lieber nicht.',
+ 'Lack hält Wasser fern. Und Zombies, wenn man ihn schnell genug sprüht.',
+];
+const REUTER=[
+ 'Öl? Wie altmodisch. Ich bevorzuge Patina.',
+ 'Eisen plus Wasser plus Sauerstoff. Das ist keine Apokalypse, Meyer. Das ist Chemie.',
+ 'Ich bin Chemielehrer. Oxidation ist kein Unfall, Oxidation ist ein Lehrplan.',
+ 'Natriumchlorid. Klingt harmlos, oder? Frag mal deinen Fahrradrahmen.',
+ 'Schutzbrille auf! Ich will, dass du siehst, wie dein Zink-Zaun korrodiert.',
+ 'Technik ist nur angewandte Chemie, die sich für etwas Besseres hält.',
+ 'Edelstahl ist was für Feiglinge.',
+ 'Ich habe die Fahrradständer neu gestrichen. Mit Salzwasser.',
+ 'Meyer bringt euch Löten bei. Ich bringe euch Demut bei.',
+ 'Ein bisschen Rost hat noch niemandem geschadet. Fragen Sie meinen Rahmen.',
+];
+const REUTER_WRONG=['Falsch! Ich lasse das mal oxidieren.','Falsch. Das gibt im Chemie-Raum eine Sechs und hier einen Zombie mehr.','Reaktion abgeschlossen: Deine Antwort ist zu Rost zerfallen.','Hervorragend. Noch zwei davon und ich schenke dir eine verrostete Medaille.','Die Kiste nehme ich. Für meine Sammlung.','Hahaha. Der Hochofen weint.'];
+
+// ---------- State ----------
+let S=null, niveau='RS', running=false, paused=false, modal=false, last=0;
+function newState(){return {schrott:150, gate:100, wave:-1, waveT:0, queue:[], spawnT:0, breakT:6, inBreak:true,
+  towers:[], zombies:[], shots:[], fx:[], texts:[], crates:[], crateT:8, sel:null, t:0,
+  kills:0, right:0, wrong:0, streak:0, bestStreak:0, topic:{}, idleT:25, msg:null, msgT:0, bossDone:false, won:false, hover:null, shake:0, usedQ:[], trauma:0, hitStop:0, flashT:0};}
+
+// ---------- Helpers ----------
+const cellAt=(x,y)=>{const c=Math.floor((x-BX)/CW), r=Math.floor((y-BY)/CH);return (c>=0&&c<COLS&&r>=0&&r<ROWS)?{c,r}:null;};
+const towerAt=(c,r)=>S.towers.find(t=>t.c===c&&t.r===r);
+const laneY=r=>BY+r*CH+CH/2;
+function say(who,text,dur=6){S.msg={who,text};S.msgT=dur;}
+function float(x,y,txt,col='#fff',size=20){S.texts.push({x,y,txt,col,size,t:0});}
+
+// ---------- Spawning ----------
+function startWave(i){
+ const w=WAVES[i]; S.wave=i; S.inBreak=false; S.queue=[]; let t=1;
+ const pool=[];for(const k in w.types)for(let j=0;j<w.types[k];j++)pool.push(k);
+ for(let j=0;j<w.n;j++){S.queue.push({t, type:j<2?'rost':pick(pool)}); t+=rnd(w.gap[0],w.gap[1])*(niveau==='BR'?1.25:1);}
+ if(w.boss) S.queue.push({t:t*0.45,type:'boss'});
+ S.queue.sort((a,b)=>a.t-b.t); S.waveT=0;
+ say('Meyer',MEYER_WAVE[i],8); sfx.groan();
+}
+function spawn(type,row){
+ const z=ZT[type]; let r=row??Math.floor(Math.random()*ROWS); if(type==='boss') r=clamp(r,1,3);
+ const mul=niveau==='BR'?0.82:1;
+ const hpMul=1+S.wave*0.06;
+ S.zombies.push({type,r,x:W+30,y:laneY(r),hp:z.hp*hpMul*mul,max:z.hp*hpMul*mul,shield:(z.shield||0)*mul,maxShield:(z.shield||0)*mul,lastHit:0,
+   slow:0,stun:0,eat:null,ph:Math.random()*6,boss:type==='boss',saltT:4,callT:7});
+ if(type==='boss'){say('Reuter','Guten Abend. Heute: praktischer Chemieunterricht. Thema Korrosion. Versuchsobjekt: deine Werkstatt.',8);S.shake=.6;sfx.groan();}
+}
+
+// ---------- Damage ----------
+function hurt(z,d,src){
+ if(z.dead)return; z.lastHit=S.t; z.flash=.07;
+ if(z.shield>0){const a=Math.min(z.shield,d);z.shield-=a;d-=a; if(z.shield<=0) float(z.x,z.y-70,'Oxidschicht weg!','#cfe8ff',16);}
+ z.hp-=d;
+ if(z.hp<=0){z.dead=true;S.kills++;const sc=ZT[z.type].score;S.schrott+=Math.round(sc/2);float(z.x,z.y-40,'+'+Math.round(sc/2)+' Schrott','#ffcf6b',18);
+   for(let i=0;i<22;i++)S.fx.push({k:'chip',x:z.x+rnd(-14,14),y:z.y-rnd(10,70),vx:rnd(-130,130),vy:rnd(-240,-30),t:0,life:rnd(.5,1.1),col:pick(['#c4581f','#ff8a3d','#7a2e10','#5fd0b0','#2a1a12'])});
+   S.fx.push({k:'dust',x:z.x,y:z.y-20,t:0,life:.9,r:z.boss?90:34});
+   S.trauma=Math.min(1,S.trauma+(z.boss?.9:['kette','kupfer'].includes(z.type)?.35:.15)); if(z.boss||z.type==='kupfer')S.hitStop=z.boss?.25:.07;
+   if(z.boss){S.bossDone=true;say('Reuter','Das … war … nicht … im … Versuchsprotokoll …',6);S.schrott+=200;S.shake=1;}
+   sfx.hit();}
+}
+
+// ---------- Update ----------
+function update(dt){
+ if(S.hitStop>0){S.hitStop-=dt;return;}
+ S.trauma=Math.max(0,S.trauma-dt*1.4); for(const t of S.towers) if(t.pop>0)t.pop-=dt;
+ S.t+=dt; if(S.shake>0)S.shake-=dt; if(S.flashT>0)S.flashT-=dt; if(S.msgT>0)S.msgT-=dt;
+ // waves
+ if(S.inBreak){S.breakT-=dt; if(S.breakT<=0){ if(S.wave+1<WAVES.length) startWave(S.wave+1); }}
+ else{S.waveT+=dt; while(S.queue.length&&S.queue[0].t<=S.waveT){spawn(S.queue.shift().type);}
+   if(!S.queue.length&&!S.zombies.length){ if(S.wave===WAVES.length-1){return win();} S.inBreak=true;S.breakT=12; say('Meyer',pick(['Durchatmen. Bauen. Kisten öffnen.','Welle überstanden. Ich bin fast stolz. Fast.','Kurze Pause. Nutz sie. Die nicht.']),6);}}
+ // idle chatter
+ S.idleT-=dt; if(S.idleT<=0){S.idleT=rnd(28,40); if(Math.random()<.55) say('Meyer',pick(MEYER_IDLE)); else say('Reuter',pick(REUTER));}
+ // crates
+ S.crateT-=dt; if(S.crateT<=0){S.crateT=rnd(9,14)*(niveau==='BR'?.85:1); const c=Math.floor(rnd(1,COLS)),r=Math.floor(rnd(0,ROWS));
+   S.crates.push({x:BX+c*CW+CW/2,y:-40,ty:BY+r*CH+CH/2+10,t:0,life:14}); sfx.crate();}
+ for(const k of S.crates){ if(k.y<k.ty) k.y=Math.min(k.ty,k.y+120*dt); else k.life-=dt; k.t+=dt; }
+ S.crates=S.crates.filter(k=>k.life>0);
+ // towers
+ for(const t of S.towers){ const T=TOWERS[t.k]; t.cd-=dt; t.anim=Math.max(0,(t.anim||0)-dt);
+  const ahead=S.zombies.filter(z=>z.r===t.r&&!z.dead&&z.x>t.x-30&&z.x<W+10);
+  if(T.id==='oel'&&t.cd<=0&&ahead.length){t.cd=T.cd;t.anim=.2;S.shots.push({k:'oil',x:t.x+30,y:t.y-18,r:t.r,vx:420});}
+  if(T.id==='presse'&&t.cd<=0){t.cd=T.cd;t.anim=.5;S.schrott+=25;float(t.x,t.y-50,'+25 Recycling','#9be37a',17);sfx.coin();}
+  if(T.id==='lack'&&t.cd<=0){const hit=ahead.filter(z=>z.x<t.x+CW*2.4);if(hit.length){t.cd=T.cd;t.anim=.5;hit.forEach(z=>hurt(z,24));
+    for(let i=0;i<26;i++)S.fx.push({k:'spray',x:t.x+30,y:t.y-20,vx:rnd(200,420),vy:rnd(-70,70),t:0,life:rnd(.35,.6),col:pick(['#4fc3f7','#81d4fa','#29b6f6'])});}}
+  if(T.id==='magnet'&&t.cd<=0){const zs=ahead.filter(z=>z.x<t.x+CW*4.2);if(zs.length){t.cd=T.cd;t.anim=.6;
+    zs.forEach(z=>{ if(ZT[z.type].mag){z.stun=z.boss?.6:1.6;z.x=Math.max(t.x+60,z.x-(z.boss?10:40));hurt(z,12);S.fx.push({k:'arc',x1:t.x,y1:t.y-40,x2:z.x,y2:z.y-40,t:0,life:.35});}
+      else if(!z.magMsg||S.t-z.magMsg>4){z.magMsg=S.t;float(z.x,z.y-80,'nicht magnetisch!','#cfe8ff',15);} });}}
+  if(T.id==='loet'&&t.cd<=0){const z=ahead.find(z=>z.x<t.x+CW*1.25);if(z){t.cd=T.cd;t.anim=.3;hurt(z,z.type==='kupfer'?70:48);
+    for(let i=0;i<8;i++)S.fx.push({k:'spark',x:z.x-20,y:z.y-35,vx:rnd(-90,90),vy:rnd(-140,20),t:0,life:rnd(.2,.45),col:pick(['#ffd54f','#ff9800','#fff'])});}}
+ }
+ // shots
+ for(const s of S.shots){s.x+=s.vx*dt; const z=S.zombies.find(z=>!z.dead&&z.r===s.r&&Math.abs(z.x-s.x)<26);
+  if(z){s.dead=true;hurt(z,20);z.slow=2.2;S.fx.push({k:'splat',x:z.x,y:z.y-30,t:0,life:.4});}
+  if(s.x>W+20)s.dead=true;}
+ S.shots=S.shots.filter(s=>!s.dead);
+ // zombies
+ for(const z of S.zombies){ if(z.dead)continue; const Z=ZT[z.type]; z.ph+=dt*(z.boss?3:5); if(z.flash>0)z.flash-=dt;
+  if(Math.random()<dt*2.2)S.fx.push({k:'flake',x:z.x+rnd(-12,12),y:z.y-rnd(20,70),vx:rnd(-10,25),vy:rnd(10,40),t:0,life:rnd(.6,1.2),col:z.type==='alu'?'#b9c6cc':z.type==='kupfer'?'#5fd0b0':'#c4581f'});
+  if(z.shield<z.maxShield&&S.t-z.lastHit>3) z.shield=Math.min(z.maxShield,z.shield+12*dt);
+  let sp=Z.sp*(niveau==='BR'?.85:1);
+  if(S.zombies.some(o=>o!==z&&!o.dead&&o.type==='salz'&&o.r===z.r&&Math.abs(o.x-z.x)<CW*1.6)) sp*=1.3;
+  if(z.slow>0){z.slow-=dt;sp*=.55;}
+  if(z.stun>0){z.stun-=dt;sp=0;}
+  // blocking tower
+  const tw=S.towers.find(t=>t.r===z.r&&z.x>t.x&&z.x-t.x<CW*.55);
+  if(tw){ if(z.stun<=0){tw.hp-=Z.dps*dt; if(Math.random()<dt*1.5)sfx.hit(); if(tw.hp<=0){tw.dead=true;float(tw.x,tw.y-50,'zerstört','#ff6b4a',16);}} }
+  else if(z.x>BX-20) z.x-=sp*dt;
+  else { if(z.stun<=0){S.gate-=Z.gate*dt*(niveau==='BR'?.75:1); if(Math.random()<dt*2){sfx.gate();S.flashT=.3;} S.trauma=Math.min(1,Math.max(S.trauma,.25));} }
+  if(z.boss){ z.saltT-=dt; z.callT-=dt;
+   if(z.saltT<=0){z.saltT=5.5; const tgt=S.towers.filter(t=>t.r===z.r&&t.x<z.x).sort((a,b)=>b.x-a.x)[0]||pick(S.towers);
+    if(tgt){tgt.hp-=45;S.fx.push({k:'salt',x1:z.x,y1:z.y-90,x2:tgt.x,y2:tgt.y-20,t:0,life:.6});float(tgt.x,tgt.y-55,'eingesalzen!','#fff',16);if(tgt.hp<=0)tgt.dead=true;}}
+   if(z.callT<=0){z.callT=11; spawn(Math.random()<.5?'rost':'salz',(z.r+ (Math.random()<.5?1:-1)+ROWS)%ROWS); if(Math.random()<.4)say('Reuter',pick(REUTER),4);}}
+ }
+ S.zombies=S.zombies.filter(z=>!z.dead||false);
+ S.towers=S.towers.filter(t=>!t.dead);
+ // fx
+ for(const f of S.fx){f.t+=dt; if(f.vx!==undefined){f.x+=f.vx*dt;f.y+=f.vy*dt; if(f.k==='chip')f.vy+=500*dt;}}
+ S.fx=S.fx.filter(f=>f.t<f.life);
+ for(const t of S.texts){t.t+=dt;t.y-=28*dt;} S.texts=S.texts.filter(t=>t.t<1.6);
+ if(S.gate<=0){S.gate=0;lose();}
+}
+
+// ---------- Drawing ----------
+let bgCache=null;
+const PAL={ink:'#0c0f10',steel:'#263032',steel2:'#3a4749',bone:'#e9dfc8',rust:'#c4581f',ember:'#ff8a3d',patina:'#5fd0b0',alarm:'#e2412f'};
+function halftone(g,x,y,w,h,col,step,maxR,fn){g.fillStyle=col;for(let yy=y;yy<y+h;yy+=step)for(let xx=x+((yy/step)%2?step/2:0);xx<x+w;xx+=step){const r=maxR*fn(xx,yy);if(r>.3){g.beginPath();g.arc(xx,yy,r,0,7);g.fill();}}}
+function makeBg(){const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+ g.fillStyle=PAL.ink;g.fillRect(0,0,W,H);
+ // floor: concrete slabs, two-tone
+ for(let r=0;r<ROWS;r++)for(let cc=0;cc<COLS;cc++){const x=BX+cc*CW,y=BY+r*CH;g.fillStyle=(r+cc)%2?'#1c2324':'#182021';g.fillRect(x,y,CW,CH);
+   g.strokeStyle='#0a0d0d';g.lineWidth=3;g.strokeRect(x+1.5,y+1.5,CW-3,CH-3);
+   g.strokeStyle='rgba(233,223,200,.05)';g.lineWidth=1;g.beginPath();g.moveTo(x+4,y+4);g.lineTo(x+CW-4,y+4);g.stroke();}
+ // rust & patina stains as halftone blobs
+ for(let i=0;i<34;i++){const cx=BX+rnd(0,COLS*CW),cy=BY+rnd(0,ROWS*CH),rad=rnd(25,70),col=Math.random()<.75?'rgba(196,88,31,.55)':'rgba(95,208,176,.35)';
+   halftone(g,cx-rad,cy-rad,rad*2,rad*2,col,6,2.6,(x,y)=>Math.max(0,1-Math.hypot(x-cx,y-cy)/rad)*(.6+.4*Math.sin(x*.07+y*.05)));}
+ // cracks
+ for(let i=0;i<26;i++){g.strokeStyle='rgba(0,0,0,.7)';g.lineWidth=rnd(.8,1.8);g.beginPath();let px=BX+rnd(0,COLS*CW),py=BY+rnd(0,ROWS*CH);g.moveTo(px,py);for(let j=0;j<6;j++){px+=rnd(-22,22);py+=rnd(-16,16);g.lineTo(px,py);}g.stroke();}
+ // painted lane numbers (stencil)
+ g.font='28px "Black Ops One", Impact, sans-serif';g.fillStyle='rgba(233,223,200,.06)';g.textAlign='center';
+ for(let r=0;r<ROWS;r++){g.fillText('BAHN '+(r+1),BX+COLS*CW-90,laneY(r)+10);}
+ // fog at entrance
+ const fog=g.createLinearGradient(BX+COLS*CW-160,0,W,0);fog.addColorStop(0,'rgba(12,15,16,0)');fog.addColorStop(1,'rgba(12,15,16,.95)');g.fillStyle=fog;g.fillRect(BX+COLS*CW-160,BY,W,ROWS*CH);
+ // gate: riveted steel door
+ const gw=BX-10;const gg=g.createLinearGradient(0,0,gw,0);gg.addColorStop(0,'#1d2526');gg.addColorStop(1,'#33403f');g.fillStyle=gg;g.fillRect(0,BY-10,gw,ROWS*CH+20);
+ for(let y=BY;y<BY+ROWS*CH;y+=CH){g.strokeStyle='#0a0d0d';g.lineWidth=3;g.strokeRect(12,y+10,gw-26,CH-20);
+   for(const[rx,ry] of [[20,y+18],[gw-22,y+18],[20,y+CH-18],[gw-22,y+CH-18]]){g.fillStyle='#6b7776';g.beginPath();g.arc(rx,ry,3.5,0,7);g.fill();g.fillStyle='#0a0d0d';g.beginPath();g.arc(rx+1,ry+1,1.5,0,7);g.fill();}
+   // rust drips
+   for(let i=0;i<5;i++){const dx=rnd(24,gw-30),dl=rnd(20,70);const dg=g.createLinearGradient(0,y+20,0,y+20+dl);dg.addColorStop(0,'rgba(196,88,31,.8)');dg.addColorStop(1,'rgba(196,88,31,0)');g.fillStyle=dg;g.fillRect(dx,y+20,rnd(2,4),dl);}}
+ g.save();g.translate(gw/2-2,BY+ROWS*CH/2);g.rotate(-Math.PI/2);g.font='34px "Black Ops One", Impact, sans-serif';g.fillStyle='rgba(233,223,200,.12)';g.textAlign='center';g.fillText('WERKSTATT · TuN',0,12);g.restore();
+ for(let y=BY-10;y<BY+ROWS*CH+10;y+=24){g.fillStyle='#d9a300';g.beginPath();g.moveTo(gw,y);g.lineTo(gw+10,y);g.lineTo(gw+10,y+12);g.lineTo(gw,y+24);g.fill();g.fillStyle=PAL.ink;g.beginPath();g.moveTo(gw,y+12);g.lineTo(gw+10,y+12);g.lineTo(gw+10,y+24);g.lineTo(gw,y+24);g.fill();}
+ // toolbar: dark steel with halftone
+ const tb=g.createLinearGradient(0,0,0,136);tb.addColorStop(0,'#2b3536');tb.addColorStop(1,'#161c1d');g.fillStyle=tb;g.fillRect(0,0,W,136);
+ halftone(g,0,0,W,136,'rgba(233,223,200,.035)',5,1.4,(x,y)=>1-y/136);
+ g.fillStyle=PAL.rust;g.fillRect(0,136,W,3);g.fillStyle='#0a0d0d';g.fillRect(0,139,W,5);
+ for(let x=14;x<W;x+=60){g.fillStyle='#5b6766';g.beginPath();g.arc(x,8,3,0,7);g.fill();g.beginPath();g.arc(x,128,3,0,7);g.fill();}
+ g.textAlign='left';return c;}
+// grain tiles
+const GRAIN=[];for(let k=0;k<4;k++){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');const id=g.createImageData(256,256);for(let i=0;i<id.data.length;i+=4){const v=Math.random()*255;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;}g.putImageData(id,0,0);GRAIN.push(c);}
+// light map
+const LC=document.createElement('canvas');LC.width=W;LC.height=H;const lg=LC.getContext('2d');
+const LAMPS=[{x:BX+CW*1.5},{x:BX+CW*4.5},{x:BX+CW*7.5}];
+function hole(x,y,r,a=1){const gr=lg.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(0,0,0,${a})`);gr.addColorStop(1,'rgba(0,0,0,0)');lg.fillStyle=gr;lg.beginPath();lg.arc(x,y,r,0,7);lg.fill();}
+function glow(g,x,y,r,col,a){const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,col.replace('A',a));gr.addColorStop(1,col.replace('A',0));g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,7);g.fill();}
+const CLOCK=['23:41','00:52','01:58','03:07','04:16','05:30','06:47'];
+function darkness(){const p=S?clamp((S.wave+(S.inBreak?1:0))/WAVES.length,0,1):0;return .80-.42*p;}
+
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+
+function drawTowerIcon(g,id,x,y,s=1,anim=0){g.save();g.translate(x,y);g.scale(s,s);
+ g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(0,28,34,9,0,0,7);g.fill();
+ if(id==='oel'){g.fillStyle='#2e7d32';rr(g,-22,-14,40,40,8);g.fill();g.fillStyle='#1b5e20';g.fillRect(-22,6,40,6);
+   g.strokeStyle='#9e9e9e';g.lineWidth=5;g.beginPath();g.moveTo(14,-6);g.lineTo(38,-26-anim*20);g.stroke();
+   g.strokeStyle='#4caf50';g.lineWidth=4;g.beginPath();g.arc(-6,-14,12,Math.PI,0);g.stroke();
+   g.fillStyle='#fff';g.font='bold 11px Arial';g.textAlign='center';g.fillText('ÖL',-2,8);}
+ if(id==='zaun'){g.fillStyle='#90a4ae';for(let i=-2;i<=2;i++){g.fillRect(i*12-3,-30,6,58);}g.fillRect(-30,-18,60,6);g.fillRect(-30,8,60,6);
+   g.fillStyle='rgba(255,255,255,.4)';for(let i=-2;i<=2;i++)g.fillRect(i*12-3,-30,2,58);g.fillStyle='#cfd8dc';g.font='bold 10px Arial';g.textAlign='center';g.fillText('Zn',0,-34);}
+ if(id==='presse'){g.fillStyle='#546e7a';g.fillRect(-28,-6,56,34);g.fillStyle='#37474f';g.fillRect(-24,-34,8,30);g.fillRect(16,-34,8,30);g.fillStyle='#ffb300';g.fillRect(-26,-36-(anim>0?-10:0)+0,52,10);
+   g.fillStyle='#8d6e63';g.fillRect(-14,4+(anim>0?4:0),28,16-(anim>0?6:0));g.fillStyle='#fff';g.font='bold 18px Arial';g.textAlign='center';g.fillText('♻',0,-10);}
+ if(id==='lack'){g.fillStyle='#455a64';g.fillRect(-10,-2,14,30);g.fillStyle='#0288d1';rr(g,-26,-28,48,26,6);g.fill();g.fillStyle='#b0bec5';g.fillRect(22,-20,16,8);
+   g.fillStyle='#4fc3f7';g.beginPath();g.arc(-2,-36,10,0,7);g.fill();g.fillStyle='#01579b';g.fillRect(-6,-46,8,6);}
+ if(id==='magnet'){g.strokeStyle='#5d4037';g.lineWidth=6;g.beginPath();g.moveTo(-26,28);g.lineTo(-26,-34);g.lineTo(18,-34);g.stroke();g.strokeStyle='#888';g.lineWidth=2;g.beginPath();g.moveTo(14,-34);g.lineTo(14,-14);g.stroke();
+   g.lineWidth=11;g.strokeStyle='#c62828';g.beginPath();g.arc(14,0,13,Math.PI,0,true);g.stroke();g.fillStyle='#eceff1';g.fillRect(-4.5,-2,9,10);g.fillRect(22.5,-2,9,10);
+   if(anim>0){g.strokeStyle='rgba(95,208,176,.8)';g.lineWidth=2;for(let i=1;i<4;i++){g.beginPath();g.arc(14,10,8+i*7,0.2,Math.PI-.2);g.stroke();}}}
+ if(id==='loet'){g.fillStyle='#333';rr(g,-28,10,56,18,4);g.fill();g.fillStyle='#d32f2f';g.fillRect(-20,14,10,8);
+   g.save();g.rotate(-.5);g.fillStyle='#1565c0';rr(g,-30,-12,34,14,6);g.fill();g.fillStyle='#b0bec5';g.fillRect(4,-8,22,6);g.fillStyle=anim>0?'#ffeb3b':'#ff7043';g.beginPath();g.moveTo(26,-8);g.lineTo(38,-5);g.lineTo(26,-2);g.fill();g.restore();
+   if(anim>0){g.fillStyle='rgba(255,200,0,.35)';g.beginPath();g.arc(30,-22,14,0,7);g.fill();}}
+ if(id==='wrench'){g.save();g.rotate(-.7);g.fillStyle='#b0bec5';g.fillRect(-5,-8,10,44);g.beginPath();g.arc(0,-14,14,0,7);g.fill();g.fillStyle='#262b2d';g.fillRect(-5,-30,10,16);g.restore();}
+ g.restore();}
+
+function drawZombie(g,z){const Z=ZT[z.type],x=z.x,y=z.y;const sway=Math.sin(z.ph)*(z.stun>0?0:1);
+ g.save();g.translate(x,y+30);
+ if(z.boss){g.scale(.9,.9);drawBoss(g,z,sway);g.restore();return;}
+ const s=z.type==='kupfer'?1.3:z.type==='kette'?1.1:1;g.scale(s,s);
+ g.fillStyle='rgba(0,0,0,.4)';g.beginPath();g.ellipse(0,0,24,7,0,0,7);g.fill();
+ const col=Z.col, dark=shade(col,-35);
+ // legs
+ g.strokeStyle=dark;g.lineWidth=8;g.lineCap='round';g.beginPath();g.moveTo(-4,-34);g.lineTo(-8+sway*7,-2);g.moveTo(4,-34);g.lineTo(8-sway*7,-2);g.stroke();
+ // body
+ g.fillStyle=col;rr(g,-15,-74,30,44,7);g.fill();
+ // rust/patina blotches
+ g.fillStyle=z.type==='kupfer'?'#4f9a7a':z.type==='alu'?'#7d8a90':'#5a2a10';for(const[bx,by,br] of [[-6,-60,4],[6,-48,5],[-3,-40,3]]){g.beginPath();g.arc(bx,by,br,0,7);g.fill();}
+ if(z.type==='kette'){g.strokeStyle='#2b2b2b';g.lineWidth=3;for(let i=0;i<5;i++){g.beginPath();g.ellipse(-12+i*6,-56+i*5,4,2.5,.7,0,7);g.stroke();}}
+ if(z.type==='salz'){g.fillStyle='#fff';for(let i=0;i<9;i++){g.fillRect(rnd(-14,14),rnd(-74,-34),2,2);}}
+ // bolts
+ g.fillStyle='#bbb';g.beginPath();g.arc(-15,-66,3,0,7);g.arc(15,-66,3,0,7);g.fill();
+ // arms
+ g.strokeStyle=col;g.lineWidth=7;g.beginPath();g.moveTo(-12,-66);g.lineTo(-30,-62+sway*4);g.moveTo(12,-66);g.lineTo(-26,-54-sway*4);g.stroke();
+ // head
+ g.fillStyle=shade(col,10);rr(g,-13,-98,26,24,5);g.fill();
+ g.fillStyle=z.type==='alu'?'#7fdbff':'#5fd0b0';g.shadowColor=g.fillStyle;g.shadowBlur=10;g.fillRect(-9,-90,6,4);g.fillRect(2,-90,6,4);g.shadowBlur=0;
+ g.fillStyle='#111';g.fillRect(-8,-81,14,3);
+ // shield
+ if(z.shield>0){g.strokeStyle=`rgba(160,220,255,${.25+.5*z.shield/z.maxShield})`;g.lineWidth=3;g.beginPath();g.ellipse(-4,-52,30,52,0,0,7);g.stroke();}
+ if(z.slow>0){g.fillStyle='rgba(20,20,10,.55)';g.beginPath();g.ellipse(0,-2,22,6,0,0,7);g.fill();}
+ if(z.stun>0){g.strokeStyle='rgba(95,208,176,.9)';g.lineWidth=2;g.beginPath();g.arc(0,-108,8,0,Math.PI*1.5);g.stroke();}
+ g.restore();
+ // hp bar
+ if(z.hp<z.max||z.shield<z.maxShield){const w=40;g.fillStyle='#000';g.fillRect(x-w/2,y-80*s,w,5);g.fillStyle='#e53935';g.fillRect(x-w/2,y-80*s,w*clamp(z.hp/z.max,0,1),5);}
+}
+function drawBoss(g,z,sway){
+ g.fillStyle='rgba(0,0,0,.45)';g.beginPath();g.ellipse(0,0,70,12,0,0,7);g.fill();
+ // rusty bike
+ g.strokeStyle='#6b3a1f';g.lineWidth=5;for(const wx of [-42,42]){g.beginPath();g.arc(wx,-26,24,0,7);g.stroke();g.lineWidth=1.5;for(let a=0;a<6;a++){g.beginPath();g.moveTo(wx,-26);g.lineTo(wx+Math.cos(a+z.ph)*24,-26+Math.sin(a+z.ph)*24);g.stroke();}g.lineWidth=5;}
+ g.strokeStyle='#7a3b18';g.lineWidth=6;g.beginPath();g.moveTo(-42,-26);g.lineTo(-8,-58);g.lineTo(30,-58);g.lineTo(42,-26);g.moveTo(-8,-58);g.lineTo(2,-26);g.lineTo(-42,-26);g.moveTo(30,-58);g.lineTo(26,-74);g.stroke();
+ // body (suit)
+ g.fillStyle='#3e2a1e';rr(g,-22,-124,40,60,8);g.fill();
+ g.fillStyle='#e8e2d4';g.beginPath();g.moveTo(-4,-124);g.lineTo(6,-124);g.lineTo(1,-100);g.fill();
+ g.fillStyle='#9b1c1c';g.beginPath();g.moveTo(-1,-120);g.lineTo(4,-120);g.lineTo(5,-96);g.lineTo(1,-90);g.lineTo(-3,-96);g.fill();
+ // arm with salt shaker
+ g.strokeStyle='#3e2a1e';g.lineWidth=9;g.lineCap='round';g.beginPath();g.moveTo(-16,-114);g.lineTo(-40,-120+sway*6);g.stroke();
+ g.fillStyle='#eee';rr(g,-52,-142+sway*6,14,22,3);g.fill();g.fillStyle='#999';g.fillRect(-52,-146+sway*6,14,5);
+ g.fillStyle='#fff';for(let i=0;i<4;i++)g.fillRect(-50+rnd(-6,10),-150+sway*6-rnd(0,14),2,2);
+ g.beginPath();g.moveTo(14,-114);g.lineTo(26,-76);g.stroke();
+ // head
+ g.fillStyle='#8c5a3c';rr(g,-16,-158,32,32,8);g.fill();
+ g.fillStyle='#3a2a20';g.fillRect(-16,-160,32,8);
+ g.fillStyle='#ff5722';g.shadowColor='#ff5722';g.shadowBlur=12;g.fillRect(-10,-146,7,4);g.fillRect(4,-146,7,4);g.shadowBlur=0;
+ g.strokeStyle='#111';g.lineWidth=2;g.beginPath();g.moveTo(-8,-134);g.quadraticCurveTo(0,-130+Math.sin(z.ph*2)*2,8,-134);g.stroke();
+ // badge
+ g.fillStyle='#d4af37';g.beginPath();g.arc(10,-110,5,0,7);g.fill();g.fillStyle='#000';g.font='bold 7px Arial';g.textAlign='center';g.fillText('R',10,-107.5);
+ // name + hp
+ g.fillStyle='#000';g.fillRect(-60,-190,120,10);g.fillStyle='#ff5722';g.fillRect(-60,-190,120*clamp(z.hp/z.max,0,1),10);
+ g.fillStyle='#ffb9a8';g.font='bold 15px Arial';g.fillText('HERR REUTER · Der Oxidator',0,-196);
+}
+function shade(hex,p){const n=parseInt(hex.slice(1),16);let r=(n>>16)+p,g=(n>>8&255)+p,b=(n&255)+p;r=clamp(r,0,255);g=clamp(g,0,255);b=clamp(b,0,255);return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');}
+
+const CARD_X=170, CARD_W=112, CARD_G=8;
+function cardRect(i){return {x:CARD_X+i*(CARD_W+CARD_G),y:12,w:CARD_W,h:112};}
+const WRENCH_I=6;
+
+function draw(){
+ if(!bgCache)bgCache=makeBg();
+ ctx.save();
+ const tr=S?S.trauma*S.trauma:0; if(tr>0)ctx.translate(rnd(-1,1)*14*tr,rnd(-1,1)*10*tr);
+ ctx.drawImage(bgCache,0,0);
+ if(!S){ctx.restore();return;}
+ // hover cell
+ if(S.sel!==null&&S.hover){const{c,r}=S.hover;const ok=S.sel===WRENCH_I?!!towerAt(c,r):!towerAt(c,r)&&S.schrott>=TOWERS[S.sel].cost;
+   ctx.strokeStyle=ok?'rgba(95,208,176,.8)':'rgba(226,65,47,.8)';ctx.lineWidth=3;ctx.setLineDash([10,6]);ctx.strokeRect(BX+c*CW+5,BY+r*CH+5,CW-10,CH-10);ctx.setLineDash([]);
+   ctx.fillStyle=ok?'rgba(95,208,176,.10)':'rgba(226,65,47,.10)';ctx.fillRect(BX+c*CW,BY+r*CH,CW,CH);}
+ // towers
+ for(const t of S.towers){const sc=t.pop>0?1+Math.sin((t.pop/.28)*Math.PI)*.25:1;drawTowerIcon(ctx,TOWERS[t.k].id,t.x,t.y,sc,t.anim||0);
+   if(t.hp<t.max){ctx.fillStyle='#000';ctx.fillRect(t.x-30,t.y+36,60,5);ctx.fillStyle='#5fd0b0';ctx.fillRect(t.x-30,t.y+36,60*clamp(t.hp/t.max,0,1),5);}}
+ // zombies
+ [...S.zombies].sort((a,b)=>a.r-b.r).forEach(z=>{if(z.flash>0)ctx.filter='brightness(4) saturate(0)';drawZombie(ctx,z);ctx.filter='none';});
+ // shots
+ for(const s of S.shots){ctx.fillStyle='#1d1a0c';ctx.beginPath();ctx.ellipse(s.x,s.y,9,6,0,0,7);ctx.fill();ctx.fillStyle='rgba(233,223,200,.6)';ctx.beginPath();ctx.arc(s.x+3,s.y-2,2,0,7);ctx.fill();}
+ // fx (normal)
+ for(const f of S.fx){const a=1-f.t/f.life;
+  if(f.k==='chip'||f.k==='flake'){ctx.globalAlpha=a;ctx.fillStyle=f.col;ctx.fillRect(f.x,f.y,f.k==='flake'?2:4,f.k==='flake'?2:4);ctx.globalAlpha=1;}
+  if(f.k==='spray'){ctx.globalAlpha=a*.8;ctx.fillStyle=f.col;ctx.beginPath();ctx.arc(f.x,f.y,3+f.t*8,0,7);ctx.fill();ctx.globalAlpha=1;}
+  if(f.k==='dust'){ctx.globalAlpha=a*.55;halftoneBurst(ctx,f.x,f.y,f.r*(.6+f.t),f.t);ctx.globalAlpha=1;}
+  if(f.k==='splat'){ctx.globalAlpha=a;ctx.fillStyle='#262410';ctx.beginPath();ctx.arc(f.x,f.y,10+f.t*30,0,7);ctx.fill();ctx.globalAlpha=1;}
+  if(f.k==='salt'){const p=f.t/f.life;ctx.fillStyle=PAL.bone;for(let i=0;i<10;i++){const q=clamp(p-i*.03,0,1);ctx.fillRect(f.x1+(f.x2-f.x1)*q+rnd(-5,5),f.y1+(f.y2-f.y1)*q-Math.sin(q*Math.PI)*60+rnd(-5,5),3,3);}}}
+ // crates
+ for(const k of S.crates){const blink=k.life<4&&Math.floor(k.t*6)%2;if(blink)continue;
+  if(k.y<k.ty){ctx.strokeStyle='rgba(233,223,200,.5)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(k.x-16,k.y-14);ctx.lineTo(k.x-26,k.y-60);ctx.moveTo(k.x+16,k.y-14);ctx.lineTo(k.x+26,k.y-60);ctx.stroke();
+    ctx.fillStyle='#1b1f20';ctx.beginPath();ctx.ellipse(k.x,k.y-64,30,12,0,Math.PI,0);ctx.fill();ctx.strokeStyle=PAL.rust;ctx.lineWidth=3;ctx.stroke();}
+  ctx.save();ctx.translate(k.x,k.y);ctx.rotate(Math.sin(k.t*3)*.05);
+  ctx.fillStyle='#7a5a30';ctx.fillRect(-20,-18,40,34);ctx.strokeStyle='#3b2a14';ctx.lineWidth=3;ctx.strokeRect(-20,-18,40,34);ctx.beginPath();ctx.moveTo(-20,-18);ctx.lineTo(20,16);ctx.stroke();
+  ctx.fillStyle='#5fd0b0';ctx.font='20px "Black Ops One", Impact, sans-serif';ctx.textAlign='center';ctx.fillText('?',0,6);ctx.restore();}
+ // ---- lighting ----
+ const dk=darkness();lg.globalCompositeOperation='source-over';lg.clearRect(0,0,W,H);lg.fillStyle=`rgba(4,7,9,${dk})`;lg.fillRect(0,142,W,H-142);
+ lg.globalCompositeOperation='destination-out';
+ LAMPS.forEach((L,i)=>{const fl=.85+.15*Math.sin(S.t*13+i*2)*(Math.random()<.04?-3:1);const sw=Math.sin(S.t*.8+i)*8;L.cx=L.x+sw;
+   lg.save();lg.globalAlpha=clamp(fl,0,1);const cone=lg.createLinearGradient(0,150,0,H);cone.addColorStop(0,'rgba(0,0,0,.95)');cone.addColorStop(1,'rgba(0,0,0,.25)');lg.fillStyle=cone;
+   lg.beginPath();lg.moveTo(L.cx-18,150);lg.lineTo(L.cx+18,150);lg.lineTo(L.cx+190,H);lg.lineTo(L.cx-190,H);lg.closePath();lg.fill();lg.restore();hole(L.cx,170,90,.9);});
+ for(const t of S.towers){const id=TOWERS[t.k].id;hole(t.x,t.y,id==='loet'?110:70,id==='loet'||(t.anim||0)>0?.9:.55);}
+ for(const k of S.crates)hole(k.x,k.y,80,.85);
+ for(const f of S.fx){if(f.k==='spark')hole(f.x,f.y,30,.7);}
+ for(const z of S.zombies){hole(z.x,z.y-80,22,.6);}
+ hole(BX,BY+ROWS*CH/2,140,.5);
+ ctx.drawImage(LC,0,0);
+ // ---- additive glows ----
+ ctx.globalCompositeOperation='lighter';
+ LAMPS.forEach(L=>{glow(ctx,L.cx,175,160,'rgba(255,170,90,A)',.13);});
+ for(const t of S.towers){const id=TOWERS[t.k].id;if(id==='loet')glow(ctx,t.x+30,t.y-20,60,'rgba(255,120,40,A)',.35+((t.anim||0)>0?.4:0));if(id==='magnet'&&(t.anim||0)>0)glow(ctx,t.x+14,t.y,80,'rgba(95,208,176,A)',.35);if(id==='lack'&&(t.anim||0)>0)glow(ctx,t.x+60,t.y-20,90,'rgba(80,170,255,A)',.18);}
+ for(const k of S.crates)glow(ctx,k.x,k.y,60,'rgba(95,208,176,A)',.25+.12*Math.sin(k.t*5));
+ for(const z of S.zombies){glow(ctx,z.x-2,z.y-60*(z.type==='kupfer'?1.3:1)-(z.boss?50:0),z.boss?40:18,z.type==='alu'?'rgba(120,220,255,A)':z.boss?'rgba(255,90,40,A)':'rgba(95,208,176,A)',.55);}
+ for(const f of S.fx){const a=1-f.t/f.life;
+  if(f.k==='spark'){ctx.fillStyle=f.col;ctx.globalAlpha=a;ctx.fillRect(f.x,f.y,3,3);ctx.globalAlpha=1;glow(ctx,f.x,f.y,12,'rgba(255,160,60,A)',.5*a);}
+  if(f.k==='arc'){ctx.globalAlpha=a;ctx.strokeStyle='#5fd0b0';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(f.x1,f.y1);for(let i=1;i<8;i++){ctx.lineTo(f.x1+(f.x2-f.x1)*i/8+rnd(-6,6),f.y1+(f.y2-f.y1)*i/8+rnd(-10,10));}ctx.stroke();ctx.lineWidth=7;ctx.globalAlpha=a*.25;ctx.stroke();ctx.globalAlpha=1;}}
+ ctx.globalCompositeOperation='source-over';
+ // lamps themselves (on top of light)
+ LAMPS.forEach(L=>{ctx.strokeStyle='#0a0d0d';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(L.x,140);ctx.lineTo(L.cx,156);ctx.stroke();ctx.fillStyle='#2b3536';ctx.beginPath();ctx.moveTo(L.cx-20,166);ctx.lineTo(L.cx+20,166);ctx.lineTo(L.cx+10,154);ctx.lineTo(L.cx-10,154);ctx.closePath();ctx.fill();ctx.fillStyle='#ffd9a0';ctx.fillRect(L.cx-7,166,14,3);});
+ // texts
+ for(const t of S.texts){ctx.globalAlpha=clamp(1.6-t.t,0,1);ctx.font=`${t.size+2}px "Black Ops One", Impact, sans-serif`;ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle='#0a0d0d';ctx.strokeText(t.txt,t.x,t.y);ctx.fillStyle=t.col;ctx.fillText(t.txt,t.x,t.y);ctx.globalAlpha=1;}
+ // grain + vignette
+ ctx.globalAlpha=.07;ctx.globalCompositeOperation='overlay';const gt=GRAIN[Math.floor(S.t*24)%4];for(let x=0;x<W;x+=256)for(let y=142;y<H;y+=256)ctx.drawImage(gt,x,y);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+ const v=ctx.createRadialGradient(W/2,H/2+40,280,W/2,H/2+40,860);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.55)');ctx.fillStyle=v;ctx.fillRect(0,142,W,H-142);
+ // damage flash when gate hit
+ if(S.flashT>0){ctx.fillStyle=`rgba(226,65,47,${S.flashT*.6})`;ctx.fillRect(0,142,W,H-142);}
+ ctx.restore();
+ drawHUD();
+}
+function halftoneBurst(g,x,y,r,t){g.fillStyle=PAL.rust;for(let yy=-r;yy<r;yy+=7)for(let xx=-r;xx<r;xx+=7){const d=Math.hypot(xx,yy)/r;if(d<1){const rr2=2.8*(1-d)*(1-t*.6);if(rr2>.3){g.beginPath();g.arc(x+xx,y+yy,rr2,0,7);g.fill();}}}}
+function drawHUD(){const g=ctx;
+ // schrott box
+ g.fillStyle='#0d1112';rr(g,12,12,146,112,3);g.fill();g.strokeStyle=PAL.rust;g.lineWidth=2;g.stroke();
+ g.fillStyle=PAL.patina;g.font='13px "Special Elite", monospace';g.textAlign='center';g.fillText('SCHROTT',85,34);
+ g.fillStyle=PAL.bone;g.font='42px "Black Ops One", Impact, sans-serif';g.fillText(Math.floor(S.schrott),85,82);
+ g.fillStyle='#9aa3a7';g.font='12px Arial';g.fillText('kg',85,104);
+ // cards
+ for(let i=0;i<=WRENCH_I;i++){const R=cardRect(i);const isW=i===WRENCH_I;const T=TOWERS[i];const afford=isW||S.schrott>=T.cost;
+  g.fillStyle=S.sel===i?'#3a1f10':'#121718';rr(g,R.x,R.y,R.w,R.h,3);g.fill();g.lineWidth=S.sel===i?3:1.5;g.strokeStyle=S.sel===i?PAL.ember:'#34413f';g.stroke();if(S.sel===i){g.save();g.globalCompositeOperation='lighter';glow(g,R.x+R.w/2,R.y+50,60,'rgba(255,138,61,A)',.18);g.restore();}
+  g.globalAlpha=afford?1:.35;drawTowerIcon(g,isW?'wrench':T.id,R.x+R.w/2,R.y+50,.72,0);
+  g.fillStyle=PAL.bone;g.font='12px "Special Elite", monospace';g.textAlign='center';g.fillText(isW?'Abbauen':T.name,R.x+R.w/2,R.y+92);
+  g.fillStyle=PAL.ember;g.font='14px "Black Ops One", Impact, sans-serif';g.fillText(isW?'½ zurück':T.cost+' kg',R.x+R.w/2,R.y+108);g.globalAlpha=1;
+  g.fillStyle='#777';g.font='11px Arial';g.textAlign='left';g.fillText(String(i+1),R.x+6,R.y+15);}
+ // gate & wave
+ const px=1020;g.fillStyle='#0d1112';rr(g,px,12,248,112,3);g.fill();g.strokeStyle=PAL.rust;g.lineWidth=2;g.stroke();
+ g.fillStyle=PAL.bone;g.font='22px "Black Ops One", Impact, sans-serif';g.textAlign='right';g.fillText(CLOCK[clamp(S.wave+(S.inBreak&&S.wave>=0?1:0),0,6)]||CLOCK[0],px+236,34);
+ g.textAlign='left';g.fillStyle=PAL.patina;g.font='13px "Special Elite", monospace';g.fillText('WERKSTATT-TOR',px+12,34);
+ g.fillStyle='#000';g.fillRect(px+12,42,224,14);g.fillStyle=S.gate>50?PAL.patina:S.gate>25?PAL.ember:PAL.alarm;g.fillRect(px+12,42,224*S.gate/100,14);
+ g.fillStyle='#9aa3a7';g.fillText(S.inBreak?(S.wave<0?'GLEICH GEHT ES LOS':'PAUSE · nächste Welle '+Math.ceil(S.breakT)+' s'):'WELLE '+(S.wave+1)+' / '+WAVES.length,px+12,78);
+ const prog=S.inBreak?0:1-(S.queue.length/(WAVES[S.wave].n+(WAVES[S.wave].boss?1:0)));g.fillStyle='#000';g.fillRect(px+12,86,224,8);g.fillStyle=PAL.rust;g.fillRect(px+12,86,224*prog,8);
+ g.fillStyle='#9aa3a7';g.font='12px Arial';g.fillText('richtig: '+S.right+'   Serie: '+S.streak+'   ⏸ P  🔊 M',px+12,114);
+ // message
+ if(S.msg&&S.msgT>0){const m=S.msg, isR=m.who==='Reuter';const a=clamp(S.msgT,0,1);g.globalAlpha=a;
+  const w=760,x=(W-w)/2+40,y=H-78;g.fillStyle=isR?'rgba(30,10,6,.94)':'rgba(6,20,17,.94)';rr(g,x,y,w,62,6);g.fill();g.strokeStyle=isR?'#7a2e22':'#2f5a2f';g.lineWidth=2;g.stroke();
+  g.fillStyle=isR?'#ff6b4a':'#5fd0b0';g.font='13px "Special Elite", "Courier New", monospace';g.textAlign='left';g.fillText((isR?'STÖRSENDER · HERR REUTER':'FUNK · HERR MEYER'),x+14,y+20);
+  g.fillStyle=isR?'#ffcfc2':'#d4f3ea';g.font='15px "Special Elite", "Courier New", monospace';wrap(g,m.text,x+14,y+40,w-28,17,2);g.globalAlpha=1;}
+}
+function wrap(g,text,x,y,maxW,lh,maxL){const words=text.split(' ');let line='',n=0;for(const w of words){const t=line?line+' '+w:w;if(g.measureText(t).width>maxW&&line){g.fillText(line,x,y+n*lh);line=w;n++;if(n>=maxL)return;}else line=t;}g.fillText(line,x,y+n*lh);}
+
+// ---------- Loop ----------
+function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+ if(running&&!paused&&!modal)update(dt);
+ draw(); requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{bgCache=null;});
+
+// ---------- Input ----------
+function toLogical(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};}
+cv.addEventListener('pointermove',e=>{if(!S)return;const p=toLogical(e);S.hover=cellAt(p.x,p.y);});
+cv.addEventListener('pointerdown',e=>{if(!S||!running||paused||modal)return;const p=toLogical(e);
+ // crates first
+ for(const k of S.crates){if(Math.abs(p.x-k.x)<34&&Math.abs(p.y-k.y)<34){S.crates.splice(S.crates.indexOf(k),1);openQuestion('kiste');return;}}
+ for(let i=0;i<=WRENCH_I;i++){const R=cardRect(i);if(p.x>=R.x&&p.x<=R.x+R.w&&p.y>=R.y&&p.y<=R.y+R.h){S.sel=S.sel===i?null:i;beep(500,.04);return;}}
+ const cell=cellAt(p.x,p.y);if(!cell||S.sel===null)return;
+ const ex=towerAt(cell.c,cell.r);
+ if(S.sel===WRENCH_I){if(ex){S.towers.splice(S.towers.indexOf(ex),1);const back=Math.floor(TOWERS[ex.k].cost/2);S.schrott+=back;float(ex.x,ex.y-40,'+'+back,'#ffcf6b');beep(300,.08);}return;}
+ const T=TOWERS[S.sel];
+ if(ex){float(BX+cell.c*CW+CW/2,BY+cell.r*CH+30,'besetzt','#ff8a80',15);return;}
+ if(S.schrott<T.cost){float(BX+cell.c*CW+CW/2,BY+cell.r*CH+30,'zu wenig Schrott','#ff8a80',15);sfx.no();return;}
+ S.schrott-=T.cost;S.towers.push({k:S.sel,c:cell.c,r:cell.r,x:BX+cell.c*CW+CW/2,y:BY+cell.r*CH+CH/2,hp:T.hp,max:T.hp,cd:T.id==='presse'?T.cd:.3,pop:.28});sfx.place();S.trauma=Math.min(1,S.trauma+.08);
+ if(!e.shiftKey)S.sel=null;
+});
+addEventListener('keydown',e=>{if(!S||!running)return;
+ if(e.key>='1'&&e.key<='7'&&!modal){const i=+e.key-1;S.sel=S.sel===i?null:i;}
+ if(e.key==='Escape'){if(!modal)S.sel=null;}
+ if((e.key==='p'||e.key==='P')&&!modal)togglePause();
+ if(e.key==='m'||e.key==='M'){soundOn=!soundOn;}
+});
+function togglePause(){paused=!paused;$('pause').classList.toggle('hidden',!paused);}
+$('resume').onclick=togglePause;
+$('quit').onclick=()=>{paused=false;$('pause').classList.add('hidden');lose(true);};
+
+// ---------- Questions ----------
+let qPool=[];
+function nextQ(){if(!qPool.length)qPool=FRAGEN.map((_,i)=>i).sort(()=>Math.random()-.5);return FRAGEN[qPool.pop()];}
+function openQuestion(kind){modal=true;const q=nextQ();
+ $('fTag').textContent='Ersatzteilkiste · Thema: '+q.t;
+ $('fFunk').innerHTML='<b>FUNK · Herr Meyer:</b> '+pick(['Kiste geöffnet. Bevor du reingreifst: eine Frage.','Erst denken, dann Schrott.','Richtig beantworten, dann gehört der Inhalt dir. Falsch: Reuter freut sich.','Kleine Wiederholung zwischendurch. Die Zombies warten solange. Glaube ich.']);
+ $('fQ').textContent=q.q;
+ let opts=q.a.map((t,i)=>({t,ok:i===0}));
+ if(niveau==='BR') opts=[opts[0],...opts.slice(1).sort(()=>Math.random()-.5).slice(0,2)];
+ opts.sort(()=>Math.random()-.5);
+ const box=$('fOpts');box.innerHTML='';
+ opts.forEach(o=>{const b=document.createElement('button');b.className='opt';b.type='button';b.textContent=o.t;b.onclick=()=>answer(o.ok,b,q);b._ok=o.ok;box.appendChild(b);});
+ $('fErk').classList.add('hidden');$('fWeiter').classList.add('hidden');$('frage').classList.remove('hidden');
+ setTimeout(()=>box.firstChild&&box.firstChild.focus(),50);}
+function answer(ok,btn,q){const all=[...$('fOpts').children];all.forEach(b=>{b.disabled=true;if(b._ok)b.classList.add('ok');});
+ const tp=S.topic[q.t]=S.topic[q.t]||{r:0,n:0};tp.n++;
+ const erk=$('fErk');erk.classList.remove('hidden','bad');
+ if(ok){tp.r++;S.right++;S.streak++;S.bestStreak=Math.max(S.bestStreak,S.streak);let gain=60;let extra='';
+  if(S.streak%3===0){gain+=60;extra=' <b>Meyer-Bonus: 3 in Folge, +60!</b>';}
+  S.schrott+=gain;sfx.ok();erk.innerHTML='<b>Richtig! +'+gain+' kg Schrott.</b>'+extra+'<br>'+q.e;}
+ else{btn.classList.add('no');S.wrong++;S.streak=0;sfx.no();erk.classList.add('bad');erk.innerHTML='<b>Reuter: „'+pick(REUTER_WRONG)+'“</b><br>Richtig ist: <b>'+q.a[0]+'</b>. '+q.e;}
+ $('fWeiter').classList.remove('hidden');$('fWeiter').focus();}
+$('fWeiter').onclick=()=>{$('frage').classList.add('hidden');modal=false;};
+
+// ---------- Start / End ----------
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).classList.add('hidden'));
+$('howBtn').onclick=()=>$('how').classList.remove('hidden');
+$('bestBtn').onclick=()=>{const gEl=$('akteGrid');gEl.innerHTML='';for(const k in ZT){const z=ZT[k];const d=document.createElement('div');d.className='mini';d.innerHTML='<b>'+z.name+'</b> · '+(z.mag?'magnetisch':'nicht magnetisch')+'<br>'+z.akte;gEl.appendChild(d);}$('akte').classList.remove('hidden');};
+$('nivRS').onclick=()=>{niveau='RS';$('nivRS').classList.add('on');$('nivBR').classList.remove('on');};
+$('nivBR').onclick=()=>{niveau='BR';$('nivBR').classList.add('on');$('nivRS').classList.remove('on');};
+function showHS(){const h=store.get('rostHS');$('hs').textContent=h?('Bester Lauf auf diesem Gerät: '+h):'';}
+showHS();
+try{const n=store.get('rostName');if(n)$('name').value=n;}catch(e){}
+function begin(){store.set('rostName',$('name').value.trim());S=newState();running=true;paused=false;modal=false;
+ ['start','ende','how','akte'].forEach(id=>$(id).classList.add('hidden'));
+ say('Meyer','Werkzeug oben anklicken, dann aufs Feld. Ein Ölkännchen und eine Recycling-Presse sind ein guter Anfang. Kisten anklicken!',9);}
+
+// ---------- Intro ----------
+const SLIDES=[
+ {tag:'23:41 Uhr · TuN-Werkstatt',who:'Meyer',txt:'Hört mich jemand? Hier Meyer. Der Fahrradkeller ist gefallen. Drei Winter ohne Öl, und jetzt sind die Räder … aufgestanden. Rost-Zombies. Sie kommen von rechts, direkt auf unsere Werkstatt zu.',scene:'horde'},
+ {tag:'Störsignal',who:'Reuter',txt:'Guten Abend. Reuter hier, Chemie. Eisen plus Wasser plus Sauerstoff: Ich nenne das nicht Apokalypse, ich nenne das Unterricht. Und ich habe sehr, sehr viel Streusalz.',scene:'reuter'},
+ {tag:'Dein Auftrag',who:'Meyer',txt:'Halte das Werkstatt-Tor links bis zum Morgengrauen. Sechs Wellen. Fällt das Tor, bist du Teil der Patina. Kein Druck.',scene:'gate'},
+ {tag:'Bedienung · Werkzeug bauen',who:'Meyer',txt:'Oben ein Werkzeug anklicken (oder Taste 1 bis 6), dann ein freies Feld. Öl bremst, Lack sprüht, der Lötkolben brennt aus nächster Nähe, der Zink-Zaun hält auf. Die Recycling-Presse macht dir laufend Schrott.',scene:'tools'},
+ {tag:'Bedienung · Schrott verdienen',who:'Meyer',txt:'Ersatzteilkisten fallen vom Himmel. Anklicken, Frage aus unserer Reihe richtig beantworten, Schrott kassieren. Drei richtige in Folge: Bonus. Falsch: Reuter kriegt die Kiste. Und lacht.',scene:'crate'},
+ {tag:'Letzter Tipp',who:'Meyer',txt:'Der Magnetkran zieht nur, was aus Eisen ist. Alu und Kupfer lachen darüber. Wer im Unterricht aufgepasst hat, ist hier klar im Vorteil. Viel Glück. Ich hole Kaffee.',scene:'magnet'},
+];
+let iIdx=0,iT=0,iTyped=0,iRun=false,iLast=0;
+const ic=$('ic'),ig=ic.getContext('2d');
+function introOpen(){iIdx=0;showSlide();$('start').classList.add('hidden');$('intro').classList.remove('hidden');iRun=true;iLast=performance.now();requestAnimationFrame(introLoop);setTimeout(()=>$('iNext').focus(),50);}
+function showSlide(){const sl=SLIDES[iIdx];iT=0;iTyped=0;$('iTag').textContent=sl.tag;$('iStep').textContent=(iIdx+1)+' / '+SLIDES.length;
+ $('iFunk').className='funk'+(sl.who==='Reuter'?' r':'');$('iNext').textContent=iIdx===SLIDES.length-1?'Los geht’s':'Weiter';typeTick();}
+function typeTick(){const sl=SLIDES[iIdx];const head=sl.who==='Reuter'?'STÖRSENDER · Herr Reuter: ':'FUNK · Herr Meyer: ';
+ $('iFunk').innerHTML='<b>'+head+'</b>'+esc(sl.txt.slice(0,Math.floor(iTyped)))+(iTyped<sl.txt.length?'<span style="opacity:.6">▌</span>':'');}
+function introNext(){const sl=SLIDES[iIdx];if(iTyped<sl.txt.length){iTyped=sl.txt.length;typeTick();return;}
+ if(iIdx<SLIDES.length-1){iIdx++;showSlide();beep(400,.05);}else introClose();}
+function introClose(){iRun=false;$('intro').classList.add('hidden');store.set('rostIntro','1');begin();}
+$('iNext').onclick=introNext;$('iSkip').onclick=introClose;
+addEventListener('keydown',e=>{if(!iRun)return;if(e.key==='Escape')introClose();});
+function introLoop(ts){if(!iRun)return;const dt=Math.min(.05,(ts-iLast)/1000);iLast=ts;iT+=dt;
+ const sl=SLIDES[iIdx];if(iTyped<sl.txt.length){iTyped+=dt*48;if(Math.floor(iTyped)%3===0)beep(1200,.01,'square',.006);typeTick();}
+ drawScene(sl.scene,iT);requestAnimationFrame(introLoop);}
+function iZ(type,x,y,ph,extra={}){return Object.assign({type,x,y,r:0,hp:1,max:1,shield:ZT[type].shield||0,maxShield:ZT[type].shield||0,slow:0,stun:0,ph,boss:type==='boss'},extra);}
+function drawScene(k,t){drawScene0(k,t);const g=ig,w=ic.width,h=ic.height;const lx=w*.42+Math.sin(t*.8)*12;
+ g.save();g.globalCompositeOperation='lighter';const cone=g.createLinearGradient(0,0,0,h);cone.addColorStop(0,'rgba(255,170,90,.16)');cone.addColorStop(1,'rgba(255,170,90,.02)');g.fillStyle=cone;g.beginPath();g.moveTo(lx-12,0);g.lineTo(lx+12,0);g.lineTo(lx+170,h);g.lineTo(lx-170,h);g.closePath();g.fill();g.restore();
+ const v=g.createRadialGradient(lx,h*.6,60,lx,h*.6,w*.65);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.6)');g.fillStyle=v;g.fillRect(0,0,w,h);
+ g.globalAlpha=.06;g.globalCompositeOperation='overlay';g.drawImage(GRAIN[Math.floor(t*24)%4],0,0);g.drawImage(GRAIN[(Math.floor(t*24)+1)%4],256,0);g.drawImage(GRAIN[(Math.floor(t*24)+2)%4],512,0);g.globalAlpha=1;g.globalCompositeOperation='source-over';}
+function drawScene0(k,t){const g=ig,w=ic.width,h=ic.height;g.clearRect(0,0,w,h);
+ // floor + moon
+ g.fillStyle='#0c0f10';g.fillRect(0,0,w,h);g.fillStyle='#1c2324';g.fillRect(0,170,w,80);
+ for(let x=0;x<w;x+=76){g.strokeStyle='rgba(0,0,0,.5)';g.strokeRect(x,170,76,80);}
+ g.fillStyle='rgba(230,225,200,.85)';g.beginPath();g.arc(w-70,46,22,0,7);g.fill();g.fillStyle='#0b0f14';g.beginPath();g.arc(w-60,40,20,0,7);g.fill();
+ const gate=()=>{g.fillStyle='#3c464a';g.fillRect(0,60,70,190);g.strokeStyle='#1a1f21';g.lineWidth=3;g.strokeRect(6,70,58,170);for(let y=60;y<250;y+=20){g.fillStyle=(y/20)%2?'#e0b000':'#111';g.fillRect(70,y,8,20);}};
+ if(k==='horde'){gate();['rost','salz','rost','kette','rost'].forEach((ty,i)=>{const x=w+40-((t*38+i*110)%(w+40))+ (i%2)*20;drawZombie(g,iZ(ty,Math.max(110,x),178+(i%2)*14,t*5+i));});}
+ if(k==='reuter'){const x=w-200-Math.sin(t)*20;drawZombie(g,iZ('boss',x,206,t*3));g.fillStyle='#fff';for(let i=0;i<30;i++){const q=(t*.8+i/30)%1;g.fillRect(x-60-q*300,90+Math.sin(q*6+i)*30+q*80,3,3);}
+   g.fillStyle='#ff6b4a';g.font='bold 22px "Courier New",monospace';g.fillText('Fe + O₂ + H₂O → Rost',40,60);g.fillStyle='rgba(255,107,74,.6)';g.font='14px "Courier New",monospace';g.fillText('(vereinfacht. Er besteht darauf.)',40,82);}
+ if(k==='gate'){gate();g.fillStyle='#000';g.fillRect(100,30,260,16);const hp=.35+.65*Math.abs(Math.cos(t*.6));g.fillStyle=hp>.5?'#5fd0b0':'#ffb300';g.fillRect(100,30,260*hp,16);g.fillStyle='#ccc';g.font='bold 13px Arial';g.fillText('WERKSTATT-TOR',100,24);
+   drawZombie(g,iZ('rost',150+Math.sin(t*2)*6,180,t*5));drawZombie(g,iZ('kette',230,186,t*5+2));g.fillStyle='#5fd0b0';g.font='bold 18px Arial';g.fillText('← hier dürfen sie nicht durch',300,130);}
+ if(k==='tools'){const ids=['oel','zaun','presse','lack','magnet','loet'],names=['Öl','Zink-Zaun','Presse','Lack','Magnet','Lötkolben'];
+   ids.forEach((id,i)=>{const x=70+i*118,act=Math.floor(t*1.2)%6===i;g.fillStyle=act?'#4a3a22':'#1a1e20';g.fillRect(x-48,20,96,110);g.strokeStyle=act?'#ffb300':'#4d5559';g.lineWidth=act?3:2;g.strokeRect(x-48,20,96,110);
+     drawTowerIcon(g,id,x,72,.8,act?(t%1):0);g.fillStyle='#fff';g.font='bold 13px Arial';g.textAlign='center';g.fillText(names[i],x,120);g.textAlign='left';});
+   const c=Math.floor(t*1.2)%6,cx=70+c*118;const p=(t*1.2)%1;const ty=210;g.fillStyle='rgba(95,208,176,.15)';g.fillRect(cx-38,172,76,76);
+   g.fillStyle='#fff';g.beginPath();const px=cx+(p<.5?0:0),py=p<.5?100+p*200:ty;g.moveTo(px,py);g.lineTo(px+12,py+30);g.lineTo(px+2,py+26);g.lineTo(px-4,py+38);g.closePath();g.fill();
+   if(p>.5)drawTowerIcon(g,ids[c],cx,ty-8,.7,0);}
+ if(k==='crate'){const y=Math.min(150,-40+((t*90)%300));const x=230;
+   if(y<150){g.strokeStyle='rgba(220,220,220,.6)';g.beginPath();g.moveTo(x-16,y-14);g.lineTo(x-26,y-60);g.moveTo(x+16,y-14);g.lineTo(x+26,y-60);g.stroke();g.fillStyle='#333';g.beginPath();g.ellipse(x,y-64,30,12,0,Math.PI,0);g.fill();}
+   g.shadowColor='#5fd0b0';g.shadowBlur=16;g.fillStyle='#8d6e3f';g.fillRect(x-20,y-18,40,34);g.shadowBlur=0;g.fillStyle='#5fd0b0';g.font='bold 18px Arial';g.textAlign='center';g.fillText('?',x,y+5);
+   g.fillStyle='#ccc';g.font='bold 30px Arial';g.fillText('→',360,150);g.fillStyle='#121516';g.fillRect(410,80,300,110);g.strokeStyle='#555f63';g.strokeRect(410,80,300,110);
+   g.fillStyle='#fff';g.font='bold 15px Arial';g.fillText('Was braucht Eisen zum Rosten?',560,110);g.fillStyle=(t%3)>1.5?'#1d3b14':'#111618';g.fillRect(430,124,260,26);g.fillStyle='#fff';g.font='14px Arial';g.fillText('Wasser und Sauerstoff',560,142);
+   if((t%3)>1.5){g.fillStyle='#ffcf6b';g.font='bold 20px Arial';g.fillText('+60 kg Schrott',560,180);}g.textAlign='left';}
+ if(k==='magnet'){drawTowerIcon(g,'magnet',110,190,1.1,(t%1.5)<.6?1:0);const zx=[300,440,580];['rost','alu','kupfer'].forEach((ty,i)=>{const pull=ZT[ty].mag&&(t%1.5)<.6;drawZombie(g,iZ(ty,zx[i]-(pull?20:0),180,t*5+i,{stun:pull?1:0}));
+   g.fillStyle=ZT[ty].mag?'#5fd0b0':'#7fdbff';g.font='bold 14px Arial';g.textAlign='center';g.fillText(ZT[ty].mag?'Eisen: zieht!':'nicht magnetisch',zx[i],70);g.textAlign='left';});
+   if((t%1.5)<.6){g.strokeStyle='#5fd0b0';g.lineWidth=2;g.beginPath();g.moveTo(130,150);for(let i=1;i<10;i++)g.lineTo(130+(zx[0]-150)*i/10,150+rnd(-10,10)-i*2);g.stroke();}}
+}
+$('go').onclick=introOpen;
+$('again').onclick=begin;
+$('toStart').onclick=()=>{$('ende').classList.add('hidden');$('start').classList.remove('hidden');showHS();};
+function score(){return S.kills*10+S.right*50+Math.round(S.gate)*5+(S.won?500:0);}
+function end(won,quit){running=false;S.won=won;const nm=$('name').value.trim()||'Unbekannte Person';
+ const sc=score();const best=+(store.get('rostHSn')||0);if(sc>best){store.set('rostHSn',sc);store.set('rostHS',nm+' · '+sc+' Punkte'+(won?' · überlebt':''));}
+ $('eTag').textContent=won?'Morgengrauen · 06:47 Uhr':'Funkstille · '+(quit?'aufgegeben':'Welle '+(S.wave+1));
+ $('eHead').textContent=won?'ÜBERLEBT.':'DIE WERKSTATT IST GEFALLEN.';
+ $('eFunk').className='funk'+(won?'':' r');
+ $('eFunk').innerHTML=won?'<b>FUNK · Herr Meyer:</b> „'+esc(nm)+', du hast die Werkstatt gehalten. Herr Reuter wurde fachgerecht recycelt, spart rund 95 % Energie. Im Chemieraum brennt noch Licht, aber das ist ein Problem für morgen. Ich habe übrigens den Kaffee vergessen. Bis Dienstag.“'
+  :'<b>STÖRSENDER · Herr Reuter:</b> „Versuch geglückt. '+esc(nm)+' ist jetzt Teil der Patina. Ich nenne das: natürliche Oberflächenveredelung. Protokoll bis Montag.“<br><span style="color:#b9f5a0">Meyer, ganz leise: „Noch eine Runde. Diesmal mit mehr Öl.“</span>';
+ const quote=S.right+S.wrong?Math.round(100*S.right/(S.right+S.wrong)):0;
+ $('eStats').innerHTML=`<div><b>${sc}</b>Punkte</div><div><b>${S.kills}</b>Zombies recycelt</div><div><b>${S.right} / ${S.right+S.wrong}</b>Fragen richtig (${quote} %)</div><div><b>${S.bestStreak}</b>längste Serie</div>`;
+ const th=Object.entries(S.topic).map(([k,v])=>`${k}: ${v.r}/${v.n}`).join(' · ');
+ const weak=Object.entries(S.topic).filter(([k,v])=>v.r<v.n).map(([k])=>k);
+ $('eThemen').innerHTML=(th?'Themen: '+th:'Keine Kiste geöffnet. Mutig.')+(weak.length?'<br>Nochmal ins Lernlogbuch schauen: <b style="color:#ffb9a8">'+weak.join(', ')+'</b>':'');
+ $('ende').classList.remove('hidden');}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function win(){end(true);} function lose(q){if(running)end(false,q);}
+// test hook
+window.__rost={get S(){return S},begin,spawn,openQuestion,step:(dt)=>{if(running)update(dt)},get running(){return running},setNiv:v=>niveau=v};
+})();
+</script>
+</body>
+</html>
