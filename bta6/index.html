@@ -226,7 +226,7 @@ const sWin = () => [523, 659, 784, 1047, 1319].forEach((f, i) => beep(f, 0.18, "
 const SAVE_KEY = "bta6_v2", OLD_KEY = "neustadt2035_3d_v1";
 function fresh() {
   return { v: 2, name: "", team: "", money: 60, done: {}, tries: {}, prog: {}, recall: [], bricks: [], calls: {}, gp: null, finale: false, visited: {},
-    up: { shoes: 0, board: false }, look: { skin: 1, hair: "kurz", hairCol: 1, top: 0, pants: 0, g: {} }, owned: {}, tomatini: 0, tomT: 0, pos: null, intro: 0, gfx: "hoch", made: false, ts: 0 };
+    up: { shoes: 0, board: false, ride: "" }, look: { skin: 1, hair: "kurz", hairCol: 1, top: 0, pants: 0, g: {} }, owned: {}, side: {}, tomatini: 0, tomT: 0, pos: null, intro: 0, gfx: "hoch", made: false, ts: 0 };
 }
 let S = fresh();
 function adopt(o) {
@@ -1601,7 +1601,7 @@ function menu(tab = "m") {
     menu.items = items;
   }
   if (tab === "p") {
-    body = `<p>Rang: <b>${rankOf(starSum())[1]}</b> · ★ ${starSum()} · Aufträge ${doneCount()} / ${ALLIDS.length} · Finale ${S.finale ? "gewonnen" : "offen"}</p><p>Projektkarten-Challenges: ${SC.filter((s) => S.done[s.id]).length} / ${SC.length}</p><p>Sammelsteine: ${S.bricks.length} / ${BRICK_POS.length}</p>${S.bricks.length ? `<div class="mlist">${S.bricks.map((i) => `<div class="mitem"><div><small>${esc(BRICKS[i][2])}</small></div><div class="st">🧱</div></div>`).join("")}</div>` : ""}<p>Generalprobe: ${S.gp ? de(S.gp.p) + " / 60 Punkte, Note " + S.gp.n : "noch nicht geschrieben"}</p><p>Rückrufaktion: ${S.recall.length} Fragen offen</p><h3>Team</h3><input class="name" id="tname" maxlength="20" value="${esc(S.team)}" placeholder="Teamname"><div class="row"><button class="btn sm" id="tsave">Speichern</button><button class="btn sm" id="reset">Spielstand löschen</button></div><h3>Spielstand und Urkunde</h3><div id="saveBox"></div>`;
+    body = `<p>Rang: <b>${rankOf(starSum())[1]}</b> · ★ ${starSum()} · Aufträge ${doneCount()} / ${ALLIDS.length} · Finale ${S.finale ? "gewonnen" : "offen"}</p><p>Projektkarten-Challenges: ${SC.filter((s) => S.done[s.id]).length} / ${SC.length}</p><p>Sammelsteine: ${S.bricks.length} / ${BRICK_POS.length}</p>${S.bricks.length ? `<div class="mlist">${S.bricks.map((i) => `<div class="mitem"><div><small>${esc(BRICKS[i][2])}</small></div><div class="st">🧱</div></div>`).join("")}</div>` : ""}<p>Fahrzeug: ${S.up.ride === "pedelec" ? "Pedelec" : S.up.ride === "scooter" ? "E-Scooter" : "keins"}</p><p>Generalprobe: ${S.gp ? de(S.gp.p) + " / 60 Punkte, Note " + S.gp.n : "noch nicht geschrieben"}</p><p>Rückrufaktion: ${S.recall.length} Fragen offen</p><h3>Team</h3><input class="name" id="tname" maxlength="20" value="${esc(S.team)}" placeholder="Teamname"><div class="row"><button class="btn sm" id="tsave">Speichern</button><button class="btn sm" id="reset">Spielstand löschen</button></div><h3>Spielstand und Urkunde</h3><div id="saveBox"></div>`;
   }
   if (tab === "h") {
     body = `<div class="keys"><p><b>Laufen:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> oder Pfeiltasten · <kbd>Shift</kbd> rennen · Maus ziehen dreht die Kamera · Mausrad zoomt · <kbd>E</kbd> sprechen · <kbd>M</kbd> Menü. Handy: Joystick links, rechts wischen dreht die Kamera.</p><p><b>So funktioniert's:</b> Sprich mit den Figuren mit ◆ über dem Kopf. Die Experten in Ladepark, Vertiport, Bahnhof und Robotaxi Lab haben Aufträge zu den vier Expertenfeldern. Bei Herrn Meyer programmierst du die sechs Projektkarten in Wortblöcken. Dein Programm fährt dann auf dem Testgelände, und das Testprotokoll zeigt, ob alles klappt.</p><p><b>Wortblöcke:</b> Tippe links einen Block an, er wird an der Stelle mit ▸ eingefügt. Tippe auf eine Lücke zwischen Blöcken, um die Einfügestelle zu wählen. Gelb umrandete Werte (cm, Farbe, Sensor C/D/E) ändern sich beim Antippen.</p><p><b>Finale:</b> Ab ${FINAL_NEED} Aufträgen schaltet das Rathaus das Rededuell gegen Herrn Reuter frei. Die Generalprobe dort ist aufgebaut wie die Kursarbeit.</p><p>Der Spielstand wird nur in diesem Browser gespeichert.</p></div>`;
@@ -1665,9 +1665,9 @@ async function finale() {
 const tmpV = new THREE.Vector3();
 function uiTick() {
   near = null; let best = 4.5;
-  if (!RUN) for (const k in NPCS) { const n = NPCS[k], d = Math.hypot(n.at.x - pos.x, n.at.z - pos.z); if (d < best) { best = d; near = k; } }
+  if (!RUN && !DRIVE) for (const k in NPCS) { const n = NPCS[k], d = Math.hypot(n.at.x - pos.x, n.at.z - pos.z); if (d < best) { best = d; near = k; } }
   const p = $("prompt");
-  if (near && !paused && !busy) { p.style.display = "block"; $("bAct").textContent = `▶ ${NPCS[near].name}  [E]`; } else p.style.display = "none";
+  if (near && !paused && !busy && !DRIVE) { p.style.display = "block"; $("bAct").textContent = `▶ ${NPCS[near].name}  [E]`; } else p.style.display = "none";
   // Navi-Pfeil
   const na = $("nav");
   if (navT && !RUN) {
@@ -1914,13 +1914,146 @@ ACTIONS.bennet = async () => {
 };
 
 // =====================================================================
+//  SIDE-QUEST: E-AUTO FAHREN ZU RAD-SCHRÖER (Fahrrad-Shop)
+// =====================================================================
+// --- Fahrrad-Shop-Gebäude (rohe Meshes, nach dem Welt-Build) ---
+(function bikeShop() {
+  const M = (c, r = 0.7) => new THREE.MeshStandardMaterial({ color: C(c), roughness: r });
+  const box = (a, b, c, d, e, f, mat) => { const m = new THREE.Mesh(new THREE.BoxGeometry(d - a, e - b, f - c), mat); m.position.set((a + d) / 2, (b + e) / 2, (c + f) / 2); m.castShadow = m.receiveShadow = true; scene.add(m); return m; };
+  const x0 = 8, x1 = 26, z0 = 70, z1 = 80;
+  box(x0, 0, z0, x1, 4.6, z1, M(0xef7d2e, 0.75));                 // Shop-Korpus, orange
+  box(x0 - 0.3, 4.6, z0 - 0.3, x1 + 0.3, 4.95, z1 + 0.3, M(0x33363c)); // Dachband
+  box(x0 + 2, 1.1, z0, x1 - 2, 3.2, z0 + 0.12, M(0x9fd0e8, 0.3)); // Schaufenster zur Straße (Nordseite -z)
+  box(x0 + 3.5, 2.9, z0 - 2.6, x1 - 3.5, 3.1, z0, M(0xef7d2e, 0.75)); // Vordach nach Norden
+  for (const x of [x0 + 4, x1 - 4]) cyl(x, 0, z0 - 2.4, 0.08, 2.9, 0x55585f);
+  // ausgestellte Räder vor dem Laden
+  const bike = (bx, bz, col) => {
+    for (const dz of [-0.33, 0.33]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.06, 8, 18), M(0x15151a, 0.5)); w.position.set(bx, 0.33, bz + dz); w.rotation.y = Math.PI / 2; scene.add(w); }
+    box(bx - 0.05, 0.33, bz - 0.35, bx + 0.05, 0.9, bz + 0.35, M(col, 0.5));
+    box(bx - 0.4, 0.9, bz - 0.06, bx + 0.4, 0.98, bz + 0.06, M(0x2a2a30));
+  };
+  bike(x0 + 4.5, z0 - 1.3, 0xc8371e); bike(x1 - 4.5, z0 - 1.3, 0x2f8f5f);
+  sign("RAD-SCHRÖER", (x0 + x1) / 2, 3.95, z0 - 0.02, 6, 0.9, Math.PI, { fg: "#16101f", bg: "#ffd400" });
+  sign("Pedelecs · E-Scooter", (x0 + x1) / 2, 3.1, z0 - 0.02, 5.2, 0.5, Math.PI, { fg: "#fff", bg: "#2f6fb0" });
+  solid(x0, z0, x1, z1, 4.6);
+})();
+// --- Herr Schröer als NPC ---
+NAMES.schroeer = "Herr Schröer · Rad-Schröer";
+LOOKS.schroeer = { skin: 0xe9b890, top: 0x2f8f5f, pants: 0x30343c, hair: 0x9a9a9a, beard: 0xb0b0b0, glasses: true };
+(function schroeer() {
+  const p = { x: 17, z: 66.5 }, col = "#3dff8b", g = makeChar(LOOKS.schroeer); g.position.set(p.x, 0.05, p.z); g.rotation.y = Math.PI; scene.add(g);
+  const dia = new THREE.Mesh(new THREE.OctahedronGeometry(0.24), new THREE.MeshBasicMaterial({ color: col, toneMapped: false })); dia.position.set(p.x, 2.5, p.z); scene.add(dia);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.8, 36), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.6, toneMapped: false, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, 0.09, p.z); scene.add(ring);
+  NPCS.schroeer = { at: p, name: "Rad-Schröer", color: col, g, dia, ring }; solid(p.x - 0.3, p.z - 0.3, p.x + 0.3, p.z + 0.3, 2);
+  SVG.schroeer = portrait(LOOKS.schroeer);
+})();
+// --- Das fahrbare E-Auto ---
+const ECAR_HOME = { x: 20, z: 46, head: Math.PI / 2 };
+const driveCar = carMesh(0x2de2e6, true);
+driveCar.position.set(ECAR_HOME.x, 0.04, ECAR_HOME.z); driveCar.rotation.y = -ECAR_HOME.head; scene.add(driveCar);
+{ const col = "#2de2e6", p = { x: ECAR_HOME.x, z: ECAR_HOME.z };
+  const dia = new THREE.Mesh(new THREE.OctahedronGeometry(0.24), new THREE.MeshBasicMaterial({ color: col, toneMapped: false })); dia.position.set(p.x, 2.6, p.z); scene.add(dia);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(1.7, 2.05, 36), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.6, toneMapped: false, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, 0.09, p.z); scene.add(ring);
+  NPCS.ecar = { at: p, name: "E-Auto · einsteigen", color: col, g: driveCar, dia, ring, car: true };
+}
+let DRIVE = null;
+function enterCar() {
+  closePanel(); busy = false; paused = false;
+  pos.set(NPCS.ecar.at.x, 0, NPCS.ecar.at.z);
+  DRIVE = { head: driveCar.rotation.y === 0 ? ECAR_HOME.head : -driveCar.rotation.y, spd: 0 };
+  NPCS.ecar.dia.visible = NPCS.ecar.ring.visible = false;
+  setNav("schroeer"); S.visited.ecar = 1;
+  $("bAct").style.display = "none";
+  flash("Losfahren! W/S Gas, A/D lenken, E aussteigen", "#2de2e6"); beep(520, 0.1);
+}
+function driveTick(dt) {
+  let acc = 0, steer = 0;
+  if (keys.KeyW || keys.ArrowUp) acc += 1; if (keys.KeyS || keys.ArrowDown) acc -= 1;
+  if (keys.KeyD || keys.ArrowRight) steer -= 1; if (keys.KeyA || keys.ArrowLeft) steer += 1;
+  acc -= joy.y; steer -= joy.x;
+  DRIVE.spd += acc * 15 * dt; DRIVE.spd *= (1 - 1.4 * dt); DRIVE.spd = clamp(DRIVE.spd, -7, 17);
+  if (Math.abs(DRIVE.spd) < 0.05) DRIVE.spd = 0;
+  DRIVE.head += steer * 1.7 * dt * clamp(Math.abs(DRIVE.spd) / 4, 0, 1) * Math.sign(DRIVE.spd || 1);
+  const hx = Math.cos(DRIVE.head), hz = Math.sin(DRIVE.head), step = DRIVE.spd * dt;
+  const nx = pos.x + hx * step, nz = pos.z + hz * step;
+  let bump = false;
+  if (!blockedAt(nx, pos.z, 0.85)) pos.x = nx; else bump = true;
+  if (!blockedAt(pos.x, nz, 0.85)) pos.z = nz; else bump = true;
+  if (bump) { DRIVE.spd *= -0.25; if (Math.abs(DRIVE.spd) > 1) sNo(); }
+  facing = Math.atan2(hx, hz);
+  driveCar.position.set(pos.x, 0.04, pos.z); driveCar.rotation.y = -DRIVE.head;
+  const d = Math.hypot(NPCS.schroeer.at.x - pos.x, NPCS.schroeer.at.z - pos.z);
+  const pr = $("bAct"); pr.style.display = "block";
+  pr.textContent = d < 7 ? "✓ Aussteigen bei Rad-Schröer  [E]" : "◼ Aussteigen  [E]";
+}
+function exitCar() {
+  const atShop = Math.hypot(NPCS.schroeer.at.x - pos.x, NPCS.schroeer.at.z - pos.z) < 8;
+  const px = pos.x - Math.cos(DRIVE.head) * 2.2, pz = pos.z - Math.sin(DRIVE.head) * 2.2;
+  DRIVE = null;
+  // Auto bleibt stehen, wo es geparkt wurde; Marker wieder an
+  NPCS.ecar.at.x = pos.x; NPCS.ecar.at.z = pos.z;
+  NPCS.ecar.dia.position.set(pos.x, 2.6, pos.z); NPCS.ecar.ring.position.set(pos.x, 0.09, pos.z);
+  NPCS.ecar.dia.visible = NPCS.ecar.ring.visible = true;
+  if (!blockedAt(px, pz, 0.45)) pos.set(px, 0, pz);     // neben dem Auto aussteigen
+  facing = DRIVE_LAST_HEAD = 0; near = null; $("bAct").style.display = "none";
+  beep(440, 0.08);
+  if (atShop) { navT = null; beam.visible = false; bikeShop(); }
+}
+let DRIVE_LAST_HEAD = 0;
+
+// --- Quizfragen (E-Mobilität) ---
+const RAD_QUIZ = [
+  { t: "mc", q: "Was ist ein Pedelec?", o: ["Ein Fahrrad, dessen Motor nur hilft, solange man selbst tritt", "Ein Motorrad mit Pedalen zur Zierde", "Ein Fahrrad, das ganz ohne Treten bis 80 km/h fährt"], a: 0 },
+  { t: "mc", q: "Bis zu welchem Tempo unterstützt der Motor eines normalen Pedelecs?", o: ["25 km/h", "70 km/h", "130 km/h"], a: 0 },
+  { t: "tf", q: "E-Scooter und Pedelecs fahren rein elektrisch und stoßen beim Fahren kein CO2 aus.", a: true },
+  { t: "mc", q: "Was braucht ein E-Scooter in Deutschland, um auf der Straße erlaubt zu sein?", o: ["Eine Versicherungsplakette", "Einen Führerschein der Klasse B", "Gar nichts"], a: 0 },
+];
+async function radQuiz() {
+  busy = true; let right = 0;
+  await talk("schroeer", "Drei kurze Fragen zu E-Rädern. Schaffst du zwei richtig, such dir ein Fahrzeug gratis aus. Betze-Ehrenwort!", "Los");
+  const qs = shuffle(RAD_QUIZ).slice(0, 3);
+  for (const q of qs) { const f = await ask(JSON.parse(JSON.stringify(q)), "Rad-Schröer · Quiz"); if (f > 0.99) right++; }
+  if (right >= 2) { S.side.voucher = 1; save(); }
+  await talk("schroeer", right >= 2 ? `${right} von 3 richtig. Stark! Du hast ein Fahrzeug frei. Such es dir aus.` : `${right} von 3. Knapp daneben. Kaufen kannst du trotzdem, oder du versuchst es später nochmal.`);
+  busy = false; bikeShop();
+}
+const RIDES = [
+  ["pedelec", "Pedelec", "Tritt-Unterstützung bis 25 km/h. Du läufst spürbar schneller durch Neustadt.", 120],
+  ["scooter", "E-Scooter", "Klein, wendig, elektrisch. Etwas günstiger als das Pedelec.", 80],
+];
+function bikeShop() {
+  const voucher = !!S.side.voucher, has = S.up.ride;
+  const items = RIDES.map(([id, n, d, pr]) => {
+    const owned = has === id, free = voucher && !has;
+    const price = owned ? "✔ im Besitz" : free ? "gratis (Quiz)" : pr + " $";
+    return `<div class="mitem" ${owned ? "" : `data-ride="${id}"`}><div><b>${n}</b><br><small>${d}</small></div><div class="st">${price}</div></div>`;
+  }).join("");
+  openPanel(`<div class="talk">${SVG.schroeer}<div><div class="who">${NAMES.schroeer}</div><p>${has ? "Na, läuft das neue Gefährt? Komm wieder, wenn du etwas brauchst." : "Willkommen bei Rad-Schröer! Pedelec oder E-Scooter? Beantworte mein kurzes Quiz und eins ist gratis."}</p></div></div>
+  <p class="keys">Kontostand: <b style="color:var(--gr)">${S.money} $</b>${voucher && !has ? ' · <b style="color:var(--ye)">1 Gratis-Gutschein</b>' : ""}</p>
+  <div class="mlist">${items}</div>
+  <div class="row">${has ? "" : `<button class="btn sm" id="quiz">${voucher ? "Quiz nochmal" : "Quiz starten"}</button>`}<button class="btn" id="x">Zurück</button></div>`);
+  if ($("quiz")) $("quiz").onclick = () => radQuiz();
+  $("x").onclick = closePanel;
+  pn.querySelectorAll("[data-ride]").forEach((el) => el.onclick = () => {
+    const id = el.dataset.ride, it = RIDES.find((r) => r[0] === id);
+    if (S.up.ride) return;
+    if (voucher) { S.side.voucher = 0; }
+    else { if (S.money < it[3]) { sNo(); flash("Zu wenig Geld", "#ff4d5e"); return; } S.money -= it[3]; }
+    S.up.ride = id; save(); hud(); sCoin(); flash(it[1] + " gekauft!", "#3dff8b");
+    bikeShop();
+  });
+}
+ACTIONS.ecar = () => enterCar();
+ACTIONS.schroeer = () => bikeShop();
+
+// =====================================================================
 //  STEUERUNG, KAMERA, SCHLEIFE
 // =====================================================================
 let facing = Math.PI, yaw = 0, pitch = 0.2, camDist = 7.5, clock = 0, near = null, started = false, lastDrag = -9, radioT = 25;
 const joy = { x: 0, y: 0, id: null };
 function resize() { const w = innerWidth, h = innerHeight; RND.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); RND.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
 addEventListener("resize", resize); resize();
-addEventListener("keydown", (e) => { if (!started || ov.classList.contains("show")) return; keys[e.code] = true; if (e.code === "KeyE" || e.code === "Enter") act(); if (e.code === "KeyM" && !RUN) menu(); if (e.code.startsWith("Arrow") || e.code === "Space") e.preventDefault(); });
+addEventListener("keydown", (e) => { if (!started || ov.classList.contains("show")) return; keys[e.code] = true; if (e.code === "KeyE" || e.code === "Enter") act(); if (e.code === "KeyM" && !RUN && !DRIVE) menu(); if (e.code.startsWith("Arrow") || e.code === "Space") e.preventDefault(); });
 addEventListener("keyup", (e) => (keys[e.code] = false));
 document.addEventListener("visibilitychange", () => { for (const k in keys) keys[k] = false; });
 let drag = null;
@@ -1935,9 +2068,9 @@ if (isTouch) {
   J.addEventListener("pointermove", (e) => { if (e.pointerId === joy.id) upd(e); });
   const end = () => { joy.id = null; joy.x = joy.y = 0; K.style.transform = ""; }; J.addEventListener("pointerup", end); J.addEventListener("pointercancel", end);
 }
-function act() { if (!near || paused || RUN || busy) return; beep(700, 0.05); S.visited[near] = 1; ACTIONS[near](); }
+function act() { if (DRIVE) return exitCar(); if (!near || paused || RUN || busy) return; beep(700, 0.05); S.visited[near] = 1; ACTIONS[near](); }
 $("bAct").onclick = act;
-$("bMenu").onclick = () => { if (!paused && !RUN) menu(); };
+$("bMenu").onclick = () => { if (!paused && !RUN && !DRIVE) menu(); };
 $("bSound").onclick = () => { soundOn = !soundOn; $("bSound").textContent = soundOn ? "🔊" : "🔇"; };
 const angDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 function updPlayer(dt) {
@@ -1945,7 +2078,7 @@ function updPlayer(dt) {
   const mag = Math.min(1, Math.hypot(f, r)); let sp = 0;
   if (mag > 0.08) {
     let dx = -Math.sin(yaw) * f + Math.cos(yaw) * r, dz = -Math.cos(yaw) * f - Math.sin(yaw) * r; const l = Math.hypot(dx, dz); dx /= l; dz /= l;
-    sp = ((keys.ShiftLeft || keys.ShiftRight || (isTouch && mag > 0.92) ? 12 : 6.5) + S.up.shoes * 3 + (S.up.board ? 7 : 0) + (Date.now() < TOM_UNTIL ? 4 : 0)) * mag;
+    sp = ((keys.ShiftLeft || keys.ShiftRight || (isTouch && mag > 0.92) ? 12 : 6.5) + S.up.shoes * 3 + (S.up.board ? 7 : 0) + (Date.now() < TOM_UNTIL ? 4 : 0) + (S.up.ride ? 4 : 0)) * mag;
     const nx = pos.x + dx * sp * dt, nz = pos.z + dz * sp * dt; if (!blockedAt(nx, pos.z)) pos.x = nx; if (!blockedAt(pos.x, nz)) pos.z = nz;
     facing += angDiff(facing, Math.atan2(dx, dz)) * Math.min(1, dt * 12);
     if (clock - lastDrag > 1.5 && f > 0.3) yaw += angDiff(yaw, facing + Math.PI) * Math.min(1, dt * 1.2);
@@ -1955,6 +2088,7 @@ function updPlayer(dt) {
 function updCamera(dt) {
   if (!started) { const a = clock * 0.07 + 2.2; cam.position.set(-14 + Math.sin(a) * 62, 20 + Math.sin(clock * 0.1) * 5, 20 + Math.cos(a) * 62); cam.lookAt(-8, 4, 12); return; }
   if (AV) { const por = innerWidth < innerHeight, d = por ? 5.4 : 4.2, cx = pos.x + Math.sin(yaw) * d, cz = pos.z + Math.cos(yaw) * d; cam.position.lerp(tmpV.set(cx, 1.5, cz), Math.min(1, dt * 8)); const sh = por ? 0 : 1.15; cam.lookAt(pos.x + Math.cos(yaw) * sh, por ? 0.15 : 1.05, pos.z - Math.sin(yaw) * sh); PL.rotation.y = yaw + 0.25; return; }
+  if (DRIVE) { const back = 9.5, h = DRIVE.head, bx = pos.x - Math.cos(h) * back, bz = pos.z - Math.sin(h) * back; cam.position.lerp(tmpV.set(bx, 4.6, bz), Math.min(1, dt * 4)); cam.lookAt(pos.x + Math.cos(h) * 3, 1.1, pos.z + Math.sin(h) * 3); return; }
   if (RUN) { const s = RUN.s, por = innerWidth < innerHeight; cam.position.lerp(tmpV.set(AC.x + s.car.x * 0.3, por ? 27 : 19.5, AC.z + (por ? 12 : 10.5)), Math.min(1, dt * 3)); cam.lookAt(AC.x + s.car.x * 0.5, 0.6, AC.z + s.car.z * 0.5); return; }
   const hx = pos.x, hy = 1.75, hz = pos.z, ox = Math.sin(yaw) * Math.cos(pitch), oy = Math.sin(pitch), oz = Math.cos(yaw) * Math.cos(pitch); let d = camDist;
   for (let k = 1; k <= 14; k++) { const t = (k / 14) * camDist, x = hx + ox * t, z = hz + oz * t, y = hy + oy * t; if (SOLID.some((b) => b.h > 3 && y < b.h && x > b.x0 && x < b.x1 && z > b.z0 && z < b.z1)) { d = Math.max(1.2, t - 0.8); break; } }
@@ -2001,10 +2135,11 @@ function drawMini() {
 let last = performance.now(), frame = 0, saveT = 0;
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt; frame++;
-  if (started && !paused && !RUN) { updPlayer(dt); bricksTick(); radioT -= dt; if (radioT <= 0) { radioT = 35 + Math.random() * 25; radio(pick(R_LINES)); } saveT += dt; if (saveT > 5) { saveT = 0; S.pos = [pos.x, pos.z]; save(); } }
+  if (started && !paused && !RUN && !DRIVE) { updPlayer(dt); bricksTick(); radioT -= dt; if (radioT <= 0) { radioT = 35 + Math.random() * 25; radio(pick(R_LINES)); } saveT += dt; if (saveT > 5) { saveT = 0; S.pos = [pos.x, pos.z]; save(); } }
   if (RUN) runTick(dt);
+  if (DRIVE) driveTick(dt);
   updWorld(dt); avatarFx(PL, clock); updCamera(dt); sky.position.copy(cam.position); sunFollow(started ? (RUN ? AC.x : pos.x) : -8, started ? (RUN ? AC.z : pos.z) : 12);
-  PL.visible = !RUN; RND.render(scene, cam);
+  PL.visible = !RUN && !DRIVE; RND.render(scene, cam);
   if (started) { uiTick(); if (frame % 3 === 0) drawMini(); if (frame % 30 === 0) questTick(); }
   requestAnimationFrame(loop);
 }
