@@ -47,6 +47,8 @@
   .inhalt h2 { margin: 0; font-size: 1.2rem; line-height: 1.25; }
   .marken { display: flex; flex-wrap: wrap; gap: 6px; }
   .marke { font-size: .8rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--rand); color: var(--leise); }
+  .marke.gut { background: #d5f0c8; border-color: #4f9a31; color: #1f4a12; }
+  .marke.zu { background: #f3e3c3; border-color: #c9a463; color: #5a3d14; }
   .inhalt p { margin: 0; color: var(--leise); font-size: .95rem; flex: 1; }
   .los { font-weight: 700; color: var(--akzent); }
   .leer { color: var(--leise); padding: 20px 0; }
@@ -82,6 +84,10 @@
      symbol : Emoji für die Kachel
      farbe  : Hintergrundfarbe der Kachel (nur ohne Bild sichtbar)
      bild   : optional, Vorschaubild, z. B. "vorschau/mein-spiel.jpg"
+     training: optional, zeigt „✔ geschafft“, wenn das Training auf diesem
+               Gerät geschafft ist: { speicher: "Schlüssel", id: "Name" }
+     sperre : optional, zeigt 🔒/🔓 je nach Fortschritt:
+               { speicher: "Schlüssel", ids: [...], offen: [weitere Schlüssel] }
    ===================================================================== */
 const SPIELE = [
   {
@@ -90,9 +96,34 @@ const SPIELE = [
     symbol: "📖", farbe: "#f3c969"
   },
   {
+    ordner: "holz-training-1-wald", titel: "Holz-Training 1: Wald", fach: "TuN", klasse: 6,
+    text: "Förster Fritz' Wald-Sortierer: Waldfunktionen zuordnen und den Wald in Zahlen verstehen. Etwa 3 Minuten.",
+    symbol: "🌲", farbe: "#9cc98a", bild: "vorschau/holz-training-1-wald.jpg",
+    training: { speicher: "holz-training-v1", id: "wald" }
+  },
+  {
+    ordner: "holz-training-2-baum", titel: "Holz-Training 2: Baum", fach: "TuN", klasse: 6,
+    text: "Eule Olgas Baum-Check: Wurzel, Stamm und Krone und Bäume an Nadeln, Blättern und Früchten bestimmen.",
+    symbol: "🦉", farbe: "#8fbf9f", bild: "vorschau/holz-training-2-baum.jpg",
+    training: { speicher: "holz-training-v1", id: "baum" }
+  },
+  {
+    ordner: "holz-training-3-stamm", titel: "Holz-Training 3: Stamm", fach: "TuN", klasse: 6,
+    text: "Specht Pauls Bohr-Mission: Schichten des Stammes, Jahresringe zählen, Frühholz und Spätholz.",
+    symbol: "🪵", farbe: "#c9a36b", bild: "vorschau/holz-training-3-stamm.jpg",
+    training: { speicher: "holz-training-v1", id: "stamm" }
+  },
+  {
+    ordner: "holz-training-4-werkstoff", titel: "Holz-Training 4: Werkstoff", fach: "TuN", klasse: 6,
+    text: "Säge-Sepps Sägewerk-Express: Schnittholz, Förderband mit Holzwerkstoffen, Holz arbeitet und Werkzeuge zum Ablängen.",
+    symbol: "🪚", farbe: "#e0a46b", bild: "vorschau/holz-training-4-werkstoff.jpg",
+    training: { speicher: "holz-training-v1", id: "werkstoff" }
+  },
+  {
     ordner: "holzcraft", titel: "Holzcraft – Das Geheimnis des Waldes", fach: "TuN", klasse: 6,
-    text: "Erkunde den Wald, löse die Rätsel der Waldbewohner und sammle vier Wissensblöcke.",
-    symbol: "🌲", farbe: "#8fbf7f"
+    text: "Das große Abschlussspiel der Reihe Holz: Erkunde den Wald und sammle vier Wissensblöcke. Wird nach allen vier Holz-Trainings freigeschaltet.",
+    symbol: "🌲", farbe: "#8fbf7f",
+    sperre: { speicher: "holz-training-v1", ids: ["wald", "baum", "stamm", "werkstoff"], offen: ["holzcraft-frei", "holzcraft-tun6-v1"] }
   },
   {
     ordner: "holzhausen", titel: "Die Prüfungen von Holzhausen", fach: "TuN", klasse: 7,
@@ -138,6 +169,22 @@ const SPIELE = [
     if (klasse) e.className = klasse;
     if (text != null) e.textContent = text;
     return e;
+  }
+
+  function lies(schluessel) { try { return JSON.parse(localStorage.getItem(schluessel)); } catch (e) { return null; } }
+  function vorhanden(schluessel) { try { return localStorage.getItem(schluessel) !== null; } catch (e) { return false; } }
+  function fortschrittsMarke(s) {
+    if (s.training) {
+      var t = lies(s.training.speicher) || {};
+      return (t[s.training.id] && t[s.training.id].done) ? el("span", "marke gut", "✔ geschafft") : null;
+    }
+    if (s.sperre) {
+      var st = lies(s.sperre.speicher) || {};
+      var n = s.sperre.ids.filter(function (i) { return st[i] && st[i].done; }).length;
+      var frei = n === s.sperre.ids.length || (s.sperre.offen || []).some(vorhanden);
+      return frei ? el("span", "marke gut", "🔓 freigeschaltet") : el("span", "marke zu", "🔒 " + n + "/" + s.sperre.ids.length + " Trainings");
+    }
+    return null;
   }
 
   var spiele = SPIELE.slice().sort(function (a, b) {
@@ -199,6 +246,8 @@ const SPIELE = [
       var marken = el("div", "marken");
       if (s.fach) marken.appendChild(el("span", "marke", s.fach));
       if (s.klasse) marken.appendChild(el("span", "marke", "Klasse " + s.klasse));
+      var fm = fortschrittsMarke(s);
+      if (fm) marken.appendChild(fm);
       inhalt.appendChild(marken);
       inhalt.appendChild(el("h2", null, s.titel));
       inhalt.appendChild(el("p", null, s.text || ""));

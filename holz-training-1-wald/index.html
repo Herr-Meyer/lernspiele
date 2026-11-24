@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Holz-Training 1 · Wald – Lernspiel TuN 6</title>
+<meta name="theme-color" content="#2b1d10">
+<style>
+:root{
+  --bg:#2b1d10; --wood:#c9a463; --panel:#f3e6c8; --panel2:#e6cc96; --ink:#2b1d10; --muted:#6a4f2c;
+  --green:#4f9a31; --green-d:#2f6b1c; --red:#b83226; --gold:#f2c230; --okbg:#d5f0c8; --badbg:#f6d0ca;
+  --accent:#4f9a31;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background-color:var(--bg);background-image:radial-gradient(circle at 20% 0%, #3d6b2a 0, #2b1d10 70%);background-attachment:fixed;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:18px;line-height:1.4;
+  -webkit-tap-highlight-color:transparent;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+button{font:inherit;color:inherit;touch-action:manipulation}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.top{display:flex;align-items:center;gap:8px;padding:10px 12px;color:#fff;max-width:760px;margin:0 auto}
+.top a{color:#fff;text-decoration:none;font-weight:700;background:rgba(255,255,255,.14);border-radius:10px;padding:8px 12px;min-height:44px;display:inline-flex;align-items:center}
+.top .t{flex:1;font-weight:800;font-size:15px;line-height:1.15;text-align:center;letter-spacing:.3px}
+.top .pts{font-weight:800;background:rgba(0,0,0,.25);border-radius:10px;padding:8px 10px;min-width:64px;text-align:center}
+.icon-btn{background:rgba(255,255,255,.14);border:0;border-radius:10px;color:#fff;min-width:44px;min-height:44px;cursor:pointer;font-size:18px}
+.bar{height:10px;max-width:736px;margin:0 auto 10px;background:rgba(0,0,0,.3);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+main{max-width:760px;margin:0 auto;padding:0 12px 24px}
+.card{background:var(--panel);border:4px solid var(--ink);border-radius:14px;box-shadow:inset -4px -4px 0 var(--panel2),0 6px 0 rgba(0,0,0,.35);padding:16px}
+.who{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.who .av{font-size:40px;line-height:1;background:var(--panel2);border:3px solid var(--ink);border-radius:12px;width:60px;height:60px;display:grid;place-items:center;flex:none}
+.who .nm{font-weight:800;color:var(--muted);font-size:15px;text-transform:uppercase;letter-spacing:.6px}
+.round{display:inline-block;font-size:13px;font-weight:800;background:var(--accent);color:#fff;border-radius:999px;padding:3px 10px;margin-bottom:6px}
+h1{font-size:clamp(24px,6vw,34px);margin:4px 0 8px;line-height:1.15}
+h2{font-size:21px;margin:2px 0 12px;line-height:1.25}
+p{margin:6px 0 10px}
+.fig{background:#fffaf0;border:3px solid var(--ink);border-radius:12px;margin:6px 0 12px;padding:6px;text-align:center}
+.fig svg{display:block;width:100%;max-width:420px;height:auto;margin:0 auto}
+.fig.hot svg [data-id]{cursor:pointer}
+.opts{display:grid;gap:8px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{text-align:left;font-weight:600;padding:12px 14px;min-height:52px;background:#fff;border:3px solid var(--ink);border-radius:12px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.opt:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.opt.ok{background:var(--okbg);border-color:var(--green)}
+.opt.bad{background:var(--badbg);border-color:var(--red);animation:sh .3s}
+.opt:disabled{cursor:default}
+.opt .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;font-weight:800;margin-right:8px}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.item{font-size:21px;font-weight:700;text-align:center;background:#fff;border:3px dashed var(--muted);border-radius:12px;padding:16px 12px;margin:8px 0 14px;min-height:78px;display:grid;place-items:center}
+.bins{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.bin{font-weight:800;font-size:18px;padding:14px 10px;min-height:64px;border:3px solid var(--ink);border-radius:12px;background:var(--wood);cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.3)}
+.bin small{display:block;font-weight:600;font-size:13px;color:var(--muted)}
+.bin.ok{background:var(--okbg);border-color:var(--green)}
+.bin.bad{background:var(--badbg);border-color:var(--red);animation:sh .3s}
+.fb{min-height:24px;margin:12px 0 0;font-weight:600}
+.fb.ok{color:var(--green-d)}.fb.bad{color:var(--red)}
+.fb .ex{display:block;color:var(--ink);font-weight:500;margin-top:4px}
+.next{display:flex;justify-content:flex-end;margin-top:12px}
+.btn{font-weight:800;font-size:18px;padding:12px 22px;min-height:52px;border:3px solid var(--ink);border-radius:12px;background:var(--green);color:#fff;cursor:pointer;box-shadow:0 5px 0 var(--green-d);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.alt{background:var(--panel2);color:var(--ink);box-shadow:0 5px 0 rgba(0,0,0,.3)}
+.btn:active{transform:translateY(2px)}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.stars{font-size:44px;letter-spacing:6px;margin:4px 0}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:12px 0}
+.chip{border:3px solid var(--ink);border-radius:12px;padding:8px 10px;background:#fff;font-weight:700;text-decoration:none;color:var(--ink);display:block}
+.chip.done{background:var(--okbg);border-color:var(--green)}
+.chip small{display:block;font-weight:600;color:var(--muted);font-size:13px}
+.unlock{border:3px solid var(--gold);background:#fff6d6;border-radius:12px;padding:12px;margin-top:10px}
+canvas.belt{width:100%;height:auto;display:block;border:3px solid var(--ink);border-radius:12px;background:#cfe7f7;margin:6px 0 12px;touch-action:manipulation}
+.hint{font-size:15px;color:var(--muted)}
+@media (max-width:420px){.opts.two{grid-template-columns:1fr}.card{padding:12px}body{font-size:17px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="top">
+  <a href="../" aria-label="Zum Spiele-Menü">☰ Menü</a>
+  <div class="t">Training 1 · Wald</div>
+  <div class="pts" id="pts" aria-live="polite">★ 0</div>
+  <button class="icon-btn" id="snd" aria-label="Ton an oder aus">🔊</button>
+</div>
+<div class="bar" aria-hidden="true"><i id="bar"></i></div>
+<main><div class="card" id="card"></div></main>
+<script>
+"use strict";
+/* ================= Inhalte dieses Trainings ================= */
+const GAME = {
+ "id": "wald",
+ "title": "Förster Fritz: Wald-Sortierer",
+ "who": "Förster Fritz",
+ "avatar": "🌲",
+ "minutes": 3,
+ "story": "Hallo! Im Wald ist viel los. Hilf mir, Ordnung in meine Beobachtungen zu bringen.",
+ "intro": "Ordne Beobachtungen den drei <b>Waldfunktionen</b> zu und beantworte Fragen zum <b>Wald in Zahlen</b>.",
+ "win": "Prima! Du weißt, was der Wald alles für uns leistet.",
+ "lose": "Fast! Lies dir die Erklärungen noch einmal durch und versuch es gleich nochmal.",
+ "rounds": [
+  {
+   "name": "Runde 1 · Waldfunktionen",
+   "intro": "Der Wald hat drei Funktionen: <b>Erholung</b> (für dich), <b>Nutzen</b> (Holz, Arbeit, Sauerstoff) und <b>Schutz</b> (Boden, Luft, Lärm, Wasser). Ordne jede Beobachtung zu!",
+   "shuffle": true,
+   "take": 9,
+   "bins": [
+    {
+     "id": "erholung",
+     "label": "Erholung",
+     "sub": "Entspannung, Sport, Natur"
+    },
+    {
+     "id": "nutzen",
+     "label": "Nutzen",
+     "sub": "Holz, Arbeit, Sauerstoff"
+    },
+    {
+     "id": "schutz",
+     "label": "Schutz",
+     "sub": "Boden, Luft, Lärm, Wasser"
+    }
+   ],
+   "q": "Welche Funktion des Waldes ist gemeint?",
+   "tasks": [
+    {
+     "item": "Familie Yilmaz wandert am Sonntag durch den Wald.",
+     "a": "erholung",
+     "e": "Wandern dient der Erholung.",
+     "type": "sort"
+    },
+    {
+     "item": "Lena beobachtet einen Specht mit dem Fernglas.",
+     "a": "erholung",
+     "e": "Naturbeobachtung gehört zur Erholungsfunktion.",
+     "type": "sort"
+    },
+    {
+     "item": "Die Klasse 6b macht einen Waldlauf.",
+     "a": "erholung",
+     "e": "Sport und Spiel im Wald = Erholung.",
+     "type": "sort"
+    },
+    {
+     "item": "Eine Försterin hat im Wald ihren Arbeitsplatz.",
+     "a": "nutzen",
+     "e": "Arbeitsplätze gehören zur Nutzfunktion.",
+     "type": "sort"
+    },
+    {
+     "item": "Aus Fichtenstämmen werden Bretter gesägt.",
+     "a": "nutzen",
+     "e": "Holz als Rohstoff = Nutzfunktion.",
+     "type": "sort"
+    },
+    {
+     "item": "Die Bäume produzieren Sauerstoff.",
+     "a": "nutzen",
+     "e": "Die Sauerstoffproduktion zählt zur Nutzfunktion des Waldes.",
+     "type": "sort"
+    },
+    {
+     "item": "Ein Waldbesitzer verkauft Brennholz.",
+     "a": "nutzen",
+     "e": "Einkommen aus Holz = Nutzfunktion.",
+     "type": "sort"
+    },
+    {
+     "item": "Bei Starkregen halten die Wurzeln den Boden fest.",
+     "a": "schutz",
+     "e": "Der Wald schützt den Boden vor Abtragung.",
+     "type": "sort"
+    },
+    {
+     "item": "Der Wald schluckt den Lärm der Autobahn.",
+     "a": "schutz",
+     "e": "Lärmschutz gehört zur Schutzfunktion.",
+     "type": "sort"
+    },
+    {
+     "item": "Die Blätter filtern Staub und Ruß aus der Luft.",
+     "a": "schutz",
+     "e": "Luftreinigung = Schutzfunktion.",
+     "type": "sort"
+    },
+    {
+     "item": "Bei Sturm bremst der Wald den Wind.",
+     "a": "schutz",
+     "e": "Der Wald schützt vor Wind und Bodenabtragung.",
+     "type": "sort"
+    }
+   ]
+  },
+  {
+   "name": "Runde 2 · Wald in Zahlen",
+   "intro": "Jetzt geht es um Zahlen und Fakten. Manchmal hilft dir ein Diagramm.",
+   "shuffle": false,
+   "take": null,
+   "tasks": [
+    {
+     "q": "Wie viel der Fläche Deutschlands ist bewaldet?",
+     "o": [
+      "fast ein Zehntel",
+      "fast ein Drittel",
+      "fast die Hälfte",
+      "fast drei Viertel"
+     ],
+     "a": 1,
+     "keep": true,
+     "e": "Fast ein Drittel unseres Landes ist Wald.",
+     "type": "choice"
+    },
+    {
+     "q": "Lies das Diagramm: Wie viel Prozent der Bäume sind Kiefern?",
+     "fig": [
+      "baumarten"
+     ],
+     "o": [
+      "10 %",
+      "15 %",
+      "24 %",
+      "28 %"
+     ],
+     "a": 2,
+     "keep": true,
+     "e": "Die Säule „Kiefer“ zeigt 24 %.",
+     "type": "choice"
+    },
+    {
+     "q": "Welche Baumart wächst in Deutschland am häufigsten?",
+     "o": [
+      "Fichte",
+      "Kiefer",
+      "Buche",
+      "Eiche"
+     ],
+     "a": 0,
+     "keep": true,
+     "e": "Die Fichte hat den größten Anteil (28 %).",
+     "type": "choice"
+    },
+    {
+     "q": "Welche Industrie verbraucht in Deutschland das meiste Holz?",
+     "o": [
+      "Sägeindustrie",
+      "Papierindustrie",
+      "Spielzeugindustrie"
+     ],
+     "a": 0,
+     "e": "Die Sägeindustrie verbraucht das meiste Rohholz.",
+     "type": "choice"
+    },
+    {
+     "q": "Was bedeutet nachhaltige Forstwirtschaft?",
+     "o": [
+      "Es wird nur so viel Holz geerntet, wie wieder nachwächst.",
+      "Es werden möglichst viele Bäume auf einmal gefällt.",
+      "Im Wald wird gar kein Holz mehr geerntet."
+     ],
+     "a": 0,
+     "e": "Nachhaltig heißt: Wer einen Baum fällt, sorgt dafür, dass ein neuer wächst.",
+     "type": "choice"
+    }
+   ]
+  }
+ ],
+ "pass": 0.6
+};
+/* ================= Gemeinsame Engine ================= */
+const KEY = 'holz-training-v1';
+const TRAININGS = [
+  {id:'wald', titel:'1 · Wald', ordner:'holz-training-1-wald'},
+  {id:'baum', titel:'2 · Baum', ordner:'holz-training-2-baum'},
+  {id:'stamm', titel:'3 · Stamm', ordner:'holz-training-3-stamm'},
+  {id:'werkstoff', titel:'4 · Werkstoff', ordner:'holz-training-4-werkstoff'}
+];
+const $ = s => document.querySelector(s);
+const card = $('#card');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function loadAll(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; } }
+function saveAll(o){ try{ localStorage.setItem(KEY, JSON.stringify(o)); }catch(e){} }
+
+/* --- Ton --- */
+let ac = null, sound = true;
+try{ sound = localStorage.getItem('holz-training-ton') !== 'aus'; }catch(e){}
+const sndBtn = $('#snd');
+function setSnd(){ sndBtn.textContent = sound ? '🔊' : '🔇'; }
+setSnd();
+sndBtn.addEventListener('click', () => { sound = !sound; setSnd(); try{ localStorage.setItem('holz-training-ton', sound?'an':'aus'); }catch(e){} });
+function beep(notes, type, len){
+  if(!sound) return;
+  try{
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state === 'suspended') ac.resume();
+    let t = ac.currentTime + .01;
+    notes.forEach(f => { const o=ac.createOscillator(), g=ac.createGain(); o.type=type||'square'; o.frequency.value=f;
+      g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(.06,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+len*1.6);
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+len*1.8); t += len; });
+  }catch(e){}
+}
+const sOk = () => beep([523,659,784],'square',.07), sBad = () => beep([220,165],'sawtooth',.12), sWin = () => beep([523,659,784,1047,784,1047],'square',.11);
+function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+
+/* --- Spielablauf --- */
+let tasks = [], ti = 0, pts = 0, max = 0;
+function build(){
+  tasks = []; max = 0;
+  GAME.rounds.forEach((r, ri) => {
+    const list = r.shuffle === false ? r.tasks : shuffle(r.tasks);
+    const n = r.take ? list.slice(0, r.take) : list;
+    n.forEach((t, k) => { tasks.push(Object.assign({}, t, {round:r.name, rIdx:ri, first:k===0, intro:r.intro, belt:r.belt})); });
+  });
+  // Förderband-Runden zu einer Aufgabe zusammenfassen
+  const out = []; max = 0;
+  tasks.forEach(t => {
+    if(t.belt){
+      let b = out.find(x => x.type==='belt' && x.rIdx===t.rIdx);
+      if(!b){ b = {type:'belt', rIdx:t.rIdx, round:t.round, intro:t.intro, first:true, bins:GAME.rounds[t.rIdx].bins, items:[], speed:GAME.rounds[t.rIdx].speed||5200}; out.push(b); }
+      b.items.push(t);
+    } else out.push(t);
+  });
+  out.forEach(t => max += taskMax(t));
+  tasks = out;
+}
+function taskMax(t){ return t.type==='order' ? t.steps.length : t.type==='belt' ? t.items.length : 1; }
+function setBar(){ $('#bar').style.width = (100*ti/Math.max(1,tasks.length)) + '%'; $('#pts').textContent = '★ ' + pts; }
+
+function header(t){
+  return `<div class="round">${esc(t.round)}</div>`;
+}
+function whoBox(txt){
+  return `<div class="who"><div class="av" aria-hidden="true">${GAME.avatar}</div><div><div class="nm">${esc(GAME.who)}</div><div>${txt}</div></div></div>`;
+}
+function feedback(ok, msg, ex){
+  const fb = $('#fb'); fb.className = 'fb ' + (ok?'ok':'bad');
+  fb.innerHTML = esc(msg) + (ex ? `<span class="ex">${esc(ex)}</span>` : '');
+}
+function showNext(label){
+  const n = $('#next');
+  n.innerHTML = `<button class="btn" id="go">${label || (ti === tasks.length-1 ? 'Auswertung ▸' : 'Weiter ▸')}</button>`;
+  const b = $('#go'); b.addEventListener('click', () => { ti++; render(); }); b.focus({preventScroll:true});
+  b.scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+
+function start(){
+  const all = loadAll(), me = all[GAME.id];
+  card.innerHTML = `${whoBox(GAME.story)}
+    <h1>${esc(GAME.title)}</h1>
+    <p>${GAME.intro}</p>
+    <p class="hint">Dauer: etwa ${GAME.minutes} Minuten · Geschafft ab ${Math.round(GAME.pass*100)} % der Punkte.</p>
+    ${me && me.done ? `<p><b>✔ Schon geschafft!</b> Bestwert: ${me.best} von ${me.max} Punkten.</p>` : ''}
+    <div class="row"><button class="btn" id="go">Los geht's ▸</button></div>`;
+  $('#go').addEventListener('click', () => { beep([392],'square',.05); build(); ti = 0; pts = 0; render(); });
+  $('#bar').style.width = '0%'; $('#pts').textContent = '★ 0';
+}
+
+function render(){
+  setBar();
+  if(ti >= tasks.length) return finish();
+  const t = tasks[ti];
+  window.scrollTo({top:0});
+  if(t.first && t.intro && !t._introShown){
+    t._introShown = true;
+    card.innerHTML = `${header(t)}${whoBox(t.intro)}<div class="row"><button class="btn" id="go">Verstanden ▸</button></div>`;
+    $('#go').addEventListener('click', render); $('#go').focus({preventScroll:true});
+    return;
+  }
+  ({choice:rChoice, sort:rSort, hot:rHot, order:rOrder, belt:rBelt})[t.type](t);
+}
+
+function fig(t){ return t.fig ? `<div class="fig${t.type==='hot'?' hot':''}">${FIG[t.fig[0]].apply(null, t.fig.slice(1))}</div>` : ''; }
+
+/* Auswahl */
+function rChoice(t){
+  const opts = t.keep ? t.o.map((x,i)=>({x,i})) : shuffle(t.o.map((x,i)=>({x,i})));
+  card.innerHTML = `${header(t)}<h2>${esc(t.q)}</h2>${fig(t)}
+    <div class="opts${t.o.length===4 && t.o.every(x=>x.length<18) ? ' two':''}">${opts.map(o=>`<button class="opt" data-i="${o.i}">${esc(o.x)}</button>`).join('')}</div>
+    <div class="fb" id="fb" aria-live="polite"></div><div class="next" id="next"></div>`;
+  let first = true;
+  card.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+    if(b.disabled) return;
+    if(+b.dataset.i === t.a){
+      b.classList.add('ok'); card.querySelectorAll('.opt').forEach(x => x.disabled = true);
+      if(first){ pts++; } sOk(); buzz(20); setBar();
+      feedback(true, first ? 'Richtig! +1' : 'Richtig!', t.e); showNext();
+    } else { first = false; b.classList.add('bad'); b.disabled = true; sBad(); buzz([30,40,30]); feedback(false, 'Leider nicht – versuch es nochmal.'); }
+  }));
+}
+/* Sortieren */
+function rSort(t){
+  const bins = GAME.rounds[t.rIdx].bins;
+  card.innerHTML = `${header(t)}<h2>${esc(GAME.rounds[t.rIdx].q)}</h2>${fig(t)}<div class="item">${esc(t.item)}</div>
+    <div class="bins">${bins.map(b=>`<button class="bin" data-b="${esc(b.id)}">${esc(b.label)}${b.sub?`<small>${esc(b.sub)}</small>`:''}</button>`).join('')}</div>
+    <div class="fb" id="fb" aria-live="polite"></div><div class="next" id="next"></div>`;
+  let first = true;
+  card.querySelectorAll('.bin').forEach(b => b.addEventListener('click', () => {
+    if(b.disabled) return;
+    if(b.dataset.b === t.a){
+      b.classList.add('ok'); card.querySelectorAll('.bin').forEach(x => x.disabled = true);
+      if(first) pts++; sOk(); buzz(20); setBar(); feedback(true, first ? 'Richtig! +1' : 'Richtig!', t.e); showNext();
+    } else { first = false; b.classList.add('bad'); b.disabled = true; sBad(); buzz([30,40,30]); feedback(false, 'Nicht ganz – überleg nochmal.'); }
+  }));
+}
+/* Bild antippen */
+function rHot(t){
+  card.innerHTML = `${header(t)}<h2>${esc(t.q)}</h2><p class="hint">Tippe auf die richtige Stelle im Bild.</p>${fig(t)}
+    <div class="fb" id="fb" aria-live="polite"></div><div class="next" id="next"></div>`;
+  let first = true, done = false;
+  card.querySelectorAll('.fig [data-id]').forEach(el => el.addEventListener('click', ev => {
+    ev.stopPropagation(); if(done) return;
+    const id = el.getAttribute('data-id');
+    if(id === t.a){
+      done = true; markHot(id, 'ok'); if(first) pts++; sOk(); buzz(20); setBar();
+      feedback(true, (first ? 'Richtig! +1 – ' : 'Richtig! – ') + (t.label || FIGNAMES[t.a] || ''), t.e); showNext();
+    } else { first = false; markHot(id, 'bad'); sBad(); buzz([30,40,30]); feedback(false, 'Das ist ' + (FIGNAMES[id] || 'nicht die richtige Stelle') + '. Versuch es nochmal.'); }
+  }));
+}
+function markHot(id, cls){
+  card.querySelectorAll(`.fig [data-id="${id}"]`).forEach(el => {
+    el.style.outline = 'none';
+    el.setAttribute('stroke', cls==='ok' ? '#2e8b3e' : '#b83226'); el.setAttribute('stroke-width','6');
+    if(cls==='bad') setTimeout(() => { el.removeAttribute('stroke'); el.removeAttribute('stroke-width'); }, 700);
+  });
+}
+/* Reihenfolge */
+function rOrder(t){
+  const steps = shuffle(t.steps.map((s,i)=>({s,i})));
+  card.innerHTML = `${header(t)}<h2>${esc(t.q)}</h2><p class="hint">Tippe die Schritte in der richtigen Reihenfolge an.</p>
+    <div class="opts">${steps.map(o=>`<button class="opt" data-i="${o.i}">${esc(o.s)}</button>`).join('')}</div>
+    <div class="fb" id="fb" aria-live="polite"></div><div class="next" id="next"></div>`;
+  let need = 0, err = new Set();
+  card.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+    if(b.disabled) return;
+    const i = +b.dataset.i;
+    if(i === need){
+      if(!err.has(need)) pts++;
+      b.classList.add('ok'); b.disabled = true; b.innerHTML = `<span class="n">${need+1}</span>` + b.innerHTML; need++; sOk(); setBar();
+      if(need === t.steps.length){ feedback(true, 'Super, die Reihenfolge stimmt!', t.e); showNext(); }
+      else feedback(true, 'Richtig – und weiter?');
+    } else { err.add(need); b.classList.add('bad'); setTimeout(()=>b.classList.remove('bad'), 350); sBad(); buzz([30,40,30]); feedback(false, 'Das kommt noch nicht dran.'); }
+  }));
+}
+/* Förderband in 3D-Perspektive */
+function rBelt(t){
+  const items = shuffle(t.items);
+  card.innerHTML = `${header(t)}<h2>${esc(GAME.rounds[t.rIdx].q)}</h2>
+    <canvas class="belt" id="cv" width="720" height="360" aria-label="Förderband im Sägewerk"></canvas>
+    <div class="bins">${t.bins.map(b=>`<button class="bin" data-b="${esc(b.id)}">${esc(b.label)}${b.sub?`<small>${esc(b.sub)}</small>`:''}</button>`).join('')}</div>
+    <div class="fb" id="fb" aria-live="polite"></div><div class="next" id="next"></div>`;
+  const cv = $('#cv'), g = cv.getContext('2d');
+  let k = 0, t0 = performance.now(), state = 'run', answered = 0, raf = 0, flash = null;
+  const W = 720, H = 360, hz = 70, vx = W/2;
+  function proj(x, z){ // x: -1..1 quer, z: 0 (hinten) .. 1 (vorne)
+    const s = .22 + .78*z*z; return [vx + x*W*.42*s, hz + (H-hz-10)*(.04 + .96*Math.pow(z,1.35)), s];
+  }
+  function quad(a,b,c,d,col){ g.fillStyle = col; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.lineTo(...c); g.lineTo(...d); g.closePath(); g.fill(); }
+  function draw(now){
+    g.clearRect(0,0,W,H);
+    const sky = g.createLinearGradient(0,0,0,H); sky.addColorStop(0,'#bfe0f5'); sky.addColorStop(1,'#efe2c2'); g.fillStyle = sky; g.fillRect(0,0,W,H);
+    // Halle
+    g.fillStyle = '#8a6438'; g.fillRect(0, 0, W, 34); g.fillStyle = '#6e4a28'; for(let x=0;x<W;x+=60) g.fillRect(x,0,8,34);
+    // Band
+    const L0 = proj(-.55,0), R0 = proj(.55,0), L1 = proj(-.55,1), R1 = proj(.55,1);
+    quad([L0[0],L0[1]],[R0[0],R0[1]],[R1[0],R1[1]],[L1[0],L1[1]],'#3a3f44');
+    const off = (now/700)%1;
+    g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 2;
+    for(let i=0;i<14;i++){ const z = ((i+off)/14); const a = proj(-.55,z), b = proj(.55,z); g.beginPath(); g.moveTo(a[0],a[1]); g.lineTo(b[0],b[1]); g.stroke(); }
+    g.fillStyle = '#6b7178'; g.fillRect(L1[0]-6, L1[1], R1[0]-L1[0]+12, 12);
+    // Teil
+    if(state !== 'end' && k < items.length){
+      const it = items[k]; cv.dataset.item = it.item;
+      let z = state==='run' ? Math.min(1,(now - t0)/t.speed) : it._z;
+      if(state==='run'){ it._z = z; if(z >= 1 && !it._done){ timeout(); } }
+      const p = proj(0, Math.max(.02, z)), s = p[2];
+      const bw = 300*s, bh = 54*s, d = 26*s, x = p[0]-bw/2, y = p[1]-bh-6*s;
+      g.fillStyle = it.c || '#d8b378'; g.fillRect(x, y, bw, bh);
+      g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(x, y+bh-4*s, bw, 4*s);
+      g.fillStyle = shadeCol(it.c || '#d8b378', 1.12); g.beginPath(); g.moveTo(x,y); g.lineTo(x+d*.6,y-d); g.lineTo(x+bw+d*.6,y-d); g.lineTo(x+bw,y); g.fill();
+      g.strokeStyle = 'rgba(80,50,20,.35)'; g.lineWidth = Math.max(1,1.4*s);
+      for(let i=1;i<5;i++){ g.beginPath(); g.moveTo(x+4*s, y+bh*i/5); g.bezierCurveTo(x+bw*.3, y+bh*i/5-4*s, x+bw*.6, y+bh*i/5+4*s, x+bw-4*s, y+bh*i/5); g.stroke(); }
+      g.fillStyle = '#1d140a'; g.font = `800 ${Math.round(26*s+6)}px system-ui,sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+      g.fillStyle = 'rgba(255,255,255,.85)'; const tw = g.measureText(it.item).width; g.fillRect(p[0]-tw/2-8*s, y+bh/2-16*s-4, tw+16*s, 32*s+8);
+      g.fillStyle = '#1d140a'; g.fillText(it.item, p[0], y+bh/2);
+    }
+    if(flash && now - flash.t < 450){ g.fillStyle = flash.ok ? 'rgba(79,154,49,.25)' : 'rgba(184,50,38,.25)'; g.fillRect(0,0,W,H); }
+    g.fillStyle = '#fff'; g.font = '800 20px system-ui,sans-serif'; g.textAlign='left'; g.textBaseline='top';
+    g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(10, 42, 120, 32); g.fillStyle='#fff'; g.fillText(`Teil ${Math.min(k+1,items.length)}/${items.length}`, 20, 48);
+    if(state !== 'end') raf = requestAnimationFrame(draw);
+  }
+  function answer(id){
+    if(state !== 'run' || k >= items.length) return;
+    const it = items[k]; it._done = true; state = 'pause';
+    const ok = id === it.a;
+    if(ok){ pts++; sOk(); buzz(20); feedback(true, `Richtig: ${it.item} → ${labelOf(it.a)}`, it.e); }
+    else { sBad(); buzz([30,40,30]); feedback(false, `${it.item} gehört zu: ${labelOf(it.a)}`, it.e); }
+    flash = {ok, t:performance.now()}; setBar(); nextItem(ok ? 900 : 2200);
+  }
+  function timeout(){ const it = items[k]; it._done = true; state = 'pause'; sBad(); feedback(false, `Zu langsam! ${it.item} gehört zu: ${labelOf(it.a)}`, it.e); flash = {ok:false, t:performance.now()}; nextItem(2200); }
+  function nextItem(ms){
+    setTimeout(() => {
+      k++;
+      if(k >= items.length){ state = 'end'; cancelAnimationFrame(raf); draw(performance.now()); feedback(true, 'Das Band ist leer – gut gemacht!'); showNext(); return; }
+      t0 = performance.now(); state = 'run'; $('#fb').innerHTML = '';
+    }, ms);
+  }
+  function labelOf(id){ return (t.bins.find(b=>b.id===id)||{}).label || id; }
+  card.querySelectorAll('.bin').forEach(b => b.addEventListener('click', () => answer(b.dataset.b)));
+  raf = requestAnimationFrame(draw);
+}
+function shadeCol(hex, f){ const n=parseInt(hex.slice(1),16); const c=k=>Math.max(0,Math.min(255,Math.round(((n>>k)&255)*f))); return `rgb(${c(16)},${c(8)},${c(0)})`; }
+
+/* Auswertung */
+function finish(){
+  const all = loadAll(), prev = all[GAME.id] || {};
+  const ratio = pts / Math.max(1,max), passed = ratio >= GAME.pass;
+  const stars = ratio >= .9 ? 3 : ratio >= .75 ? 2 : passed ? 1 : 0;
+  if(passed || prev.done){
+    all[GAME.id] = {done:true, best:Math.max(prev.best||0, pts), max, stars:Math.max(prev.stars||0, stars), datum:new Date().toISOString().slice(0,10)};
+    saveAll(all);
+  }
+  const doneCount = TRAININGS.filter(x => (all[x.id]||{}).done).length;
+  const idx = TRAININGS.findIndex(x => x.id===GAME.id), nxt = TRAININGS.slice(idx+1).concat(TRAININGS.slice(0,idx)).find(x => !(all[x.id]||{}).done);
+  if(passed) sWin(); else sBad();
+  card.innerHTML = `${whoBox(passed ? GAME.win : GAME.lose)}
+    <h1>${passed ? 'Training geschafft!' : 'Fast geschafft!'}</h1>
+    <div class="stars" aria-label="${stars} von 3 Sternen">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+    <p><b>${pts} von ${max} Punkten</b> (${Math.round(ratio*100)} %). ${passed ? '' : `Du brauchst ${Math.ceil(GAME.pass*max)} Punkte. Probier es gleich nochmal!`}</p>
+    <h2>Deine Holz-Trainings</h2>
+    <div class="chips">${TRAININGS.map(x => { const d=(all[x.id]||{}); return `<a class="chip ${d.done?'done':''}" href="../${x.ordner}/">${d.done?'✔':'○'} ${esc(x.titel)}<small>${d.done ? 'geschafft · '+'★'.repeat(d.stars||1) : 'noch offen'}</small></a>`; }).join('')}</div>
+    ${doneCount === 4 ? `<div class="unlock"><b>🔓 Holzcraft ist freigeschaltet!</b><br>Du hast alle vier Trainings geschafft. Jetzt wartet das große Abenteuer im Wald.<div class="row"><a class="btn" href="../holzcraft/">Holzcraft spielen ▸</a></div></div>`
+      : `<p class="hint">🔒 Holzcraft wird freigeschaltet, wenn alle vier Trainings geschafft sind (${doneCount}/4).</p>`}
+    <div class="row"><button class="btn alt" id="again">↻ Nochmal</button>${nxt && doneCount < 4 ? `<a class="btn" href="../${nxt.ordner}/">Nächstes Training ▸</a>` : ''}<a class="btn alt" href="../">☰ Menü</a></div>`;
+  $('#again').addEventListener('click', start);
+  $('#bar').style.width = '100%';
+}
+
+/* ================= Zeichnungen (SVG) ================= */
+const FIGNAMES = {"krone": "die Krone", "stamm": "der Stamm", "wurzel": "die Wurzel", "borke": "die Borke", "bast": "der Bast", "kambium": "das Kambium", "splint": "das Splintholz", "kern": "das Kernholz", "schwarte": "eine Schwarte", "brett": "ein Brett", "bohle": "eine Bohle", "leiste": "eine Leiste", "kantholz": "das Kantholz"};
+const FIG = {
+  /* Baum mit Krone, Stamm und Wurzel (antippbar) */
+  baum(){
+    const blobs = [[150,92,62],[100,112,44],[200,112,44],[122,58,42],[180,60,42],[150,40,36]];
+    const roots = ['M150 232 C140 255 112 262 78 282','M150 232 C160 258 190 266 226 286','M150 232 C150 262 146 286 140 312',
+                   'M150 232 C128 248 104 246 70 248','M150 232 C174 248 200 246 236 250','M112 262 C104 276 100 290 92 304','M188 266 C196 280 202 292 212 304'];
+    return `<svg viewBox="0 0 300 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Baum mit Krone, Stamm und Wurzeln">
+      <rect width="300" height="226" fill="#e3f2fb"/><rect y="226" width="300" height="104" fill="#a07a4c"/><rect y="222" width="300" height="9" fill="#5fae3d"/>
+      ${[[40,260],[250,300],[60,315],[230,250]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3" fill="#7d5a33"/>`).join('')}
+      <g data-id="wurzel"><rect x="40" y="232" width="220" height="92" rx="14" fill="rgba(0,0,0,0)"/>
+        ${roots.map(d=>`<path d="${d}" fill="none" stroke="#5b3a1e" stroke-width="7" stroke-linecap="round"/>`).join('')}
+        ${roots.map(d=>`<path d="${d}" fill="none" stroke="#7a5230" stroke-width="3" stroke-linecap="round"/>`).join('')}</g>
+      <g data-id="stamm"><rect x="128" y="120" width="44" height="114" rx="4" fill="#7a5230"/>
+        <path d="M138 130 V226 M150 136 V228 M162 128 V224" stroke="#5b3a1e" stroke-width="3"/></g>
+      <g data-id="krone">${blobs.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r+3}" fill="#2b6b2e"/>`).join('')}
+        ${blobs.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#4f9a3f"/>`).join('')}
+        ${[[120,80],[178,96],[146,50],[204,120],[96,118],[160,124]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="#d64545"/>`).join('')}</g>
+    </svg>`;
+  },
+  /* Bohrkern des Spechts: von außen (oben) nach innen (unten) */
+  kern(){
+    const bands = [['borke',10,52,'#4a2e17'],['bast',62,30,'#a0703e'],['kambium',92,20,'#d9d44a'],['splint',112,116,'#f2d9a0'],['kern',228,140,'#c08a50']];
+    let lines = '';
+    for(let y=124;y<226;y+=14) lines += `<path d="M96 ${y} C150 ${y-4} 230 ${y+4} 304 ${y}" stroke="#d6ae6c" stroke-width="2" fill="none" pointer-events="none"/>`;
+    for(let y=240;y<366;y+=14) lines += `<path d="M96 ${y} C150 ${y-4} 230 ${y+4} 304 ${y}" stroke="#8f5f30" stroke-width="2" fill="none" pointer-events="none"/>`;
+    const cracks = [110,150,196,236,276].map(x=>`<path d="M${x} 12 l6 14 l-4 12 l5 12" stroke="#2a190c" stroke-width="3" fill="none" pointer-events="none"/>`).join('');
+    return `<svg viewBox="0 0 320 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schichten des Stammes von außen nach innen">
+      ${bands.map(([id,y,h,c])=>`<rect data-id="${id}" x="92" y="${y}" width="216" height="${h}" fill="${c}"/>`).join('')}
+      ${cracks}${lines}
+      <rect x="92" y="10" width="216" height="358" fill="none" stroke="#2b1d10" stroke-width="3" pointer-events="none"/>
+      <text x="44" y="30" font-size="15" font-weight="700" fill="#2b1d10" text-anchor="middle">außen</text>
+      <path d="M44 44 V340" stroke="#2b1d10" stroke-width="3" marker-end="url(#pf)"/>
+      <defs><marker id="pf" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#2b1d10"/></marker></defs>
+      <text x="44" y="366" font-size="15" font-weight="700" fill="#2b1d10" text-anchor="middle">innen</text>
+      <g transform="translate(250 -6) scale(.9)" pointer-events="none"><ellipse cx="40" cy="40" rx="14" ry="20" fill="#2b2b2b"/><circle cx="40" cy="20" r="11" fill="#2b2b2b"/>
+        <path d="M34 10 h12 v6 h-12z" fill="#d23b3b"/><path d="M28 20 l-14 3 l14 2z" fill="#9e9e9e"/><circle cx="37" cy="18" r="2.4" fill="#fff"/><path d="M36 34 h10 v18 h-10z" fill="#f4f4f4"/></g>
+    </svg>`;
+  },
+  /* Baumscheibe mit n Jahresringen */
+  ringe(n){
+    let s = `<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Baumscheibe mit Jahresringen">
+      <circle cx="120" cy="120" r="112" fill="#3a2a1c"/><circle cx="120" cy="120" r="104" fill="#7a5a3a"/><circle cx="120" cy="120" r="100" fill="#efdcb3"/>`;
+    const R = 92;
+    for(let i=n;i>=1;i--){
+      const r = R*i/n, pts = [];
+      for(let k=0;k<72;k++){ const a = k/72*Math.PI*2, rr = r*(1+.018*Math.sin(a*5+i)+.012*Math.sin(a*11+i*2)); pts.push((120+rr*Math.cos(a)).toFixed(1)+','+(120+rr*Math.sin(a)).toFixed(1)); }
+      s += `<polygon points="${pts.join(' ')}" fill="#7d5528"/>`;
+      const r2 = Math.max(1, r - Math.min(7, R/n*.35)), p2 = [];
+      for(let k=0;k<72;k++){ const a = k/72*Math.PI*2, rr = r2*(1+.018*Math.sin(a*5+i)+.012*Math.sin(a*11+i*2)); p2.push((120+rr*Math.cos(a)).toFixed(1)+','+(120+rr*Math.sin(a)).toFixed(1)); }
+      s += `<polygon points="${p2.join(' ')}" fill="${i>n/2?'#efdcb3':'#e3c891'}"/>`;
+    }
+    return s + `<circle cx="120" cy="120" r="3" fill="#5a3a1e"/></svg>`;
+  },
+  /* Diagramm Baumarten */
+  baumarten(){
+    const d = [['Fichte',28],['Kiefer',24],['Buche',15],['Eiche',10],['Sonstige',23]];
+    let s = `<svg viewBox="0 0 340 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Säulendiagramm Baumarten in Deutschland">
+      <text x="170" y="18" font-size="14" font-weight="700" text-anchor="middle" fill="#2b1d10">Baumarten im deutschen Wald (Anteil in %)</text>`;
+    [0,10,20,30].forEach(v => { const y = 200 - v*5; s += `<line x1="40" y1="${y}" x2="330" y2="${y}" stroke="#d9cdb4"/><text x="34" y="${y+4}" font-size="11" text-anchor="end" fill="#6a4f2c">${v}</text>`; });
+    d.forEach(([n,v],i) => { const x = 52 + i*56, h = v*5; s += `<rect x="${x}" y="${200-h}" width="40" height="${h}" fill="${['#2f6b1c','#4f9a31','#a5642f','#7a5230','#9aa29a'][i]}"/>
+      <text x="${x+20}" y="${195-h}" font-size="12" font-weight="700" text-anchor="middle" fill="#2b1d10">${v} %</text><text x="${x+20}" y="216" font-size="12" text-anchor="middle" fill="#2b1d10">${n}</text>`; });
+    return s + `<line x1="40" y1="200" x2="330" y2="200" stroke="#2b1d10" stroke-width="2"/></svg>`;
+  },
+  /* Zweige, Blätter und Früchte */
+  zweig(art){
+    const W = `<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Zeichnung zum Bestimmen">`;
+    let s = '';
+    if(art==='fichte'){
+      s += `<path d="M20 110 Q150 96 280 104" stroke="#7a5230" stroke-width="6" fill="none"/>`;
+      for(let x=30;x<272;x+=12){ const y = 110 - (x-20)*0.03; s += `<path d="M${x} ${y} l12 -22 M${x} ${y} l12 22 M${x+6} ${y} l-4 -24 M${x+6} ${y} l-4 24" stroke="#2f6b3a" stroke-width="3" stroke-linecap="round"/>`; }
+    } else if(art==='kiefer'){
+      s += `<path d="M20 120 Q150 106 280 112" stroke="#7a5230" stroke-width="6" fill="none"/>`;
+      for(let x=30;x<230;x+=22){ const y = 118 - (x-20)*0.03; s += `<path d="M${x} ${y} q16 -32 40 -56 M${x} ${y} q22 -24 52 -36" stroke="#3f7d3a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M${x+6} ${y} q14 32 36 54 M${x+6} ${y} q20 22 48 32" stroke="#3f7d3a" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="${x+2}" cy="${y}" r="3" fill="#5b3a1e"/>`; }
+    } else if(art==='buche'){
+      const pts = []; for(let k=0;k<=60;k++){ const a = k/60*Math.PI*2, r = 1 + .03*Math.sin(a*14); pts.push([150+120*r*Math.cos(a), 100+62*r*Math.sin(a)*(Math.cos(a)>0?0.85:1)]); }
+      s += `<polygon points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="#5aa045" stroke="#2f6b1c" stroke-width="3"/>
+        <path d="M20 100 H270" stroke="#2f6b1c" stroke-width="4"/>` + [-90,-60,-30,0,30,60,90].map(dx=>`<path d="M${150+dx} 100 l18 -38 M${150+dx} 100 l18 38" stroke="#2f6b1c" stroke-width="2"/>`).join('') + `<path d="M4 100 H32" stroke="#7a5230" stroke-width="5"/>`;
+    } else if(art==='eiche'){
+      const pts = []; for(let k=0;k<=120;k++){ const t = k/120*Math.PI*2, lob = .62 + .42*Math.abs(Math.sin(t*4.5)); pts.push([155+122*Math.cos(t)*(.75+.25*lob), 100+70*lob*Math.sin(t)]); }
+      s += `<polygon points="${pts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="#6aa84f" stroke="#2f6b1c" stroke-width="3"/>
+        <path d="M30 100 H270" stroke="#2f6b1c" stroke-width="4"/><path d="M8 102 H48" stroke="#7a5230" stroke-width="5"/>`;
+    } else if(art==='eichel'){
+      s += `<ellipse cx="150" cy="118" rx="40" ry="56" fill="#c58a3a" stroke="#7a5230" stroke-width="4"/><path d="M106 92 Q150 40 194 92 Q150 104 106 92z" fill="#8a6234" stroke="#5b3a1e" stroke-width="4"/>
+        ${[0,1,2,3].map(i=>`<path d="M${116+i*18} 88 l8 -10" stroke="#5b3a1e" stroke-width="3"/>`).join('')}<path d="M150 56 V30" stroke="#5b3a1e" stroke-width="6"/>`;
+    } else if(art==='fichtenzapfen'){
+      s += `<path d="M150 10 V36" stroke="#5b3a1e" stroke-width="6"/>`;
+      for(let r=0;r<9;r++) for(let c=-1;c<=1;c++){ const y = 40 + r*16, w = 46 - Math.abs(r-3)*3; s += `<path d="M${150+c*w*0.55-12} ${y} q12 16 24 0 q-12 -6 -24 0z" fill="${(r+c)%2?'#8a5a2b':'#a8722f'}" stroke="#5b3a1e" stroke-width="2"/>`; }
+      s += `<text x="236" y="100" font-size="15" fill="#6a4f2c" text-anchor="middle">hängt nach</text><text x="236" y="118" font-size="15" fill="#6a4f2c" text-anchor="middle">unten</text><path d="M236 128 v30" stroke="#6a4f2c" stroke-width="3" marker-end="url(#pf2)"/><defs><marker id="pf2" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#6a4f2c"/></marker></defs>`;
+    } else if(art==='buchecker'){
+      s += `<path d="M150 170 L104 70 Q150 30 196 70z" fill="#8a6234" stroke="#5b3a1e" stroke-width="4"/>` + Array.from({length:22},(_,i)=>{ const t=i/21; const x=104+t*92, y=70-Math.sin(t*Math.PI)*34; return `<path d="M${x.toFixed(0)} ${y.toFixed(0)} l${(x-150)/10} -12" stroke="#5b3a1e" stroke-width="2"/>`; }).join('') +
+        `<path d="M126 104 L150 160 L174 104 Q150 88 126 104z" fill="#a0673d" stroke="#5b3a1e" stroke-width="3"/>`;
+    }
+    return W + s + '</svg>';
+  },
+  /* Schnittplan eines Stammes (antippbar) */
+  schnitt(){
+    let le = '';
+    for(let x=24;x<216;x+=14) le += `<rect x="${x}" y="158" width="12" height="14" fill="#e8c98e"/>`;
+    return `<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schnittplan eines Baumstammes">
+      <defs><clipPath id="lc"><circle cx="120" cy="120" r="94"/></clipPath></defs>
+      <circle cx="120" cy="120" r="101" fill="#5b3a1e"/><circle cx="120" cy="120" r="94" fill="#a77b48"/>
+      <g clip-path="url(#lc)" stroke="#6e4a28" stroke-width="1.5">
+        <g data-id="schwarte"><rect x="0" y="0" width="240" height="40" fill="#d8b378"/><rect x="0" y="190" width="240" height="50" fill="#d8b378"/>
+          <rect x="0" y="84" width="38" height="72" fill="#d8b378"/><rect x="202" y="84" width="38" height="72" fill="#d8b378"/></g>
+        <g data-id="brett"><rect x="20" y="42" width="200" height="14" fill="#ecd09b"/><rect x="20" y="174" width="200" height="14" fill="#ecd09b"/>
+          <rect x="40" y="84" width="20" height="72" fill="#ecd09b"/><rect x="180" y="84" width="20" height="72" fill="#ecd09b"/></g>
+        <rect data-id="bohle" x="26" y="58" width="188" height="24" fill="#e2c084"/>
+        <rect data-id="kantholz" x="62" y="84" width="116" height="72" fill="#f0d6a2"/>
+        <g data-id="leiste">${le}<rect x="20" y="157" width="200" height="16" fill="rgba(0,0,0,0)" stroke="none"/></g>
+      </g>
+      ${[12,24,36].map(r=>`<circle cx="120" cy="120" r="${r}" fill="none" stroke="#c99a5b" stroke-width="1.5" pointer-events="none"/>`).join('')}
+    </svg>`;
+  },
+  /* Werkzeuge */
+  werkzeug(art){
+    const W = `<svg viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Werkzeug">`;
+    let s = '';
+    if(art==='anschlagwinkel'){
+      s = `<rect x="60" y="30" width="44" height="130" rx="4" fill="#a8722f" stroke="#5b3a1e" stroke-width="3"/>
+        <rect x="104" y="128" width="160" height="22" fill="#c9ced3" stroke="#6b7178" stroke-width="3"/>
+        ${Array.from({length:15},(_,i)=>`<path d="M${112+i*10} 128 v${i%5?6:11}" stroke="#454a50" stroke-width="2"/>`).join('')}
+        <circle cx="82" cy="60" r="4" fill="#5b3a1e"/><circle cx="82" cy="140" r="4" fill="#5b3a1e"/>`;
+    } else if(art==='schraubzwinge'){
+      s = `<rect x="70" y="16" width="16" height="150" fill="#9aa1a6" stroke="#5c6166" stroke-width="3"/>
+        <rect x="86" y="16" width="110" height="20" fill="#c7cbcf" stroke="#5c6166" stroke-width="3"/>
+        <rect x="86" y="120" width="110" height="20" fill="#c7cbcf" stroke="#5c6166" stroke-width="3"/>
+        <rect x="176" y="40" width="8" height="78" fill="#7c8288"/>${Array.from({length:8},(_,i)=>`<path d="M174 ${44+i*9} h12" stroke="#5c6166" stroke-width="2"/>`).join('')}
+        <rect x="176" y="140" width="8" height="10" fill="#7c8288"/><rect x="158" y="148" width="44" height="28" rx="8" fill="#d23b3b" stroke="#7a1a1a" stroke-width="3"/>
+        <rect x="166" y="36" width="28" height="10" fill="#5c6166"/>`;
+    } else if(art==='feinsaege'){
+      s = `<path d="M30 70 H220 V124 H30z" fill="#d7dbde" stroke="#6b7178" stroke-width="3"/>
+        <rect x="28" y="58" width="196" height="14" fill="#7c8288"/>
+        <path d="M30 124 ${Array.from({length:38},(_,i)=>`l2.5 6 l2.5 -6`).join(' ')}" fill="none" stroke="#6b7178" stroke-width="2"/>
+        <path d="M220 52 h40 q18 0 18 18 v46 q0 18 -18 18 h-40z" fill="#a8722f" stroke="#5b3a1e" stroke-width="3"/><rect x="236" y="74" width="24" height="38" rx="8" fill="#fffaf0" stroke="#5b3a1e" stroke-width="3"/>`;
+    } else if(art==='gehrungslade'){
+      s = `<path d="M40 70 L230 70 L270 40 L80 40z" fill="#ecd09b" stroke="#7a5230" stroke-width="3"/>
+        <path d="M40 70 V140 H230 V70" fill="#d8b378" stroke="#7a5230" stroke-width="3"/><path d="M230 70 L270 40 V110 L230 140" fill="#c9a463" stroke="#7a5230" stroke-width="3"/>
+        <path d="M70 92 H210 V140 H70z" fill="#a77b48" stroke="#7a5230" stroke-width="3"/>
+        <path d="M140 70 V140 M100 70 L120 140 M180 70 L160 140" stroke="#2b1d10" stroke-width="4"/>
+        <text x="140" y="166" font-size="13" text-anchor="middle" fill="#6a4f2c">Schlitze führen die Säge</text>`;
+    } else if(art==='schleifklotz'){
+      s = `<path d="M70 60 L230 60 L250 44 L90 44z" fill="#c8a24a" stroke="#7a5a20" stroke-width="3"/><rect x="70" y="60" width="160" height="56" fill="#a8722f" stroke="#5b3a1e" stroke-width="3"/>
+        <rect x="64" y="112" width="172" height="16" fill="#d9b96a" stroke="#7a5a20" stroke-width="3"/>
+        ${Array.from({length:40},(_,i)=>`<circle cx="${70+(i*37)%160}" cy="${116+(i*7)%10}" r="1.4" fill="#7a5a20"/>`).join('')}`;
+    } else if(art==='gliedermassstab'){
+      s = `<g fill="#f2c230" stroke="#8a6a10" stroke-width="3">
+        <path d="M30 150 L110 40 L124 48 L44 158z"/><path d="M124 48 L204 158 L190 166 L110 56z"/><path d="M190 166 L270 56 L284 64 L204 174z"/></g>
+        ${Array.from({length:8},(_,i)=>`<path d="M${46+i*9} ${136-i*12.5} l8 5" stroke="#2b1d10" stroke-width="2"/>`).join('')}
+        <circle cx="117" cy="48" r="5" fill="#8a6a10"/><circle cx="197" cy="166" r="5" fill="#8a6a10"/>`;
+    }
+    return W + s + '</svg>';
+  }
+
+};
+start();
+</script>
+</body>
+</html>

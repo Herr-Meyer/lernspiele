@@ -144,6 +144,13 @@ html.onstart,html.onstart body{height:auto;min-height:100%;overflow:auto}
 html.onstart #hud,html.onstart #pad,html.onstart #abtn,html.onstart #app{display:none !important}
 #start{position:relative;z-index:12;min-height:100vh;display:block;background:#1d3a14;padding:calc(env(safe-area-inset-top,0px) + 16px) 12px calc(env(safe-area-inset-bottom,0px) + 16px)}
 .startcard{max-width:520px;width:100%;padding:20px 18px;margin:0 auto}
+.lockhead{font-family:'Press Start 2P',ui-monospace,monospace;font-size:13px;line-height:1.6;margin:8px 0}
+.lockgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.lockgrid a{display:block;text-decoration:none;color:var(--ink);background:var(--panel2);border:3px solid var(--line);padding:8px 10px;font-size:20px;line-height:1.1}
+.lockgrid a.done{background:var(--okbg);border-color:var(--ok)}
+.lockgrid small{display:block;font-size:17px;color:var(--muted)}
+.lockcode{margin:10px 0;font-size:19px}
+.lockcode summary{cursor:pointer;color:var(--muted)}
 .startbtns .btn{display:block;width:100%;margin-bottom:8px;font-size:13px;min-height:56px;line-height:56px;padding:0 10px;text-align:center;text-decoration:none;-webkit-appearance:none;appearance:none}
 #diag{font-size:16px;color:var(--muted);text-align:center;margin-top:8px;opacity:.75}
 .logo{font-family:'Press Start 2P',monospace;font-size:clamp(26px,8vw,46px);text-align:center;color:#f2c230;letter-spacing:2px;text-shadow:3px 3px 0 #7a4a1c,6px 6px 0 #2b1d10;margin:6px 0 4px;line-height:1.2}
@@ -235,9 +242,21 @@ html.onstart #hud,html.onstart #pad,html.onstart #abtn,html.onstart #app{display
     <div class="logo">HOLZCRAFT</div>
     <div class="sub">Das Geheimnis des Waldes – TuN Klasse 6</div>
     <p>Herr Meyer braucht deine Hilfe! Erkunde den Wald, löse die Rätsel der Waldbewohner und sammle vier Wissensblöcke.</p>
+    <div id="lock" hidden>
+      <p class="lockhead">🔒 Holzcraft ist noch gesperrt.</p>
+      <p>Schaffe zuerst die vier kurzen <b>Holz-Trainings</b>. Dann öffnet sich das große Abenteuer.</p>
+      <div class="lockgrid" id="lockGrid"></div>
+      <details class="lockcode"><summary>Code von Herrn Meyer</summary>
+        <div class="field"><label for="inCode">Freischalt-Code</label><input type="text" id="inCode" maxlength="20" autocomplete="off" autocapitalize="characters"></div>
+        <button type="button" class="btn" id="codeBtn">Freischalten</button>
+      </details>
+      <div class="startbtns"><a class="btn" href="../">☰ Zum Spiele-Menü</a></div>
+    </div>
+    <div id="formArea">
     <div class="field"><label for="inName">Dein Name</label><input type="text" id="inName" maxlength="40" autocomplete="off" autocapitalize="words" enterkeyhint="next"></div>
     <div class="field"><label for="inKlasse">Deine Klasse</label><input type="text" id="inKlasse" maxlength="10" autocomplete="off" autocorrect="off" placeholder="z. B. 6a" enterkeyhint="go"></div>
     <div class="startbtns" id="startBtns"><a href="#los" class="btn primary" id="go" role="button">Spiel starten</a></div>
+    </div>
     <div class="err" id="err"></div>
     <div class="help" id="help"></div>
     <div id="diag"></div>
@@ -1580,7 +1599,31 @@ $('#passBtn').addEventListener('click', () => { if(!dlg.open && !startOpen) open
 
 /* ================= Start screen ================= */
 let startOpen = true;
+/* Freischaltung: Holzcraft öffnet sich nach den vier Holz-Trainings (gleiche Adresse, gleicher Gerätespeicher).
+   Wer Holzcraft schon begonnen hat, spielt einfach weiter. Notausgang für die Lehrkraft: Code HOLZWURM. */
+const TRAININGS = [
+  {id:'wald', titel:'1 · Wald', ordner:'holz-training-1-wald'},
+  {id:'baum', titel:'2 · Baum', ordner:'holz-training-2-baum'},
+  {id:'stamm', titel:'3 · Stamm', ordner:'holz-training-3-stamm'},
+  {id:'werkstoff', titel:'4 · Werkstoff', ordner:'holz-training-4-werkstoff'}
+];
+function trainingStand(){ try{ return JSON.parse(localStorage.getItem('holz-training-v1')) || {}; }catch(e){ return {}; } }
+function holzFrei(){
+  if(state.started) return true;
+  try{ if(localStorage.getItem('holzcraft-frei') === '1') return true; }catch(e){}
+  const t = trainingStand();
+  return TRAININGS.every(x => t[x.id] && t[x.id].done);
+}
+function buildLock(){
+  const frei = holzFrei();
+  $('#lock').hidden = frei; $('#formArea').hidden = !frei;
+  if(frei) return;
+  const t = trainingStand();
+  $('#lockGrid').innerHTML = TRAININGS.map(x => { const d = t[x.id] && t[x.id].done;
+    return `<a class="${d?'done':''}" href="../${x.ordner}/">${d?'✔':'○'} ${esc(x.titel)}<small>${d?'geschafft':'noch offen ▸'}</small></a>`; }).join('');
+}
 function buildStart(){
+  buildLock();
   $('#inName').value = state.name || ''; $('#inKlasse').value = state.klasse || '';
   const sb = $('#startBtns');
   sb.innerHTML = state.started
@@ -1606,7 +1649,15 @@ window.addEventListener('hashchange', () => { if(location.hash === '#los'){ clea
   const t = e.target, d = $('#diag'); if(!d || !t) return;
   d.textContent = 'Tipp erkannt (' + ev + '): ' + (t.id ? '#' + t.id : (t.tagName || '?').toLowerCase());
 }, true));
+$('#codeBtn').addEventListener('click', () => {
+  if($('#inCode').value.trim().toUpperCase() === 'HOLZWURM'){
+    try{ localStorage.setItem('holzcraft-frei','1'); }catch(e){}
+    buildLock(); $('#err').textContent = '';
+  } else $('#err').textContent = 'Der Code stimmt nicht.';
+});
+window.addEventListener('pageshow', () => { if(startOpen) buildLock(); });
 function startGame(){
+  if(!holzFrei()) return;
   if(starting || !startOpen) return;
   const nm = $('#inName').value.trim(), kl = $('#inKlasse').value.trim();
   if(nm.length < 2){ $('#err').textContent = 'Bitte gib deinen Namen ein – Herr Meyer muss wissen, wessen Pass das ist.'; return; }
